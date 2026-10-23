@@ -1,0 +1,789 @@
+[
+  {
+    "text": "Файл",
+    "id": -1,
+    "children": [
+      {
+        "text": "Новый\tCtrl+N",
+        "id": 5,
+        "children": []
+      },
+      {
+        "text": "Открыть...\tCtrl+O",
+        "id": 6,
+        "children": []
+      },
+      {
+        "text": "Открыть примеры...",
+        "id": 7,
+        "children": []
+      },
+      {
+        "text": "Open from the Web...",
+        "id": 8,
+        "children": []
+      },
+      {
+        "text": "Сохранить\tCtrl+S",
+        "id": 9,
+        "children": []
+      },
+      {
+        "text": "Сохранить как...",
+        "id": 10,
+        "children": []
+      },
+      {
+        "text": "Сохранить все",
+        "id": 11,
+        "children": []
+      },
+      {
+        "text": "Закрыть\tCtrl+F4",
+        "id": 12,
+        "children": []
+      },
+      {
+        "text": "Закрыть все",
+        "id": 13,
+        "children": []
+      },
+      {
+        "text": "Экспорт",
+        "id": -1,
+        "children": [
+          {
+            "text": "Список соединений",
+            "id": -1,
+            "children": [
+              {
+                "text": "Для &Tina (*.CIR)...",
+                "id": 24,
+                "children": []
+              },
+              {
+                "text": "Для &PSpice (*.CIR)...",
+                "id": 25,
+                "children": []
+              }
+            ]
+          },
+          {
+            "text": "Метафайл Windows(*.WMF)...",
+            "id": 26,
+            "children": []
+          },
+          {
+            "text": "XML...",
+            "id": 28,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "Импорт",
+        "id": -1,
+        "children": [
+          {
+            "text": "XML...",
+            "id": 39,
+            "children": []
+          },
+          {
+            "text": "Импортировать Библиотеки и Проекты TINA…",
+            "id": 40,
+            "children": []
+          },
+          {
+            "text": "",
+            "id": 41,
+            "children": []
+          },
+          {
+            "text": "PSpice таблица соединений (*.CIR)...",
+            "id": 44,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "Список материалов...",
+        "id": 46,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 47,
+        "children": []
+      },
+      {
+        "text": "Войти в подсхему",
+        "id": 48,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 50,
+        "children": []
+      },
+      {
+        "text": "Параметры страницы...",
+        "id": 51,
+        "children": []
+      },
+      {
+        "text": "Предварительный просмотр",
+        "id": 52,
+        "children": []
+      },
+      {
+        "text": "Печать...\tCtrl+P",
+        "id": 53,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 357,
+        "children": []
+      },
+      {
+        "text": "&1  /Users/fedor/Downloads/Telegram Desktop/BF240_output_v02.TSC",
+        "id": 358,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 54,
+        "children": []
+      },
+      {
+        "text": "Выход",
+        "id": 55,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Правка",
+    "id": -1,
+    "children": [
+      {
+        "text": "Отмена\tCtrl+Z",
+        "id": 57,
+        "children": []
+      },
+      {
+        "text": "Вернуть\tCtrl+Y",
+        "id": 58,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 59,
+        "children": []
+      },
+      {
+        "text": "Вырезать\tCtrl+X",
+        "id": 60,
+        "children": []
+      },
+      {
+        "text": "Копировать\tCtrl+C",
+        "id": 61,
+        "children": []
+      },
+      {
+        "text": "Вставить\tCtrl+V",
+        "id": 62,
+        "children": []
+      },
+      {
+        "text": "Удалить\tCtrl+Del",
+        "id": 63,
+        "children": []
+      },
+      {
+        "text": "Выделить все\tCtrl+A",
+        "id": 64,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 65,
+        "children": []
+      },
+      {
+        "text": "Поворот налево\tCtrl+L",
+        "id": 66,
+        "children": []
+      },
+      {
+        "text": "Поворот направо\tCtrl+R",
+        "id": 67,
+        "children": []
+      },
+      {
+        "text": "Зеркало",
+        "id": 68,
+        "children": []
+      },
+      {
+        "text": "Свойства...",
+        "id": 69,
+        "children": []
+      },
+      {
+        "text": "Символ...",
+        "id": 70,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 83,
+        "children": []
+      },
+      {
+        "text": "Спрятать/Соединить",
+        "id": 84,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Вставить",
+    "id": -1,
+    "children": [
+      {
+        "text": "Последний компонент\tCtrl+Ins",
+        "id": 87,
+        "children": []
+      },
+      {
+        "text": "Провод\tCtrl+Space",
+        "id": 88,
+        "children": []
+      },
+      {
+        "text": "Ввод\tCtrl+I",
+        "id": 90,
+        "children": []
+      },
+      {
+        "text": "Вывод\tCtrl+U",
+        "id": 91,
+        "children": []
+      },
+      {
+        "text": "Текст\tCtrl+T",
+        "id": 92,
+        "children": []
+      },
+      {
+        "text": "Графики...\tCtrl+G",
+        "id": 93,
+        "children": []
+      },
+      {
+        "text": "Блок названия...",
+        "id": 94,
+        "children": []
+      },
+      {
+        "text": "Макроэлемент...\tCtrl+M",
+        "id": 106,
+        "children": []
+      },
+      {
+        "text": "Блок...",
+        "id": 107,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 108,
+        "children": []
+      },
+      {
+        "text": "Автоповтор",
+        "id": 109,
+        "children": []
+      },
+      {
+        "text": "Автопровод",
+        "id": 110,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Вид",
+    "id": -1,
+    "children": [
+      {
+        "text": "Нормальный вид",
+        "id": 112,
+        "children": []
+      },
+      {
+        "text": "Макет страницы",
+        "id": 113,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 114,
+        "children": []
+      },
+      {
+        "text": "Масштаб",
+        "id": -1,
+        "children": [
+          {
+            "text": "Нормальный\tAlt+N",
+            "id": 116,
+            "children": []
+          },
+          {
+            "text": "Все\tAlt+L",
+            "id": 117,
+            "children": []
+          },
+          {
+            "text": "Окно",
+            "id": 118,
+            "children": []
+          },
+          {
+            "text": "Больше",
+            "id": 119,
+            "children": []
+          },
+          {
+            "text": "Меньше",
+            "id": 120,
+            "children": []
+          },
+          {
+            "text": "",
+            "id": 121,
+            "children": []
+          },
+          {
+            "text": "Ширина страницы",
+            "id": 122,
+            "children": []
+          },
+          {
+            "text": "Целая страница",
+            "id": 123,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "Сетка",
+        "id": 124,
+        "children": []
+      },
+      {
+        "text": "Отметки выводов",
+        "id": 125,
+        "children": []
+      },
+      {
+        "text": "Значения",
+        "id": 126,
+        "children": []
+      },
+      {
+        "text": "Элементы",
+        "id": 127,
+        "children": []
+      },
+      {
+        "text": "Tolerance",
+        "id": 128,
+        "children": []
+      },
+      {
+        "text": "Метки",
+        "id": 129,
+        "children": []
+      },
+      {
+        "text": "Номера блоков",
+        "id": 130,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 132,
+        "children": []
+      },
+      {
+        "text": "Обновить\tF5",
+        "id": 133,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 139,
+        "children": []
+      },
+      {
+        "text": "Панель инструментов",
+        "id": 140,
+        "children": []
+      },
+      {
+        "text": "Панель компонентов",
+        "id": 141,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 144,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 146,
+        "children": []
+      },
+      {
+        "text": "Опции...",
+        "id": 147,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Анализ",
+    "id": -1,
+    "children": [
+      {
+        "text": "ERC...",
+        "id": 149,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 150,
+        "children": []
+      },
+      {
+        "text": "Режим...\tCtrl+Alt+M",
+        "id": 151,
+        "children": []
+      },
+      {
+        "text": "Объект управления",
+        "id": 156,
+        "children": []
+      },
+      {
+        "text": "Установить параметры анализа...\tCtrl+Alt+P",
+        "id": 157,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 158,
+        "children": []
+      },
+      {
+        "text": "Анализ постоянного тока",
+        "id": -1,
+        "children": [
+          {
+            "text": "Вычисление узловых напряжений\tCtrl+Alt+D",
+            "id": 160,
+            "children": []
+          },
+          {
+            "text": "Таблица результатов постоянного тока",
+            "id": 161,
+            "children": []
+          },
+          {
+            "text": "Переходные характеристики постоянного тока...\tCtrl+Alt+R",
+            "id": 162,
+            "children": []
+          },
+          {
+            "text": "Температурный анализ...",
+            "id": 163,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "Анализ переменного тока",
+        "id": -1,
+        "children": [
+          {
+            "text": "Вычисление узловых напряжений",
+            "id": 165,
+            "children": []
+          },
+          {
+            "text": "Таблица результатов переменного тока",
+            "id": 166,
+            "children": []
+          },
+          {
+            "text": "Переходные характеристики переменного тока...\tCtrl+Alt+A",
+            "id": 167,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "Анализ переходных процессов...\tCtrl+Alt+T",
+        "id": 171,
+        "children": []
+      },
+      {
+        "text": "Решатель устойчивых состояний...",
+        "id": 172,
+        "children": []
+      },
+      {
+        "text": "Анализ Фурье",
+        "id": -1,
+        "children": [
+          {
+            "text": "Ряд Фурье...\tCtrl+Alt+F",
+            "id": 174,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "",
+        "id": 176,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 181,
+        "children": []
+      },
+      {
+        "text": "Анализ шумов...\tCtrl+Alt+N",
+        "id": 194,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 201,
+        "children": []
+      },
+      {
+        "text": "Опции...\tCtrl+Alt+O",
+        "id": 202,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "&T&&M",
+    "id": -1,
+    "children": [
+      {
+        "text": "Генератор функций",
+        "id": 224,
+        "children": []
+      },
+      {
+        "text": "Мультиметр",
+        "id": 228,
+        "children": []
+      },
+      {
+        "text": "Записывающее устройство",
+        "id": 232,
+        "children": []
+      },
+      {
+        "text": "Осциллограф",
+        "id": 236,
+        "children": []
+      },
+      {
+        "text": "Анализатор сигналов",
+        "id": 240,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Инструменты",
+    "id": -1,
+    "children": [
+      {
+        "text": "Окно диаграммы\tShift+Ctrl+D",
+        "id": 261,
+        "children": []
+      },
+      {
+        "text": "Редактор списка соединений\tShift+Ctrl+N",
+        "id": 264,
+        "children": []
+      },
+      {
+        "text": "Найти компонент...\tShift+Ctrl+C",
+        "id": 270,
+        "children": []
+      },
+      {
+        "text": "Просмотреть базу символов",
+        "id": 271,
+        "children": []
+      },
+      {
+        "text": "Перекомпилировать библиотеку",
+        "id": 272,
+        "children": []
+      },
+      {
+        "text": "Пересобрать библиотеку",
+        "id": 273,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 274,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 360,
+        "children": []
+      },
+      {
+        "text": "Мастер новых макроэлементов...\tShift+Ctrl+M",
+        "id": 275,
+        "children": []
+      },
+      {
+        "text": "Редактировать свойства макроэлемента...",
+        "id": 276,
+        "children": []
+      },
+      {
+        "text": "Экспортировать макроэлемент...",
+        "id": 277,
+        "children": []
+      },
+      {
+        "text": "Перенумеровать компоненты",
+        "id": 283,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 286,
+        "children": []
+      },
+      {
+        "text": "Заблокировать редактор  схем",
+        "id": 287,
+        "children": []
+      },
+      {
+        "text": "Прикрепить редактор соединений",
+        "id": 288,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "T&I Utilities",
+    "id": -1,
+    "children": [
+      {
+        "text": "Tina-TI FAQ",
+        "id": 293,
+        "children": []
+      },
+      {
+        "text": "TI Analog eLab Design Center",
+        "id": 294,
+        "children": []
+      },
+      {
+        "text": "Request TI sample parts",
+        "id": 295,
+        "children": []
+      }
+    ]
+  },
+  {
+    "text": "Помощь",
+    "id": -1,
+    "children": [
+      {
+        "text": "Оглавление",
+        "id": 297,
+        "children": []
+      },
+      {
+        "text": "Справочник компонентов",
+        "id": 299,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 300,
+        "children": []
+      },
+      {
+        "text": "Проверить обновления...",
+        "id": 301,
+        "children": []
+      },
+      {
+        "text": "",
+        "id": 302,
+        "children": []
+      },
+      {
+        "text": "Upgrade",
+        "id": 361,
+        "children": []
+      },
+      {
+        "text": "DesignSoft в Интернет",
+        "id": -1,
+        "children": [
+          {
+            "text": "www.designsoftware.com",
+            "id": 305,
+            "children": []
+          },
+          {
+            "text": "www.tina.com",
+            "id": 306,
+            "children": []
+          },
+          {
+            "text": "www.tinacloud.com",
+            "id": 307,
+            "children": []
+          },
+          {
+            "text": "www.edisonlab.com",
+            "id": 308,
+            "children": []
+          }
+        ]
+      },
+      {
+        "text": "О программе",
+        "id": 313,
+        "children": []
+      }
+    ]
+  }
+]

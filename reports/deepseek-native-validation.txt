@@ -1,0 +1,265 @@
+# Unified source/topology validation for h-parameter routines
+
+The bugs:
+
+1. **`calculateH` and `estimateH` validate different things.** `calculateH` demands the base current source be wired `0 → base` with positive DC (wrong for NPN — TINA/ngspice convention needs `base → 0`, i.e. current flowing *out* of base, which is a NEGATIVE DC value). `estimateH` accepts either orientation via `sign` but then does no `0`/emitter sanity check and no `VAM_`-only supply restriction.
+2. **`calculateH`'s `VAM_`-walk (`joined`)** trusts any ammeter, including ones not in the collector supply path (e.g. a stray ammeter on the base), or ammeters whose other terminal lands on base/emitter — that permits a "supply connected through an unrelated ammeter" bypass.
+3. `estimateH`'s `vp[0]!==qp[0] && !Object.values(...).some(VAM_)` is purely existential — any `VAM_` anywhere satisfies it, regardless of whether it actually bridges collector to supply.
+4. The `sign` logic in `estimateH` accepts `bp=[base,emitter]` as `sign=+1`, but for NPN forward bias the DC value written into the stepped source must be **negative** (source flows in native pin order: base→emitter means positive value *out of base*, so to inject forward base current we need negative). Both branches need to emit `-sign*(...)= -|I|` for NPN. `calculateH` currently writes the raw positive `options.ib`, which will reverse-bias.
+
+Fixed by extracting one `validateHTopology` helper that both entry points call, returning the normalized source sign, and by stepping with a single negative-magnitude convention for NPN.
+
+---
+
+## Helper
+
+```ts
+// hparams-topology.ts
+import type { Doc, SimulationResult } from './types';           // adjust to your modules
+import { components, exportSpice } from './spice';             // existing exports
+
+export interface HTopologyOptions {
+  transistor?: string;
+  baseSource?: string;
+  collectorSource?: string;
+  /** true for calculateH (also rejects unrelated ammeters on base), false for estimateH */
+  strict?: boolean;
+}
+
+export interface HTopology {
+  transistor: string;
+  baseSource: string;
+  collectorSource: string;
+  qnodes: [string, string, string];  // [collector, base, emitter]
+  /** base current source is base→emitter in native order (sign=+1) or emitter→base (sign=-1). DC value must be sign * -|ib| for forward NPN. */
+  baseSign: 1 | -1;
+  /** true iff supply reaches collector only through VAM_ ammeters */
+  supplyViaAmmeters: boolean;
+}
+
+/**
+ * Single source of truth for CE h-parameter source polarity / topology.
+ * Throws on any violation. Call from both calculateH and estimateH.
+ */
+export function validateHTopology(doc: Doc, opts: HTopologyOptions = {}): HTopology {
+  const transistor     = opts.transistor     ?? 'T1';
+  const baseSource     = opts.baseSource     ?? 'IS1';
+  const collectorSource= opts.collectorSource?? 'VS1';
+
+  // 1. NPN common-emitter prerequisite (only calculateH enforced this before).
+  const part = components(doc).find(c => c.label === transistor);
+  if (part?.kind !== 'NPN')
+    throw new Error('Этот расчёт h-параметров предназначен для NPN-транзистора');
+
+  // 2. Node/pin checks from the exported mapping.
+  const { mapping, text } = exportSpice(doc);
+  const qnodes = mapping.nodes[transistor];
+  if (!qnodes || qnodes.length !== 3)
+    throw new Error('Для h-параметров нужен биполярный транзистор');
+  if (qnodes[2] !== '0')
+    throw new Error('Эмиттер NPN должен быть соединён с землёй (общий эмиттер)');
+
+  const bnodes = mapping.nodes[baseSource];
+  const cnodes = mapping.nodes[collectorSource];
+  if (!mapping.names[baseSource]?.startsWith('I_'))
+    throw new Error('Источник базы должен быть источником тока (I…)');
+  if (!mapping.names[collectorSource]?.startsWith('V_'))
+    throw new Error('Источник коллектора должен быть источником напряжения (V…)');
+  if (!bnodes || bnodes.length !== 2 || !cnodes)
+    throw new Error('Не определены узлы источников базы/коллектора');
+
+  // 3. Base current source must sit strictly between BASE and EMITTER (0).
+  //    Native pin order base→emitter ⇒ baseSign=+1; emitter→base ⇒ −1.
+  const baseSign =
+    bnodes[0] === qnodes[1] && bnodes[1] === qnodes[2] ?  1 :
+    bnodes[1] === qnodes[1] && bnodes[0] === qnodes[2] ? -1 : 0;
+  if (!baseSign)
+    throw new Error('Источник тока базы должен быть подключён между базой и эмиттером');
+
+  // 4. Supply (+ terminal) must reach collector ONLY through ideal ammeters (VAM_).
+  //    Walk the VAM_ graph starting from the supply's non-0 terminal. Do NOT
+  //    start from arbitrary ammeters; do NOT treat base ammeters as legal.
+  const ammeters = new Map<string, [string, string]>();
+  for (const [label, name] of Object.entries(mapping.names))
+    if (name.startsWith('VAM_')) ammeters.set(label, mapping.nodes[label] as [string, string]);
+
+  // Reject ammeters that touch the base node at all — they'd be "unrelated bypasses".
+  for (const [label, ns] of ammeters)
+    if (ns.includes(qnodes[1]))
+      throw new Error(`Амперметр ${label} на базе недопустим при измерении h-параметров`);
+
+  const supplyHot = cnodes.find(n => n !== '0');
+  if (!supplyHot)
+    throw new Error('Разверните источник коллекторного напряжения: отрицательный вывод к земле');
+  // Ground of supply must be emitter/ground; the other pin feeds the network.
+  if (!cnodes.includes('0'))
+    throw new Error('Источник коллекторного напряжения должен иметь вывод на земле');
+
+  // BFS collector side, only crossing VAM_ ammeters.
+  const reached = new Set<string>([supplyHot]);
+  const frontier = [supplyHot];
+  while (frontier.length) {
+    const n = frontier.pop()!;
+    for (const ns of ammeters.values()) {
+      if (ns[0] === n && !reached.has(ns[1])) { reached.add(ns[1]); frontier.push(ns[1]); }
+      if (ns[1] === n && !reached.has(ns[0])) { reached.add(ns[0]); frontier.push(ns[0]); }
+    }
+  }
+  if (!reached.has(qnodes[0]))
+    throw new Error('Источник коллекторного напряжения не соединён с коллектором только через амперметры');
+
+  // 5. In strict mode also reject any *non-ammeter* attached to base besides transistor + base source (+ VM_).
+  if (opts.strict) {
+    for (const [label, ns] of Object.entries(mapping.nodes)) {
+      if (label === transistor || label === baseSource) continue;
+      const kind = mapping.names[label];
+      if (kind.startsWith('VM_')) continue;
+      if (ns.includes(qnodes[1]))
+        throw new Error('Для измерения h-параметров к базе должны быть подключены только транзистор, источник тока и идеальный вольтметр');
+    }
+  }
+
+  // 6. Native-order DC value orientation: for forward NPN bias on the base,
+  //    the source's DC value must be NEGATIVE (current follows pin order out of base).
+  //    Detect a wrong-sign literal directly in the netlist for a clearer message.
+  const tokens = text.split(/\r?\n/).map(l => l.trim().split(/\s+/));
+  const bi = tokens.find(t => t[0] === mapping.names[baseSource]);
+  if (!bi) throw new Error('Источник базы не найден в нетлисте');
+  const dcValue = Number(bi[3]);
+  if (Number.isFinite(dcValue) && dcValue * baseSign > 0)
+    throw new Error('Значение источника базы должно быть отрицательным для прямого смещения NPN');
+
+  return {
+    transistor, baseSource, collectorSource,
+    qnodes: qnodes as [string, string, string],
+    baseSign: baseSign as 1 | -1,
+    supplyViaAmmeters: true,
+  };
+}
+```
+
+---
+
+## `estimateH` — use the helper, fix sign
+
+```ts
+import { validateHTopology } from './hparams-topology';
+
+export async function estimateH(
+  doc: Doc,
+  settings: {transistor?:string;baseSource?:string;collectorSource?:string;
+             uCE?:number;iB?:number;deltaIB?:number;deltaUCE?:number} = {},
+  signal?: AbortSignal,
+): Promise<HParameters> {
+  const transistor      = settings.transistor      ?? 'T1';
+  const baseSource      = settings.baseSource      ?? 'IS1';
+  const collectorSource = settings.collectorSource ?? 'VS1';
+  const uCE = settings.uCE ?? 16, iB = settings.iB ?? 40e-6,
+        deltaIB = settings.deltaIB ?? 1e-6, deltaUCE = settings.deltaUCE ?? .1;
+
+  if (![uCE,iB,deltaIB,deltaUCE].every(Number.isFinite) || deltaIB<=0 || deltaUCE<=0 || iB<=deltaIB || uCE<=deltaUCE)
+    throw new Error('Неверная рабочая точка для h-параметров');
+
+  // Shared, comprehensive validation (replaces ad-hoc qp/bp/vp checks + VAM_ existence test).
+  const topo = validateHTopology(doc, { transistor, baseSource, collectorSource, strict: false });
+
+  // NPN: forward base current ⇒ NEGATIVE DC value in native pin order.
+  // baseSign tells native pin order; multiply by 1 to get negative magnitude.
+  const step = (ib: number) => -topo.baseSign * ib;
+
+  const simulation = await simulate(doc, {
+    kind: 'dc-family',
+    input: collectorSource,
+    start: uCE - deltaUCE, stop: uCE + deltaUCE, points: 3,
+    step_source: baseSource,
+    step_values: [step(iB - deltaIB), step(iB), step(iB + deltaIB)],
+  }, undefined, signal);
+
+  // …unchanged derivative math…
+}
+```
+
+Note `step(iB) = -baseSign * iB`. For `base→emitter` (baseSign=+1) this writes `-iB` — correct negative DC for NPN forward bias. For `emitter→base` (baseSign=−1) it writes `+iB`, which is the same physical direction expressed in the opposite native order. Both cases deliver forward bias; the sign convention is now centralized, not duplicated.
+
+---
+
+## `calculateH` — reuse the helper
+
+```ts
+export async function calculateH(
+  doc: Doc,
+  options: {baseSource?:string;collectorSource?:string;transistor?:string;
+            ib?:number;uce?:number;dib?:number;duce?:number} = {},
+  onProgress?: (done:number,total:number)=>void,
+  signal?: AbortSignal,
+) {
+  const transistor      = options.transistor      ?? 'T1';
+  const baseSource      = options.baseSource      ?? 'IS1';
+  const collectorSource = options.collectorSource ?? 'VS1';
+
+  // All of the old mapping/joined/sourceTokens/bnodes/cnodes checks are
+  // subsumed here; `strict: true` additionally rejects unrelated base ammeters.
+  validateHTopology(doc, { transistor, baseSource, collectorSource, strict: true });
+
+  onProgress?.(0, 1);
+  const result = await estimateH(doc, {
+    transistor, baseSource, collectorSource,
+    iB: options.ib, uCE: options.uce,
+    deltaIB: options.dib, deltaUCE: options.duce,
+  }, signal);
+  onProgress?.(1, 1);
+
+  return {
+    ...result,
+    RinTr: result.rIn, RoutTr: result.rOut,
+    point: { ib: result.iB, uce: result.uCE, ic: result.iC, ube: result.uBE },
+    measurements: result.simulation.curves,
+    formulas: { /* unchanged */ },
+    method: 'Центральные разности по сетке 3 × 3: рабочая точка и симметричные приращения IБ и UКЭ. Движок ngspice WebAssembly.',
+  };
+}
+```
+
+---
+
+## Regression tests to add (no new deps — use your existing test runner / vitest / jest)
+
+1. **Forward-bias sign convention**
+   - Netlist: `IS1 base 0 DC 40u`, `VS1 collector 0 DC 16`, `Q1 collector base 0 NPN`.
+   - `estimateH` must produce `iB ≈ +40 µA`, `iC > 0`, `uBE ≈ 0.65–0.75 V`, and `h21 > 0`.
+   - Assert the generated `step_values` in the DC-family job are `[-39µ, -40µ, -41µ]` (negative).
+
+2. **Reversed base source accepted**
+   - Netlist: `IS1 0 base DC -40u` (i.e. emitter→base orientation but still forward-biasing).
+   - `validateHTopology` returns `baseSign = -1`; `estimateH` still yields `iC > 0`.
+   - Assert `step_values = [+39µ, +40µ, +41µ]` and derivatives match the forward case to within tolerance.
+
+3. **Wrong-sign literal rejected by `calculateH`**
+   - `IS1 base 0 DC 40u` (positive) with `calculateH` → must throw `"Значение источника базы должно быть отрицательным…"`.
+   - Verify `estimateH` on the same netlist also throws (helper runs unconditionally).
+
+4. **Base source not on emitter**
+   - `IS1 base collector DC ...` → both entry points throw `"…между базой и эмиттером"`.
+
+5. **Emitter not grounded**
+   - `Q1 collector base emitter NPN`, emitter floating.
+   - `calculateH`/`estimateH` both throw the common-emitter error (previously only `calculateH` checked this).
+
+6. **Supply not reaching collector via ammeters**
+   - `VAM_x collector_node other` (not reaching collector at all), or supply pin bypassing with a plain wire but with a decoy `VAM_y` elsewhere on the schematic.
+   - Old code passed via the existential `Object.values(...).some(VAM_)` check; new code must throw `"…не соединён с коллектором только через амперметры"`.
+   - Include a positive-control netlist where `VAM_col` bridges `col_node ↔ collector` — must pass.
+
+7. **Unrelated bypass ammeter on base**
+   - Add `VAM_base base 0 DC 0` in addition to `IS1`.
+   - `strict:true` (calculateH) throws `"Амперметр VAM_base на базе недопустим…"`.
+   - `strict:false` (estimateH) still passes if `iB`/`uCE` are valid — ensures the two entry points intentionally differ *only* on this rule.
+
+8. **baseSign invariants**
+   - Table-driven: `[base,0]→+1`, `[0,base]→−1`, `[base,collector]→throw`, `[base,col,extra]→throw`.
+
+9. **Simulation consistency**
+   - For a sweep around the OP, assert `(iC(+,1)-iC(−,1)) / (2ΔiB) ≈ h21` computed independently from the returned raw curves — this ensures the fixed sign doesn't flip `h11/h21` relative to reference data from TINA.
+
+10. **Snapshot of the shared validation**
+    - Give `validateHTopology` a small fixture per rule and snapshot its throw message; this cements the "single source of truth" contract so future edits to `calculateH` or `estimateH` can't re-diverge.

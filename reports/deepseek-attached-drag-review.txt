@@ -1,0 +1,197 @@
+## Concrete minimal fixes
+
+**1. `translateSelection` — anchored endpoints + no extra stubs**
+
+Root cause: current code translates every vertex of every selected wire, then for each *boundary point* creates a *new* bridge wire even when the boundary lies on the *same* wire that is being dragged — producing a stub that overlaps the moved wire plus a redundant connector.
+
+Minimal rewrite:
+
+```ts
+export function translateSelection(doc:Doc,indices:Iterable<number>,dx:number,dy:number):number[]{
+  delta(dx,dy);const selected=indicesOf(doc,indices);if(!selected.length||(!dx&&!dy))return selected;
+  const staged=decode(encode(doc)),chosen=new Set(selected),all=selectAll(staged);
+
+  // 1) For every selected wire, decide per-endpoint: translate or anchor.
+  type Anchor={wireIdx:number;end:0|1;point:Point;fixedPeer:Point};
+  const anchors:Anchor[]=[];
+  const geometry=all.filter(i=>staged.records[i].type!==262).map(i=>{
+    const r=staged.records[i];
+    if(r.type===256){const pp=wirePoints(r);return {index:i,kind:'wire' as const,pp};}
+    return {index:i,kind:'comp' as const,pins:pins(component(r,i))};
+  });
+
+  // endpoints that touch an unselected geometry — these must remain pinned
+  const fixedTouches=new Map<string,Point>();
+  for(const g of geometry) if(!chosen.has(g.index)){
+    const pts = g.kind==='wire' ? [g.pp[0],g.pp.at(-1)!] : g.pins;
+    for(const p of pts) fixedTouches.set(p.join(','),p);
+  }
+
+  for(const i of selected){
+    const r=staged.records[i]; if(r.type!==256) continue;
+    const pp=wirePoints(r);
+    const ends:[Point,Point]=[pp[0],pp.at(-1)!];
+    (['0','1'] as const).forEach((_k,n)=>{
+      const p=ends[n];
+      if(fixedTouches.has(p.join(','))) anchors.push({wireIdx:i,end:n,point:p,fixedPeer:fixedTouches.get(p.join(','))!});
+    });
+  }
+
+  // 2) Apply translation with anchored endpoints kept put.
+  for(const index of selected){
+    const r=staged.records[index];
+    if(r.type===262){const t=textRecord(r);updateText(r,{x:coordinate(t.x+dx),y:coordinate(t.y+dy)});}
+    else if(r.type===256){
+      const pp=wirePoints(r);
+      const aStart=anchors.find(a=>a.wireIdx===index&&a.end===0);
+      const aEnd  =anchors.find(a=>a.wireIdx===index&&a.end===1);
+      // anchored ends stay; other end moves; intermediate ortho points shift with the moving end only.
+      const moved=pp.map((p,k)=>{
+        if(k===0&&aStart) return p;
+        if(k===pp.length-1&&aEnd) return p;
+        // interior points: shift only if they're on the "moving" side
+        const wasStartAnchored=!!aStart, wasEndAnchored=!!aEnd;
+        if(wasStartAnchored&&!wasEndAnchored) return [coordinate(p[0]+dx),coordinate(p[1]+dy)] as Point;
+        if(!wasStartAnchored&&wasEndAnchored) return [coordinate(p[0]+dx),coordinate(p[1]+dy)] as Point;
+        return p; // both anchored: shouldn't happen unless wire is degenerate; leave alone
+      });
+      // collapse redundant orthogonal backtracks (collinear middle points)
+      const cleaned=simplifyOrtho(moved);
+      // write back
+      const d=r.data.slice(),v=dataView(d);
+      // update count if we changed point count
+      if(cleaned.length!==pp.length){
+        // rebuild wire record from scratch via makeWire keeping style bytes
+        const style=r.data.subarray(10+4*pp.length,18+4*pp.length);
+        const rebuilt=makeWire(cleaned,style);
+        setWireUid(rebuilt,readString(r.data,wireUidBounds(r)[0])[0]);
+        r.data=rebuilt.data;
+      } else {
+        [...cleaned[0],...cleaned.at(-1)!].forEach((n,i)=>v.setInt16(2*i,n,true));
+        cleaned.forEach(([x,y],i)=>{v.setInt16(10+4*i,x,true);v.setInt16(12+4*i,y,true);});
+        r.data=d;
+      }
+    } else {
+      const c=component(r,index);updateComponent(staged,index,{x:coordinate(c.x+dx),y:coordinate(c.y+dy)});
+    }
+  }
+
+  // 3) Bridge only unmatched boundary points that no longer share a wire endpoint.
+  const liveTouches=new Set<string>();
+  for(const g of geometry) if(chosen.has(g.index)){
+    const r=staged.records[g.index];
+    if(r.type===256){const pp=wirePoints(r);liveTouches.add(pp[0].join(','));liveTouches.add(pp.at(-1)!.join(','));}
+  }
+  const branches:Rec[]=[];
+  for(const a of anchors){
+    // If translating the wire still leaves that endpoint adjacent to its fixed peer via another selected wire, skip.
+    // Otherwise build a bridge from fixed peer to new position.
+    const end:Point=[coordinate(a.point[0]+dx),coordinate(a.point[1]+dy)];
+    if(same(end,a.point)) continue;
+    const route:Point[]=[a.fixedPeer];
+    if(dx&&dy) route.push([end[0],a.fixedPeer[1]]);
+    route.push(end);
+    const simplified=simplifyOrtho(route);
+    if(simplified.length<2) continue;
+    branches.push(makeWire(simplified));
+  }
+  // dedupe bridges by (from→to) rounded key
+  const seen=new Set<string>();
+  const uniqueBranches=branches.filter(w=>{const k=w.data.slice(0,18).join(',');if(seen.has(k))return false;seen.add(k);return true;});
+
+  staged.records.splice(insertionIndex(staged),0,...uniqueBranches);
+  commit(doc,staged);return selected;
+}
+
+function simplifyOrtho(pp:Point[]):Point[]{
+  if(pp.length<3) return pp;
+  const out:Point[]=[pp[0]];
+  for(let i=1;i<pp.length-1;i++){
+    const a=out.at(-1)!,b=pp[i],c=pp[i+1];
+    const collinear=(a[0]===b[0]&&b[0]===c[0])||(a[1]===b[1]&&b[1]===c[1]);
+    // also drop immediate backtrack (a → b → a)
+    const backtrack=a[0]===c[0]&&a[1]===c[1];
+    if(!collinear&&!backtrack) out.push(b);
+  }
+  out.push(pp.at(-1)!);
+  return out;
+}
+```
+
+Key behavior change: **never translate a wire end that still touches an unselected GND/VM pin**; only the free end moves. Bridges are created only at anchored ends, from the fixed peer to the *new* location of the anchored wire — one per unique (peer→dest) pair; the `simplifyOrtho` pass collapses the A→B→A stubs you observed.
+
+**2. Footer preservation**
+
+`commit` already writes `staged.trailer`, and `decode(encode(doc))` round-trips. The bug is in `setWireUid` calling `countedString(uid)` even when the uid length equals the original — check equality first, otherwise leave bytes untouched:
+
+```ts
+function setWireUid(r:Rec,uid:string){const [start,end]=wireUidBounds(r);if(end-start===uid.length){const cur=r.data.slice(start,end);if(new TextDecoder().decode(cur)===uid)return;}r.data=join(r.data.slice(0,start),countedString(uid),r.data.slice(end));}
+```
+
+Also the rebuilt path in `translateSelection` must copy `r.data` style bytes at `10+4*pp.length..18+4*pp.length` explicitly (done above) and re-emit any trailing per-wire bytes if the codec has them — verify against `wirePoints`/`makeWire` signatures.
+
+**3. Labels drag alone with inverse component rotation**
+
+Currently there's no drag path for labels here. Suggested minimal addition: when a label hit is detected, add a `draggingLabel` state and translate `labelOff` (or the label record) in the component's *local* frame:
+
+```ts
+// on label drag:
+const c=component(staged,r);
+const rad=-(c.angle??0)*Math.PI/180;
+const lx= dx*Math.cos(rad)-dy*Math.sin(rad);
+const ly= dx*Math.sin(rad)+dy*Math.cos(rad);
+updateComponent(staged,idx,{labelX:(c.labelX??0)+Math.round(lx),labelY:(c.labelY??0)+Math.round(ly)});
+```
+
+Never translate the whole component when only the label was grabbed. Verify `labelX/labelY` exist in the codec; if labels are stored as a native text entity with its own anchor, apply the rotation inverse to the *delta*, not the position.
+
+**4. Ctrl+Z / Ctrl+Y with Russian keyboard**
+
+Replace `e.key` with `e.code`:
+
+```ts
+document.addEventListener('keydown',e=>{
+  if((e.target as HTMLElement).matches('input,select,textarea')||$<HTMLDialogElement>('#dialog').open)return;
+  const ctrl=e.ctrlKey||e.metaKey;
+  if(ctrl&&e.code==='KeyZ'){e.preventDefault();action(e.shiftKey?'redo':'undo');return;}
+  if(ctrl&&e.code==='KeyY'){e.preventDefault();action('redo');return;}
+  if(ctrl&&e.code==='KeyA'){e.preventDefault();action('select-all');return;}
+  if(ctrl&&e.code==='KeyC'){e.preventDefault();action('copy');return;}
+  if(ctrl&&e.code==='KeyX'){e.preventDefault();action('cut');return;}
+  if(ctrl&&e.code==='KeyV'){e.preventDefault();action('paste');return;}
+  if(ctrl&&e.code==='KeyS'){e.preventDefault();action('save');return;}
+  if(ctrl&&e.code==='KeyO'){e.preventDefault();action('open');return;}
+  if(ctrl&&e.code==='KeyN'){e.preventDefault();action('new');return;}
+  // non-letter mode shortcuts safe on Cyrillic layouts:
+  if(e.key==='Escape'){selectionBox=null;setMode('select');return;}
+  if(e.key==='Delete'){action('delete');return;}
+  if(e.key==='F5'){e.preventDefault();action('refresh');return;}
+  if(ctrl) return; // don't fire letter-mode shortcuts under ctrl
+  // letter shortcuts use code so Cyrillic 'р' (KeyR) works:
+  if(e.code==='KeyR') action('rotate');
+  if(e.code==='KeyT') setMode('text');
+});
+```
+
+Note `e.key==='Delete'` is fine because Delete is not layout-mapped; leave it. Do *not* keep `e.key.toLowerCase()==='r'` — that matched Latin `r` only.
+
+## Regressions to watch
+
+- **`translateSelection` returning stale index list**: `pasteSelection` returns remapped indices, but `translateSelection` returns the input indices — fine only because drag path uses them transiently. Keep it that way; don't extend to `pasteSelection`-style remapping.
+- **`makeWire(cleaned, style)`**: verify makeWire's second arg is a style `Uint8Array` and that it preserves the original `version`/`type` bytes. If not, add a `rebuildWirePoints(r, pp)` helper that edits in place.
+- **Anchor detection uses strict pin equality** — good, but GND/VM `pins()` must include every connection anchor; if `component()` can raise for stale labels, wrap in try/catch and fall back to no-anchor (current `selectAll` swallows errors; `translateSelection` doesn't).
+- **Branches inserted before analysis** via `insertionIndex` — unchanged, good.
+- **`selected=index` vs `setSelection(wireChain(...))`**: when a wire is part of a chain, single-click selects the chain. That's intended but means dragging a *single* wire in a chain moves the chain — the anchored-endpoint logic must consider *all chosen* endpoints that touch unselected geometry, which the rewrite does.
+- **`simplifyOrtho` with both endpoints anchored**: protects the case where a wire yielded zero-length (drop the wire entirely — current code leaves a degenerate record; consider `if(cleaned.length<2) remove record`).
+
+## Proposed tests
+
+1. **Anchored drag**: doc with GND at (0,0), VM at (100,0), wire `[(0,0),(50,0),(100,0)]`. `translateSelection([wireIdx],0,20)`. Expect: wire becomes `[(0,0),(50,0),(100,0)]` **unchanged or** two-segment routed to `(0,0)` and `(100,0)` — but in no case a third record; `encode(doc)` has no new wire records.
+2. **Stub cleanup**: same setup but wire `[(0,0),(50,0),(50,10),(100,0)]` — after translate by (0,20) with both ends anchored, no output contains `(50,10)` twice and no `[(50,10),(50,10)]`.
+3. **Single-anchor move**: GND at (0,0), free wire end at (50,0). `translateSelection([w],10,0)`. Expect wire end moves to (10,0)?? — decide semantics: free end moves, GND end stays. Assert start `(0,0)` preserved, end `(60,0)`, and exactly one bridge from `(0,0)` to `(0,0)` **not created**.
+4. **Mixed group**: GND + wire + resistor selected; GND-independent wire inside group must translate fully; only boundary wires get one bridge each.
+5. **Footer preservation**: load a fixture with a non-empty trailer, run `translateSelection` twice, assert `encode(doc)` tail bytes equal input tail bytes.
+6. **Russian undo**: dispatch `KeyboardEvent('keydown',{key:'я',code:'KeyZ',ctrlKey:true})` on `document`; assert `history.undoCount` decreases.
+7. **Cyrillic R**: `KeyboardEvent('keydown',{key:'к',code:'KeyR'})` triggers rotate.
+8. **Label-only drag**: component with non-zero rotation; simulate drag on label glyph; assert `labelX/labelY` change by rotated delta and `c.x/c.y` unchanged.
+9. **Ortho simplification fuzz**: property test — for random L-shaped point lists, `simplifyOrtho(simplifyOrtho(pp)) === simplifyOrtho(pp)` and result has no three collinear consecutive points and no A→B→A.

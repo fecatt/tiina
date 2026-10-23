@@ -1,0 +1,71 @@
+Looking at this codec for real bugs (bounds, mutation, copying risks):
+
+**1. `textRecord`: `p+16>d.length` checked, but `< 73` uses a magic offset that may not match `p`.**
+
+The `d.length<73` check assumes the font starts at offset 49 and the fixed header runs to 65. But `readString(d,49)` returns `p = end of font name`, which could exceed 65 if the font name is longer than expected. The `p+16>d.length` check is correct for the header, but there's **no validation that `p >= 65`** — actually `readString` should return `p` as the end position, so this is fine *if* `readString` bounds-checks. The real issue below.
+
+**2. `textRecord`: no bounds check before `v.getUint32(p,true)` reads color, etc.**
+
+`p+16>d.length` is checked before `p+4`/`p+12` reads — good. But `p` itself is derived from `readString(d,49)`. If `readString` doesn't validate that offset 49 is in bounds (data.length ≥ 73 guarantees it), fine. However `end=p+16` and then `readString(d,end)` — **`readString` must bounds-check `end < d.length`** or the first iteration reads out of bounds. That's a dependency on `readString`; but the `if(end+4>d.length)` check *after* `readString` doesn't protect the `readString` call itself. If `readString` is bounds-safe this is OK, otherwise it's a bug. Given `readString`/`countedString` are imported helpers, this is a **latent risk** — but noting it isn't a bug in this file.
+
+**3. Real bug: `flags` array length vs `count` after `text` update.**
+
+In `updateText`, when `changes.text` produces more lines than the original `count`, `t.flags[i] ?? new Uint8Array(4)` supplies zero flags for extra lines — acceptable. But if it produces **fewer** lines, `chunks.push(d.slice(t.end))` still appends the **entire trailing block from the original `t.end`**, which includes the *original* per-line 4-byte flags for the removed lines plus the footer. So after shrinking the line count, the tail of `d` still contains stale flag bytes and stale line data structure — but crucially, the footer after the last line is now at the wrong offset. Since `t.end` was computed for the *original* count, `d.slice(t.end)` correctly starts at the footer. **This part is correct** — `t.end` marks end of original lines, footer is preserved. OK.
+
+But: **`view(chunks[0]).setUint32(t.fontEnd+12,lines.length,true)`** — `chunks[0]` is `d.slice(0,t.fontEnd+16)`, so its length is `t.fontEnd+16`. Writing at `t.fontEnd+12` writes bytes at indices 12..15 relative to the start of that slice = absolute `t.fontEnd+12..t.fontEnd+15`, which is within `t.fontEnd+16`. **In bounds — OK.**
+
+**4. Real bug: `size` update writes `v.setUint32(t.fontEnd+4,...)` but `fontEnd` equals `p`, and the header layout is color@`p`, size@`p+4`, reserved@`p+8`, count@`p+12`.**
+
+Yes `p+4` is size — correct. But `textRecord` reads `size=v.getUint32(p+4,true)` — consistent. Fine.
+
+**5. Real bug: `updateText` size validation range (1..72) vs `textRecord` acceptance (1..1000).**
+
+`textRecord` accepts `size` up to 1000 (`if(!size||size>1000...)`). `updateText` restricts new size to 1..72. Inconsistent but not a crash bug — could reject valid existing data on round-trip? No, updateText doesn't re-validate via textRecord for old size. Not a bug per se, just inconsistent. **Not a bounds bug.**
+
+**6. Real bug: mutation of `r.data` even when `changes` is empty or a throw occurs mid-way.**
+
+`let d=Uint8Array.from(r.data)` — copies. Good, original untouched until `r.data=d`. But `view(d)` is created once. If `changes.text` path reassigns `d=join(chunks)`, the old `v` still points to the old buffer — but `v` isn't used after that (only `chunks[0]`'s view). Actually `view(chunks[0]).setUint32(...)` is a fresh view. Fine.
+
+**But:** if `changes.x` is set and then `changes.size` is invalid and throws, `r.data` is never assigned — original preserved. Good (copy risk avoided).
+
+**7. Real bug: `newText` template length/format assumptions.**
+
+`template.hex.match(/../g)!` — if `template.hex` has an odd number of hex digits or non-hex chars, `parseInt` yields `NaN` → `Uint8Array.from` produces 0 for NaN. Then `updateText(r,{x,y,text,size})` calls `textRecord(r)` which requires `r.data.length>=73` and `readString(d,49)` to find a font. **If the template is shorter than 73 bytes or doesn't contain a valid counted font string at 49, `textRecord` throws** and `newText` fails. No validation that template is well-formed. This is a **real risk** but depends on template content.
+
+**8. Real bug: `textRecord` returns `end` (after last line+flags) but `updateText` uses `t.end` to find footer. If `text` unchanged but `size` changed, `end` unused. Correct.**
+
+But when `changes.text` is provided **and** `t.end` was computed from original `count`: `chunks.push(d.slice(t.end))` — `t.end` is end of original lines+flags. Footer preserved. Lines rebuilt with new count. **Correct.**
+
+**However:** the per-line flag bytes for original lines are captured in `t.flags` as **slices** (`d.slice(end,end+4)` returns a copy). Good — no aliasing.
+
+**9. Real bug: `linecount` written as `lines.length` but `textRecord` on the new record would read `count` = lines.length. Consistent.**
+
+**10. Genuine bounds bug: `readString(d,49)` before `d.length<73` guard? No — guard is first. OK.**
+
+**11. Genuine bug: `cssColor` computed from `color` but `color` is read at `p` (font start), which is **after** the 49-byte prefix — but the spec says color is at `fontEnd` region: "coloru32/fontptu32/reservedu32/linecountu32 at fontEnd". Here `p = fontEnd` (end of counted font string), and `v.getUint32(p,true)` reads color at `p`. Correct per spec. But wait — spec says "coloru32/fontptu32/reservedu32/linecountu32 at fontEnd" meaning color@fontEnd, fontpt@fontEnd+4 (=size), etc. Code matches. OK.
+
+**12. Real bug: `size` in `textRecord` is read as `v.getUint32(p+4)` = fontpt. In `updateText`, `v.setUint32(t.fontEnd+4,changes.size)` writes same offset. Consistent.**
+
+**13. Actual real bug: `x`/`y` writes also to `offset+9`.**
+
+`v.setInt16(offset+9,n,true)` — for x: writes at offset 9, for y: writes at offset 11. Spec: "int16 x/y at 0/2 repeated 9/11". Correct.
+
+**But:** the `d.length<73` guard doesn't guarantee offsets 9–12 are valid — 73 ≥ 12, so OK.
+
+**14. Most significant real bug: `newText` template bytes.**
+
+If `template.hex` represents a record whose font counted-string at offset 49 has a length such that `fontEnd` region + 16 bytes + at least 0 lines fits — need length ≥ 73. `updateText` → `textRecord` → `d.length<73` throws. **Real, but template-dependent.**
+
+**15. Genuine real bug: `textRecord` at `end` iteration may exceed `d.length` on `readString` if `readString` isn't bounds-checked** — the `if(end+4>d.length)` check comes *after* `readString(d,end)`. If `end >= d.length` and `readString` doesn't guard, out-of-bounds read. Since `readString` is external, this is a **trust-boundary bug**: the local code should check `if(end>=d.length) throw` *before* calling `readString(d,end)`.
+
+**16. Genuine real bug: `count` could be huge relative to `d.length`.** Guarded by `count>10000` → error. But 10000 lines × minimum 1 byte each + 4 flag bytes = 50000 bytes minimum; if `d.length` is small, `readString` will fail on the first out-of-bounds call (caught by outer try in `texts`). Acceptable but relies on `readString` safety.
+
+**17. Copying risk: `flags.push(d.slice(end,end+4))` — copies, safe. `lines.push(line)` — `readString` returns string, safe.**
+
+**Summary of *real* bugs found in this file:**
+
+- **Premature `readString(d,end)` call**: should bounds-check `end < d.length` *before* the call, not after. (`if(end+4>d.length)` is too late and doesn't guard the read itself.)
+- **`newText` trusts `template.hex`** blindly: `parseInt` can produce `NaN`→0 silently; no validation of template length/format before `updateText`→`textRecord` (which throws on `<73`). Also `.match(...)!` will throw if hex length is odd is not detected (produces trailing `NaN`).
+- **Inconsistent `size` bounds**: `textRecord` accepts 1..1000, `updateText` accepts 1..72 — a record with size 73..1000 passes read but cannot be re-saved via `updateText` with the same size.
+
+Everything else (color offset, x/y dual write, flag slicing, footer preservation via `t.end`, copy-then-commit on `r.data`) checks out.

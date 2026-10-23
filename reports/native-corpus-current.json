@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-23",
+  "root": "C:/Users/fedor/AppData/Local/Programs/TinaTI/DesignSoft/Tina 9 - TI/EXAMPLES",
+  "files": 1482,
+  "passed": 1482,
+  "bytes": 431733579,
+  "recognised": 10007,
+  "failures": [],
+  "scope": "Byte-identical decode/encode only. Does not prove component simulation or original runtime."
+}

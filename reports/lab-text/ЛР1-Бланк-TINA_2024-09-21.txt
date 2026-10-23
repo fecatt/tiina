@@ -1,0 +1,247 @@
+ɉBEFBSAAO= FB>. Tina-TI 
+ 
+$BD@4 BF 21 E9AFS5DS 2024 7. 
+ ɂ$ЭА – $"%%ɂɃ%ɄɂɃ &ЕХ!"Ʌ"ȽɂЧЕ%ɄɂɃ '!ɂȼЕ$%ɂ&Е& 
+ɂAEF<FGF D48<BQ?9>FDBA<>< < <AHBD@4F<><. К4H98D4 Q?9>FDBF9IA<K9E><I E<EF9@. 
+Ʌ45BD4FBDA4S D45BF4 № 1 «Э?9>FD<K9E><9 J9C< CBEFBSAAB7B FB>4» 
+ȽDGCC4________________!FG89AF_________________________Ш<HD_____________(CB?ABEFPR) 
+ȼOCB?A9AB____________________ 
+ 
+ 
+ Ɂ4KF9AB______________________ 
+ɂEIB8AO9 84AAO9 8?S Q>EC9D<@9AF4: ȼ4D<4AF_____ 
+Е1=________ȼ;  
+Е2=_______ȼ; 
+ 
+R1=________Ɉ@; 
+R2=________Ɉ@; 
+ 
+R3=_________Ɉ@; 
+R4=_________Ɉ@ 
+ R5=________Ɉ@; 
+R6=________Ɉ@; 
+R7=_______Ɉ@;  
+!BCDBF<6?9A<9 A47DG;>< (ɈCOF 3) BF RAmin=______Ɉ@; 
+8B RAmax=______Ɉ@; 
+ 
+ 
+"COF 1.1. ɂEE?98B64A<9 CD<AJ<C4 A4?B:9A<S 
+4) EB59D<F9 6 ED989 Tina-TI EI9@G 6 EBBF69FEF6<< E @8AC=:>< 1.1 <5B>48G5A:8E C:474=89. 
+5) <;@9DPF9 6<DFG4?PAO@< CD<5BD4@< FB>< I1, I2, I3 < ;4A9E<F9 6 B45;8FC 1 E GK9FB@ ;A4>4! 
+ 
+6) D4EEF46PF9 A4 EI9@9 6OL9 GE?B6AB-CB?B:<F9?PAO9 A4CD46?9A<S FB>B6 6 69F6SI.  
+7) D4EEK<F4=F9 A4 BEAB69 ;4>BAB6 К<DI7BH4 FB>< I4, I5, I6 < ;4CB?A<F9 BEF4?PAO9 SK9=>< B45;8FO 1. ɉD<698<F9 
+D4EK9FAO9 HBD@G?O. 
+ 
+&45;8F4 1. 
+№ 
+"B> 
+Кa 6 CB;.1 
+Кb 6 CB;.0 
+Кa 6 CB;.0 
+Кb 6 CB;.1 
+Кa 6 CB;.1 
+Кb 6 CB;.1 
+ 4EK9FAO9 ;A4K9A<S 
+FB>B6 
+�㗿= |
+�㔼′ −�㔼′′
+min (�㔼′, �㔼′′)| × 100% 
+ɈCOF 1 
+ɈCOF 2 
+I’ = ɈCOF 3 
+I’’= ɈCOF 1+ ɈCOF 2 
+1 
+I1, @А 
+BCOF 
+BCOF 
+BCOF 
+D4EK9F 
+D4EK9F 
+2 
+I2, @А 
+BCOF 
+BCOF 
+BCOF 
+D4EK9F 
+D4EK9F 
+3 
+I3, @А 
+BCOF 
+BCOF 
+BCOF 
+D4EK9F 
+D4EK9F 
+4 
+I4, @А 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+5 
+I5, @А 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+6 
+I6, @А 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+ 
+"COF 1.2. #BEFDB9A<9 CBF9AJ<4?PAB= 8<47D4@@O 
+4) >?RK< Кa < Кb 8B?:AO A4IB8<FPES 6 CB;<J<SI 1. ȼ<DFG4?PAO@ 6B?PF@9FDB@ <;@9DPF9 CBF9AJ<4?O FBK9> 
+BFABE<F9?PAB «;9@?<» G (φG=0) < ;4A9E<F9 6 B45;8FC 2.  
+5) CBEFDB=F9 CBF9AJ<4?PAGR 8<47D4@@G 8?S «6A9LA97B» >BAFGD4 6 ;484AAB@ A4CD46?9A<<, A4K<A4S E ;484AAB= FBK><. 
+#D< CBEFDB9A<< 8<47D4@@O A9B5IB8<@B EB5?R84FP @4ELF45! ɆB:AB CBEFDB<FP 8<47D4@@G A4 BF89?PAB@ ?<EF9. 
+&45;8F4 2. 
+"BK>4 A4 EI9@9 
+К 
+A 
+B 
+C 
+D 
+E 
+F 
+G 
+ɉBF9AJ<4? FBK><, ȼ 
+φК 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+ 
+!BCDBF<6?9A<9 @9:8G F9>GM9= 
+FBK>B= < CD98O8GM9=, Ɉ@ 
+&R 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+!BCDBF<6?9A<9 BFABE<F9?PAB 
+FBK>< G, Ɉ@ 
+∑Δ�㕅�㕖 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   φK, ȼ 
+∑Δ�㕅�㕖, Ɉ@ 
+
+ɉBEFBSAAO= FB>. Tina-TI 
+ 
+$BD@4 BF 21 E9AFS5DS 2024 7. 
+"COF 2. ɂEE?98B64A<9 C4D4@9FDB6 4>F<6AB7B 86GICB?REA<>4  
+4) <;@9A<F9 <EIB8AGR EI9@G 6 EBBF69FEF6<< E @8AC=:>< 1.3 <5B>48G5A:8E C:474=89.  
+5) <;@9DPF9 69?<K<AO U%%, ΙКɁ BFABE<F9?PAB >?9@@ DE. ɈF69FO ;4C<L<F9 E G>4;4A<9@ 98<A<J <;@9D9A<S.  
+�㕈ХХ = ____________ 
+ 
+ 
+�㔼КЗ = _____________ 
+6) D4EEK<F4=F9 6IB8AB9 EBCDBF<6?9A<9 86GICB?REA<>4 A4 BEAB69 <;@9D9AAOI 84AAOI CB HBD@G?9: 
+�㕅вх
+′ = �㕈ХХ
+�㔼КЗ
+=                            = ____________Ом 
+7) 6OCB?A<F9 A9CBED98EF69AAB9 <;@9D9A<9 EBCDBF<6?9A<S J9C< B@@9FDB@.  
+�㕅вх
+′′ = _____________Ом 
+8) A4K9DF<F9 Q>6<64?9AFAO9 EI9@O BCOFB6 IB?BEFB7B IB84 < >BDBF>B7B ;4@O>4A<S. 
+!I9@4 BCOF4 %%  
+ 
+ 
+!I9@4 BCOF4 КɁ 
+ 
+ 
+ 
+ 
+ 
+9) D4EEK<F4=F9 @9FB8B@ Q>6<64?9AFAOI CD9B5D4;B64A<= 6IB8AB9 EBCDBF<6?9A<9 86GICB?REA<>4 BFABE<F9?PAB 
+>?9@@ DE. ɇ4K9DF<F9 CD<AJ<C<4?PAGR EI9@G C4EE<6AB7B 86GICB?REA<>4 < A4C<L<F9 D4EK9FAO9 HBD@G?O. 
+ 
+ 
+ 
+ 
+ 
+�㕅вх
+′′′ = _____________Ом 
+!6B8A4S F45?<J4 CB?GK9AAOI ;A4K9A<= 6IB8AB7B EBCDBF<6?9A<S Rȼ%.  
+R6I’, Ɉ@ 
+R6I’’, Ɉ@ 
+R6I’’’, Ɉ@ 
+ 
+ 
+ 
+ɉDB4A4?<;<DG=F9 ;A4K9A<S < E89?4=F9 6O6B8. 
+ 
+"COF 3. ɂEE?98B64A<9 6B?PF-4@C9DAB= < @BMABEFAB= I4D4>F9D<EF<> 4>F<6AB7B 
+86GICB?REA<>4 
+4) !>BDD9>F<DG=F9 EI9@G EB7?4EAB @8AC=:C 1.4 <5B>48G5A:8E C:474=89. $46AB@9DAB @9ASS EBCDBF<6?9A<9 A47DG;>< 
+RA 6 ;484AAB@ CB 64D<4AFG 8<4C4;BA9 BF RAmin 8B RAmax, ;4CB?A<F9 B45;8FC 3.  
+5) ɉBEFDB=F9 6B?PF-4@C9DAGR I4D4>F9D<EF<>G (ȼА%) <EFBKA<>4. !HBD@G?<DG=F9 BF?<K<S @9:8G ȼА% <894?PAB7B 
+< D94?PAB7B <EFBKA<>B6.  
+6)  4EEK<F4=F9 CB ȼА% 6AGFD9AA99 EBCDBF<6?9A<9 <EFBKA<>4 < 97B AB@<A4? (C4D4@9FDO EI9@O ;4@9M9A<S 4>F<6AB7B 
+86GICB?REA<>4 R6I < EQ). 
+7) ɉBEFDB=F9 7D4H<> ;46<E<@BEF< @BMABEF<, 6O89?SRM9=ES A4 A47DG;>9, BF EBCDBF<6?9A<S A47DG;><. 
+#D< CBEFDB9A<< 7D4H<>B6 A9B5IB8<@B EB5?R84FP @4ELF45! ɆB:AB CD<?B:<FP 7D4H<>< BF89?PAO@< ?<EF4@<. 
+ 
+&45;8F4 3. (':468B5 8A?>;P7C5<O5 548=8FO 87<5@5=8я =4?@я65=8я, B>:4 8 <>щ=>AB8) 
+№ <;@9D9A<S 
+1 
+2 
+3 
+4 
+5 
+6 
+7 
+RA, Ɉ@ 
+RAmin 
+ 
+ 
+ 
+ 
+ 
+RAmax 
+I,____ 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+U,____ 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+BCOF 
+P=U×I,____ 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+D4EK9F 
+ 
+ 
+U 
+I 
+P 
+RA 

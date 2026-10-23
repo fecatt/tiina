@@ -1,0 +1,27 @@
+RC_verified_native (PSpice format)
+**************************************
+**  This file was created by TINA   **
+**         www.tina.com             ** 
+**      (c) DesignSoft, Inc.        **          
+**     www.designsoftware.com       **
+**************************************
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\EXAMPLES\SPICE\TSPICE.LIB"
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\SPICELIB\Operational Amplifiers.LIB"
+.LIB
+.TEMP 27
+.AC DEC 20 10 1MEG
+.TRAN 2N 1U
+.DC LIN Vin 0 1 10M
+
+.OPTIONS ABSTOL=1U ITL1=150 ITL2=20 ITL4=10 TRTOL=7 
+.PROBE V(1,0)
+
+Vin         2 0 DC 0 AC 1 0
++ PWL TIME_SCALE_FACTOR=1U VALUE_SCALE_FACTOR=500M
++      REPEAT FOREVER
++       (0, 0) (100U 1) (499.9M 1) (500.1M -1) (999.9M -1) (1,0) ENDREPEAT
+C1          1 0 1U IC=0 
+R1          2 1 1K 
+
+
+.END

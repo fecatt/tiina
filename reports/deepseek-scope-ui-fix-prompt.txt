@@ -1,0 +1,353 @@
+Repair this TypeScript UI module to use the EXACT Curve structure: interface Curve {parameter?:number; names:string[]; values:(number|[number,number])[][]; plot:string}. names[0] is time and values[row][0] is time. There is NO data or duration property. Voltage channel names start with v(. scopeWindow signature is below. Return ONLY complete corrected source, no prose or fences. Must compile strict TypeScript DOM. Avoid any and invented properties. Ensure triggerAfter default initial time and total duration = last time - first time. Correct all accesses. Default vertical scales computed from real values of selected channel. This is independent postprocessor, not native TINA equivalence.
+export type Curve = import("./solver.ts").Curve;
+
+export interface ScopeOptions {
+  channels: string[];
+  timePerDivision: number;
+  divisions?: number;
+  mode: 'auto' | 'normal';
+  triggerSource: string;
+  triggerLevel: number;
+  slope: 'rising' | 'falling';
+  triggerAfter?: number;
+  pretrigger?: number;
+}
+
+export interface ScopeResult {
+  start: number;
+  stop: number;
+  triggerTime: number | null;
+  channels: { name: string; points: [number, number][] }[];
+}
+
+export function scopeWindow(curve: Curve, options: ScopeOptions): ScopeResult {
+  if(!['auto','normal'].includes(options.mode)||!['rising','falling'].includes(options.slope)||!Number.isFinite(options.triggerLevel)||(options.triggerAfter!==undefined&&!Number.isFinite(options.triggerAfter)))throw Error('Неверные параметры синхронизации');
+  const channels = options.channels;
+  if (!Array.isArray(channels) || channels.length < 1 || channels.length > 2) {
+    throw new Error('Необходимо указать от 1 до 2 каналов');
+  }
+  if (!(options.timePerDivision > 0) || !isFinite(options.timePerDivision)) {
+    throw new Error('timePerDivision должно быть положительным конечным числом');
+  }
+  const divisions = options.divisions ?? 10;
+  if (!(divisions >= 1 && divisions <= 20)) {
+    throw new Error('divisions должно быть в диапазоне от 1 до 20');
+  }
+  const pretrigger = options.pretrigger ?? 0.2;
+  if (!(pretrigger >= 0 && pretrigger <= 1)) {
+    throw new Error('pretrigger должно быть в диапазоне от 0 до 1');
+  }
+  if (!Array.isArray(curve.names) || !Array.isArray(curve.values)) {
+    throw new Error('Некорректная структура кривой');
+  }
+  const names = curve.names;
+  const values = curve.values;
+  if (values.length < 2) {
+    throw new Error('Недостаточно временных отсчётов');
+  }
+  const n = values.length;
+  for (let i = 0; i < n; i++) {
+    const t = values[i][0];
+    if (typeof t !== 'number' || !isFinite(t)) {
+      throw new Error('Некорректный временной отсчёт');
+    }
+    if (i > 0 && !(t > (values[i - 1][0] as number))) {
+      throw new Error('Временные отсчёты должны строго возрастать');
+    }
+    for (let j = 1; j < names.length; j++) {
+      const v = values[i][j];
+      if(typeof v !== 'number'||!Number.isFinite(v))throw Error('Нужен конечный вещественный сигнал');
+    }
+  }
+  const idxOf = (name: string): number => {
+    const i = names.indexOf(name);
+    if (i < 1) throw new Error(`Канал не найден: ${name}`);
+    return i;
+  };
+  const trigIdx = idxOf(options.triggerSource);
+  for (const ch of channels) idxOf(ch);
+  const getVal = (i: number, col: number): number => {
+    const v = values[i][col];
+    return typeof v === 'number' ? v : (v as [number, number])[0];
+  };
+  const timeAt = (i: number): number => values[i][0] as number;
+  const t0 = timeAt(0);
+  const tN = timeAt(n - 1);
+  const span = options.timePerDivision * divisions;
+  if (!(tN - t0 >= span)) {
+    throw new Error('Запрошенный временной интервал превышает длительность записи');
+  }
+  const triggerAfter = options.triggerAfter ?? t0;
+  let triggerTime: number | null = null;
+  const rising = options.slope === 'rising';
+  const level = options.triggerLevel;
+  const strictlyCross = (a: number, b: number): boolean => {
+    if (rising) return a < level && b >= level;
+    return a > level && b <= level;
+  };
+  for (let i = 1; i < n; i++) {
+    const ta = timeAt(i - 1);
+    const tb = timeAt(i);
+    if (tb <= triggerAfter) continue;
+    const va = getVal(i - 1, trigIdx);
+    const vb = getVal(i, trigIdx);
+    if (!strictlyCross(va, vb)) continue;
+    // linear interpolation
+    const frac = (level - va) / (vb - va);
+    const tc = ta + (tb - ta) * frac;
+    if (tc >= triggerAfter) {
+      triggerTime = tc;
+      break;
+    }
+  }
+  let start: number;
+  if (triggerTime !== null) {
+    start = triggerTime - pretrigger * span;
+  } else {
+    if (options.mode === 'normal') {
+      throw new Error('Триггер не найден: нет пересечения уровня при заданном фронте');
+    }
+    start = t0;
+  }
+  if (start < t0) start = t0;
+  if (start + span > tN) start = tN - span;
+  const stop = start + span;
+  const clampIndexLeft = (): number => {
+    let lo = 0, hi = n - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (timeAt(mid) < start) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  };
+  const leftIdx = clampIndexLeft();
+  const resultChannels: { name: string; points: [number, number][] }[] = [];
+  for (const chName of channels) {
+    const col = idxOf(chName);
+    const pts: [number, number][] = [];
+    // interpolation at left boundary
+    if (timeAt(leftIdx) === start) {
+      pts.push([start, getVal(leftIdx, col)]);
+    } else {
+      const i0 = leftIdx - 1;
+      const i1 = leftIdx;
+      if (i0 >= 0) {
+        const t0v = timeAt(i0), t1v = timeAt(i1);
+        const v0 = getVal(i0, col), v1 = getVal(i1, col);
+        const f = (start - t0v) / (t1v - t0v);
+        pts.push([start, v0 + (v1 - v0) * f]);
+      } else {
+        pts.push([start, getVal(0, col)]);
+      }
+    }
+    for (let i = Math.max(leftIdx, 1); i < n; i++) {
+      const t = timeAt(i);
+      if (t <= start) continue;
+      if (t < stop) {
+        pts.push([t, getVal(i, col)]);
+      } else if (t === stop) {
+        pts.push([t, getVal(i, col)]);
+        break;
+      } else {
+        const t0v = timeAt(i - 1), t1v = timeAt(i);
+        const v0 = getVal(i - 1, col), v1 = getVal(i, col);
+        const f = (stop - t0v) / (t1v - t0v);
+        pts.push([stop, v0 + (v1 - v0) * f]);
+        break;
+      }
+    }
+    resultChannels.push({ name: chName, points: pts });
+  }
+  return { start, stop, triggerTime, channels: resultChannels };
+}
+
+UI to fix:
+import type { Curve } from "./solver.ts";
+import { scopeWindow } from "./oscilloscope.ts";
+
+const esc = (s: string): string =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+const fmt = (n: number): string => (Number.isFinite(n) ? n.toPrecision(6) : "—");
+
+export function showScope(dialog: HTMLDialogElement, curve: Curve): void {
+  const vnames = curve.names.slice(1).filter((n) => n.trim().length > 0);
+  const duration = curve.names.length > 1 && curve.data.length > 0 ? (curve as unknown as { duration?: number }).duration : undefined;
+  const total = typeof duration === "number" && duration > 0 ? duration : 1;
+  const tpd = total / 10;
+
+  dialog.textContent = "";
+  dialog.setAttribute("data-scope", "1");
+  dialog.style.maxWidth = "1100px";
+  dialog.style.width = "95vw";
+  dialog.style.background = "#1e1e1e";
+  dialog.style.color = "#ddd";
+  dialog.style.border = "1px solid #444";
+  dialog.style.borderRadius = "6px";
+  dialog.style.padding = "0";
+
+  const head = document.createElement("div");
+  head.style.cssText = "padding:8px 12px;border-bottom:1px solid #444;font:600 13px system-ui,sans-serif;";
+
+  const h = document.createElement("div");
+  h.textContent = "Осциллограф — просмотр рассчитанного переходного процесса";
+  head.appendChild(h);
+  dialog.appendChild(head);
+
+  const body = document.createElement("div");
+  body.style.cssText = "padding:10px 12px;max-height:70vh;overflow:auto;";
+  dialog.appendChild(body);
+
+  if (vnames.length === 0) {
+    const err = document.createElement("p");
+    err.style.cssText = "color:#f88;font:13px system-ui,sans-serif;";
+    err.textContent = "Нет доступных напряжений v(...) для отображения.";
+    body.appendChild(err);
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Закрыть";
+    close.style.cssText = "margin-top:10px;padding:4px 12px;cursor:pointer;";
+    close.addEventListener("click", () => dialog.close());
+    body.appendChild(close);
+    return;
+  }
+
+  const opt = (val: string, label: string): string =>
+    `<option value="${esc(val)}">${esc(label)}</option>`;
+  const vecOpts = vnames.map((n) => opt(n, `v(${n})`)).join("");
+
+  const ctrl = document.createElement("div");
+  ctrl.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 12px;font:12px system-ui,sans-serif;margin-bottom:8px;";
+  ctrl.innerHTML = `
+    <label>Канал A: <select id="scope-chA" style="width:90px">${vecOpts}</select></label>
+    <label>Канал B: <select id="scope-chB"><option value="">—</option>${vecOpts}</select></label>
+    <label>Сек/дел: <input id="scope-tpd" type="number" step="any" value="${fmt(tpd)}" style="width:90px"></label>
+    <label>A В/дел: <input id="scope-vA" type="number" step="any" value="${fmt(total / 6 || 1)}" style="width:80px"></label>
+    <label>B В/дел: <input id="scope-vB" type="number" step="any" value="${fmt(total / 6 || 1)}" style="width:80px"></label>
+    <label>A смещ.: <input id="scope-oA" type="number" step="any" value="0" style="width:80px"></label>
+    <label>B смещ.: <input id="scope-oB" type="number" step="any" value="0" style="width:80px"></label>
+    <label>Режим: <select id="scope-mode"><option value="auto">auto</option><option value="normal">normal</option></select></label>
+    <label>Триггер: <select id="scope-tsrc"><option value="${esc(vnames[0])}">A</option><option value="${esc(vnames[Math.min(1, vnames.length - 1)])}">B</option></select></label>
+    <label>Уровень: <input id="scope-tlvl" type="number" step="any" value="0" style="width:80px"></label>
+    <label>Фронт: <select id="scope-slope"><option value="rising">rising</option><option value="falling">falling</option></select></label>
+    <label>После: <input id="scope-after" type="number" step="any" value="0" style="width:80px"></label>
+    <label>Предыст.: <input id="scope-pre" type="number" step="any" value="0" style="width:80px"></label>`;
+  body.appendChild(ctrl);
+
+  const msg = document.createElement("div");
+  msg.style.cssText = "color:#f88;font:12px system-ui,sans-serif;min-height:14px;margin-bottom:6px;";
+  body.appendChild(msg);
+
+  const plot = document.createElement("div");
+  plot.style.cssText = "background:#0b0b0b;border:1px solid #333;border-radius:4px;";
+  body.appendChild(plot);
+
+  const foot = document.createElement("div");
+  foot.style.cssText = "padding:8px 12px;border-top:1px solid #444;display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#1e1e1e;";
+  const mkBtn = (t: string, id: string): HTMLButtonElement => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.id = id;
+    b.textContent = t;
+    b.style.cssText = "padding:4px 14px;cursor:pointer;";
+    return b;
+  };
+  const btnDraw = mkBtn("Нарисовать", "scope-draw");
+  const btnExp = mkBtn("Экспорт SVG", "scope-export");
+  const btnClose = mkBtn("Закрыть", "scope-close");
+  foot.append(btnDraw, btnExp, btnClose);
+  dialog.appendChild(foot);
+
+  const $ = <T extends HTMLElement>(id: string): T => {
+    const el = dialog.querySelector(`#scope-${id}`) as T | null;
+    if (!el) throw new Error(`missing scope-${id}`);
+    return el;
+  };
+
+  let lastSvg = "";
+  const draw = (): void => {
+    msg.textContent = "";
+    const chA = $<HTMLSelectElement>("chA").value;
+    const chBval = $<HTMLSelectElement>("chB").value;
+    const tpdV = Number($<HTMLInputElement>("tpd").value);
+    const vA = Number($<HTMLInputElement>("vA").value);
+    const vB = Number($<HTMLInputElement>("vB").value);
+    const oA = Number($<HTMLInputElement>("oA").value);
+    const oB = Number($<HTMLInputElement>("oB").value);
+    const mode = $<HTMLSelectElement>("mode").value as "auto" | "normal";
+    const tsrc = $<HTMLSelectElement>("tsrc").value;
+    const tlvl = Number($<HTMLInputElement>("tlvl").value);
+    const slope = $<HTMLSelectElement>("slope").value as "rising" | "falling";
+    const after = Number($<HTMLInputElement>("after").value);
+    const pre = Number($<HTMLInputElement>("pre").value);
+    if (!(tpdV > 0)) { msg.textContent = "Сек/дел должно быть положительным."; return; }
+    if (!(vA > 0) || !(vB > 0)) { msg.textContent = "Масштаб В/дел должен быть положительным."; return; }
+    const channels = chBval ? [chA, chBval] : [chA];
+    let res: ReturnType<typeof scopeWindow>;
+    try {
+      res = scopeWindow(curve as never, {
+        channels,
+        timePerDivision: tpdV,
+        divisions: 10,
+        mode,
+        triggerSource: tsrc,
+        triggerLevel: tlvl,
+        slope,
+        triggerAfter: Number.isFinite(after) ? after : 0,
+        pretrigger: Number.isFinite(pre) ? pre : 0,
+      });
+    } catch (e) {
+      msg.textContent = e instanceof Error ? e.message : String(e);
+      return;
+    }
+    const W = 1000, H = 500, L = 60, R = 20, T = 20, B = 40;
+    const pw = W - L - R, ph = H - T - B;
+    const tSpan = Math.max(1e-12, res.stop - res.start);
+    const x = (t: number): number => L + ((t - res.start) / tSpan) * pw;
+    const chColors = ["#ffe14d", "#7dff7d"];
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="auto" style="display:block;background:#0b0b0b">`;
+    svg += `<rect width="${W}" height="${H}" fill="#0b0b0b"/>`;
+    for (let i = 0; i <= 10; i++) {
+      const xx = L + (i / 10) * pw;
+      svg += `<line x1="${xx}" y1="${T}" x2="${xx}" y2="${T + ph}" stroke="#2a2a2a" stroke-width="1"/>`;
+      const tv = res.start + (i / 10) * tSpan;
+      svg += `<text x="${xx}" y="${H - 16}" fill="#888" font-size="11" text-anchor="middle">${esc(tv.toPrecision(4))}</text>`;
+    }
+    for (let j = 0; j <= 8; j++) {
+      const yy = T + (j / 8) * ph;
+      svg += `<line x1="${L}" y1="${yy}" x2="${L + pw}" y2="${yy}" stroke="#2a2a2a" stroke-width="1"/>`;
+    }
+    svg += `<text x="${L + pw / 2}" y="${H - 2}" fill="#aaa" font-size="11" text-anchor="middle">t, с</text>`;
+    res.channels.forEach((ch, idx) => {
+      const color = chColors[idx % chColors.length];
+      const scale = idx === 0 ? vA : vB;
+      const off = idx === 0 ? oA : oB;
+      const mid = T + ph / 2;
+      const pts = ch.points.map(([t, v]) => `${x(t).toFixed(2)},${(mid - (v - off) / scale * (ph / 8) * 1).toFixed(2)}`);
+      if (pts.length > 0) svg += `<polyline fill="none" stroke="${color}" stroke-width="1.5" points="${pts.join(" ")}"/>`;
+      svg += `<text x="${L + 6}" y="${T + 14 + idx * 16}" fill="${color}" font-size="12" font-family="monospace">${esc(ch.name)} ${esc(String(scale))} В/дел</text>`;
+    });
+    svg += `</svg>`;
+    lastSvg = svg;
+    plot.innerHTML = svg;
+  };
+
+  const exportSvg = (): void => {
+    if (!lastSvg) return;
+    const blob = new Blob([lastSvg], { type: "image/svg+xml" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "scope.svg";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+
+  btnDraw.addEventListener("click", draw);
+  btnExp.addEventListener("click", exportSvg);
+  btnClose.addEventListener("click", () => dialog.close());
+
+  if (typeof dialog.showModal === "function") {
+    if (!dialog.open) dialog.showModal();
+  }
+  draw();
+}

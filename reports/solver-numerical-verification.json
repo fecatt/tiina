@@ -1,0 +1,113 @@
+[
+  {
+    "name": "op",
+    "points": 1,
+    "vectors": [
+      "v(2)",
+      "i(@q_t1[ib])",
+      "i(@q_t1[ic])",
+      "i(@q_t1[ie])",
+      "v(1)",
+      "v(3)",
+      "i(v_vs1)",
+      "i(vam_am1)"
+    ],
+    "maxAbs": 0,
+    "maxRel": 0
+  },
+  {
+    "name": "dc",
+    "points": 500,
+    "vectors": [
+      "v(v-sweep)",
+      "i(@q_t1[ib])",
+      "i(@q_t1[ic])",
+      "i(@q_t1[ie])",
+      "v(1)",
+      "v(2)",
+      "v(3)",
+      "i(v_vs1)",
+      "i(vam_am1)"
+    ],
+    "maxAbs": 1.2499238566388016e-7,
+    "maxRel": 0.000004722247662580222
+  },
+  {
+    "name": "family",
+    "parameter": 0.00001,
+    "points": 500,
+    "vectors": [
+      "v(v-sweep)",
+      "i(@q_t1[ib])",
+      "i(@q_t1[ic])",
+      "i(@q_t1[ie])",
+      "v(1)",
+      "v(2)",
+      "v(3)",
+      "i(v_vs1)",
+      "i(vam_am1)"
+    ],
+    "maxAbs": 1.2499238566388016e-7,
+    "maxRel": 0.000004722247662580222
+  },
+  {
+    "name": "family",
+    "parameter": 0.00004,
+    "points": 500,
+    "vectors": [
+      "v(v-sweep)",
+      "i(@q_t1[ib])",
+      "i(@q_t1[ic])",
+      "i(@q_t1[ie])",
+      "v(1)",
+      "v(2)",
+      "v(3)",
+      "i(v_vs1)",
+      "i(vam_am1)"
+    ],
+    "maxAbs": 1.0382241699691264e-7,
+    "maxRel": 0.000003546587759403351
+  },
+  {
+    "name": "family",
+    "parameter": 0.0001,
+    "points": 500,
+    "vectors": [
+      "v(v-sweep)",
+      "i(@q_t1[ib])",
+      "i(@q_t1[ic])",
+      "i(@q_t1[ie])",
+      "v(1)",
+      "v(2)",
+      "v(3)",
+      "i(v_vs1)",
+      "i(vam_am1)"
+    ],
+    "maxAbs": 6.4124487275663e-8,
+    "maxRel": 0.000002166611161957494
+  },
+  {
+    "name": "ac",
+    "points": 91,
+    "vectors": [
+      "frequency",
+      "v(1)",
+      "v(2)",
+      "i(v_vs1)"
+    ],
+    "maxAbs": 0,
+    "maxRel": 0
+  },
+  {
+    "name": "transient",
+    "points": 3008,
+    "vectors": [
+      "time",
+      "v(1)",
+      "v(2)",
+      "i(v_vs1)"
+    ],
+    "maxAbs": 0,
+    "maxRel": 0
+  }
+]

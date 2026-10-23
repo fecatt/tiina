@@ -1,0 +1,84 @@
+# Конкретные баги
+
+## 1. `generatorResistance`: неверная проверка длины и смещения
+
+```ts
+if(c.kind!=='VG'||d.length<p+43||d[p+8]!==1||![4,5].includes(d[p+9])||d[p+34]!==0)return null;
+const r=view(d).getFloat64(p+35,true);
+```
+
+- `d[p+34]` — проверяется, что «неизвестный маркер» равен 0. Хорошо: **fail closed**.
+- Но `d.length<p+43` — это 8 байт (float64) от `p+35`, то есть минимум `p+43`. **Верно.**
+- А вот `nativeGenerator` использует `d.length<p+42` — рассогласовано с `generatorResistance` (42 vs 43). Если `d.length===p+42`, `nativeGenerator` вернёт валидные настройки, а затем `generatorResistance` вернёт `null`, и `nativeGenerator` отбросит результат. Согласовать границу (нужно `p+43`, т.к. читается float64 по `p+35`).
+
+- `view(d)` — в фрагменте CODEC `view` не определён; если это `new DataView(d.buffer, d.byteOffset, d.byteLength)`, то ок; если просто `new DataView(d.buffer)` — **баг** (не учитывается `byteOffset` подмассива). Проверить реализацию.
+
+## 2. `nativeGenerator` читает `resistance` через `generatorResistance(c)` — двойное чтение
+
+`generatorResistance` перечитывает `d[p+34]` и `d[p+35]` уже после того, как `nativeGenerator` проверил `d.length`, `d[p+8]`, `d[p+9]`. Дублирование проверки `d[p+34]!==0` → `null` внутри `generatorResistance` — корректно по fail-closed. Но **`nativeGenerator` не проверяет `d[p+34]===0` сам** — полагается на то, что `generatorResistance` вернёт `null`. Это работает, но хрупко: если кто-то вызовет `nativeGenerator` без `generatorResistance` (или заменит), инвариант сломается. Не баг сейчас, но лучше явно проверить в `nativeGenerator`.
+
+## 3. `setNativeGenerator`: отсутствие проверки `d[p+34]` и `d.length` перед записью `p+35`
+
+```ts
+if(settings.resistance!==undefined)v.setFloat64(p+35,settings.resistance,true);
+```
+
+- Нет проверки `d[p+34]===0` и `d.length>=p+43` **до** записи. `nativeGenerator(c)` в начале функции вызывает `generatorResistance`, который уже проверяет оба условия и возвращает `null` → `nativeGenerator` возвращает `null` → бросается `'Формат генератора пока не поддерживается'`. **Фактически защищено**, но только косвенно. При рефакторинге — опасно.
+- **Реальный баг**: `settings.resistance` валидируется только через итоговый `nativeGenerator(...)`, где `generatorResistance` проверяет `r>=0 && Number.isFinite(r)`. Но если пользователь передал `settings.resistance = NaN`, `setFloat64` запишет `NaN` в `next`, затем `nativeGenerator` вернёт `null` → бросок. **Ок, fail closed.**
+- **Реальный баг**: если `settings.resistance === undefined`, а в исходной записи `d[p+34]===0` (валидный маркер) — поле `p+35` не трогается, остаётся прежним. Это корректно по комментарию («change only observed scalar slots»), но **создаёт рассинхрон с `showGeneratorParameters`, где `resistance` всегда отправляется** (`parseEngineeringValue(String(fd.get('resistance')))` из поля, предзаполненного `settings.resistance??0`). То есть `undefined` в `setNativeGenerator` практически не встречается из диалога — но API допускает.
+
+## 4. `setNativeGenerator`: чтение `settings.phase` без проверки формы — компиляторно ок, но семантически
+
+```ts
+v.setFloat64(p+26,settings.waveform==='sine'?settings.phase-90:settings.edge,true);
+```
+
+После этого `nativeGenerator` валидирует: для rectangle `parameter<=0||parameter>=1/frequency/4` → `null`. Для sine `phase` не ограничивается — **любое конечное значение принимается**. Это соответствует поведению (фаза может быть любой), но **не проверяется `Number.isFinite(settings.phase)`** явно до записи. Если `phase=NaN` — `setFloat64` запишет NaN, затем `nativeGenerator` через `.every(Number.isFinite)` вернёт `null` → бросок. **Fail closed, но запись уже совершена** в локальный `next` (не в `record.data`). `record.data=next` только после успешной проверки — **атомарность соблюдена.**
+
+## 5. **Атомарность retry после невалидного редактирования — РЕАЛЬНЫЙ БАГ**
+
+`showGeneratorParameters.onsubmit`:
+```ts
+onRawCommit(()=>setNativeGenerator(doc,index,next));dialog.close();
+```
+- `setNativeGenerator` бросает при невалидных данных. Если `onRawCommit` пробрасывает исключение — `catch` покажет ошибку, диалог **не закроется** (т.к. `dialog.close()` после `onRawCommit`, а исключение прерывает поток). **Ок.**
+- Но если `onRawCommit` **поглощает** исключение (например, оборачивает в историю и не пробрасывает), `dialog.close()` выполнится, **хотя запись не применена**, и пользователь потеряет введённые значения. Контракт `onRawCommit` не задан — **это конкретный риск потери данных при retry.**
+- **Хуже**: `setNativeGenerator` мутирует `record.data=next` до возврата. Если `onRawCommit` сначала делает undo-snapshot, потом вызывает `mutate()`, и `mutate` бросает — snapshot уже сделан, но данные не изменены → **фантомная запись в историю**. Атомарность требует, чтобы `mutate` не бросал после частичной мутации. Здесь `setNativeGenerator` пишет в `next` (локально) и только в конце `record.data=next` — **это правильно**, но вызывающий код (`onRawCommit`) должен вызывать `mutate` до фиксации снапшота, а не после.
+
+## 6. `showGeneratorParameters`: `current` перечитывается, но `next` строится из полей формы — потеря несохранённых значений при reject
+
+```ts
+const current=nativeGenerator(component(doc.records[index],index));if(!current)throw Error(...);
+const common={offset:current.offset,resistance:...,amplitude:...,frequency:...};
+```
+- `offset` берётся из `current`, а не из формы — **в форме нет поля offset**. Значит, пользователь не может изменить offset через этот диалог (только через основное поле `value`). Это осознанно (см. `showComponentProperties`: DC уровень = `c.value`). Но **`parseEngineeringValue` для `resistance`/`amplitude`/`frequency` вызывается до проверки формы** — если любое поле пустое/невалидно, бросок, диалог остаётся. **Ок.**
+- **Баг retry**: если `setNativeGenerator` бросил (например, `edge>=1/f/4`), `catch` показывает ошибку, но `current` уже прочитан, а `next` собран из **текущих** полей формы. Повторный submit перечитает `current` заново — **ок**, но `shape.value` и поля сохранились (DOM не сброшен) — **пользователь может исправить и повторить**. Это корректно.
+
+## 7. `nativeGenerator`: `1/frequency` в `.every(Number.isFinite)` — бесполезно, но не баг
+
+`frequency<=0` уже проверено; `1/frequency` не может быть не-конечным при `frequency>0` и конечном `frequency` (кроме `frequency=Infinity`, но `Number.isFinite(frequency)` уже отсекает). Избыточно, не вредно.
+
+## 8. `exportSpice`: `generatorResistance` возвращает `0` для не-VG — но `resistance` вычисляется только для `k==='VG'`
+
+```ts
+const resistance=k==='VG'?generatorResistance(c):0;
+if(resistance===null)fail(...);
+```
+- Для не-VG `resistance=0`, `fail` не срабатывает. **Ок.**
+- Для VG: если `generatorResistance` вернул `null` (маркер `p+34!=0` или не-VG-формат), `fail` — **fail closed на экспорте**. Правильно.
+- **Баг**: `internal='vg_internal_'+c.index` и `resistor='R_vg_series_'+c.index` — используют `c.index`, но `occupied` строится из `label`-имён (`name('R',c.label)`), а не из реальных имён в `names`/`used`. Коллизия возможна, если пользователь назвал резистор так, что `name('R', label)` совпадёт с `R_vg_series_N` — маловероятно, но `occupied` не учитывает уже добавленные `R_vg_series_*` из **предыдущих** итераций того же цикла (только `components(doc).filter(kind==='R')`). При нескольких VG с внутренним сопротивлением возможна коллизия `R_vg_series_5` (ручной) vs `R_vg_series_5` (авто для `c.index===5`). **Конкретный баг.**
+
+## 9. `nativeGeneratorWaveform` / `nativeRectangle`: сообщение об ошибке упоминает «сопротивление TSC», но проверка `null` уже включает все случаи
+
+```ts
+if(!s)throw Error(`... форма сигнала или сопротивление TSC пока не подтверждены`);
+```
+Это сообщение вводит в заблуждение: `null` может быть из-за формы, длины, маркера, resistance. Не баг, но диагностика.
+
+## Резюме приоритетов
+
+1. **Критично**: рассогласование `d.length<p+42` (nativeGenerator) vs `p+43` (generatorResistance) — валидная запись может быть отвергнута.
+2. **Критично**: `onRawCommit` может поглотить исключение `setNativeGenerator` → диалог закроется без применения, потеря данных.
+3. **Средне**: `view(d)` в `generatorResistance` — проверить `byteOffset`.
+4. **Средне**: коллизия имён `R_vg_series_<index>` в `exportSpice`.
+5. **Низко**: явно проверять `d[p+34]===0` в `nativeGenerator` (сейчас неявно через `generatorResistance`).

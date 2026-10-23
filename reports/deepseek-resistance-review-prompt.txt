@@ -1,0 +1,358 @@
+Review the following local TINA reconstruction changes. Focus only on concrete bugs in generator resistance handling and atomic retry after invalid dialog edits. Do not infer original TINA behavior. We observed native UI resistance float64 at parameter_offset+35 after opaque zero at+34; native RC response with 50 Ohm matches series resistor within 10.15mV, while native PSpice omits the resistor. Unknown marker must fail closed. Reply in Russian, concise, concrete.
+
+FILE src/native-generator.ts
+import {component,generatorResistance,type Component,type Doc} from './codec.ts';
+
+export type NativeGeneratorSettings={offset:number;amplitude:number;frequency:number;resistance?:number}&({waveform:'sine';phase:number}|{waveform:'rectangle';edge:number});
+
+export function nativeGenerator(c:Component):NativeGeneratorSettings|null{
+ const d=c.record.data,p=c.parameter_offset;
+ if(c.kind!=='VG'||d.length<p+42||d[p+8]!==1||![4,5].includes(d[p+9]))return null;
+ const v=new DataView(d.buffer,d.byteOffset,d.byteLength);
+ const offset=v.getFloat64(p,true),amplitude=v.getFloat64(p+10,true),frequency=v.getFloat64(p+18,true),parameter=v.getFloat64(p+26,true),resistance=generatorResistance(c);
+ if(![offset,amplitude,frequency,parameter,1/frequency,offset-amplitude,offset+amplitude].every(Number.isFinite)||amplitude<0||frequency<=0||resistance===null)return null;
+ const extra=resistance?{resistance}:{};
+ if(d[p+9]===4)return {waveform:'sine' as const,offset,amplitude,frequency,phase:parameter+90,...extra};
+ if(parameter<=0||parameter>=1/frequency/4)return null;
+ return {waveform:'rectangle' as const,offset,amplitude,frequency,edge:parameter,...extra};
+}
+
+/** Change only the observed scalar slots, leaving all other record bytes intact. */
+export function setNativeGenerator(doc:Doc,index:number,settings:NativeGeneratorSettings):void {
+ const record=doc.records[index];if(!record)throw Error('Генератор больше не существует');
+ const c=component(record,index);if(!nativeGenerator(c))throw Error('Формат генератора пока не поддерживается для редактирования');
+ if(!['sine','rectangle'].includes(settings.waveform))throw Error('Неизвестная форма сигнала');
+ const next=Uint8Array.from(record.data),v=new DataView(next.buffer,next.byteOffset,next.byteLength),p=c.parameter_offset;
+ v.setFloat64(p,settings.offset,true);next[p+9]=settings.waveform==='sine'?4:5;
+ v.setFloat64(p+10,settings.amplitude,true);v.setFloat64(p+18,settings.frequency,true);
+ v.setFloat64(p+26,settings.waveform==='sine'?settings.phase-90:settings.edge,true);
+ if(settings.resistance!==undefined)v.setFloat64(p+35,settings.resistance,true);
+ if(!nativeGenerator(component({...record,data:next},index)))throw Error('Неверные параметры: амплитуда ≥ 0, частота > 0, фронт меньше четверти периода, сопротивление ≥ 0');
+ record.data=next;
+}
+
+/** Narrow v66 rectangular VG layout, checked against native properties, XML and PSpice.
+ * Other signal IDs remain opaque; their meaning must not be guessed. */
+export function nativeRectangle(c:Component){
+ const s=nativeGenerator(c);if(!s||s.waveform!=='rectangle')return null;
+ const {offset,amplitude,frequency,edge}=s;return {offset,amplitude,frequency,edge};
+}
+
+export function nativeGeneratorWaveform(c:Component,stop:number):string {
+ const s=nativeGenerator(c);if(!s)throw Error(`Генератор ${c.label}: форма сигнала или сопротивление TSC пока не подтверждены`);
+ return s.waveform==='sine'?`SIN(${s.offset} ${s.amplitude} ${s.frequency} 0 0 ${s.phase})`:nativeRectangleWaveform(c,stop);
+}
+
+/** TINA's square starts at the DC offset, reaches +A after t, and changes
+ * polarity across half-period ±t. This differs from a low-start SPICE PULSE. */
+export function nativeRectangleWaveform(c:Component,stop:number):string {
+ const s=nativeRectangle(c);if(!s)throw Error(`Генератор ${c.label}: форма сигнала или сопротивление TSC пока не подтверждены`);
+ if(!Number.isFinite(stop)||stop<=0)throw Error('Неверное время расчёта');
+ const period=1/s.frequency,cycles=Math.ceil(stop/period);
+ if(cycles>16000)throw Error('Слишком много периодов генератора TSC');
+ const points:[number,number][]=[];
+ for(let i=0;i<=cycles;i++){
+  const t=i*period;
+  const local:[number,number][]=[[0,0],[s.edge,1],[period/2-s.edge,1],[period/2+s.edge,-1],[period-s.edge,-1]];
+  for(const [dt,a] of local)points.push([t+dt,s.offset+a*s.amplitude]);
+ }
+ return `PWL(${points.map(([t,a])=>`${t} ${a}`).join(' ')})`;
+}
+
+FILE src/properties-dialog.ts
+import {component,modelParameters,readString,BJT_FIELDS,type Doc,type Changes} from './codec.ts';
+import library from './library.json' with {type:'json'};
+import {nativeGenerator,setNativeGenerator,type NativeGeneratorSettings} from './native-generator.ts';
+
+// Keep numerical helpers importable in Node tests without loading browser CSS.
+if(typeof document!=='undefined'){const stylesheet=document.createElement('link');stylesheet.rel='stylesheet';stylesheet.href=new URL('./props-dialog.css',import.meta.url).href;document.head.append(stylesheet);}
+const escape=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
+const kindTitles:Record<string,string>={GND:'Общий узел',R:'Резистор',C:'Конденсатор',L:'Катушка индуктивности',V:'Батарея',VS:'Источник напряжения',I:'Источник тока',IS:'Генератор тока',VG:'Генератор напряжения',VM:'Вольтметр',AM:'Указатель тока',AMV:'Амперметр',NPN:'Транзистор NPN',PNP:'Транзистор PNP'};
+const units:Record<string,string>={R:'Ом',C:'Ф',L:'Гн',V:'В',VS:'В',VG:'В',I:'А',IS:'А'};
+const positive=new Set(['IS','NF','NR','NE','NC','NS','BF','BR','EG','VCEO','VCBO','VEBO','ICMAX','IBMAX','PMAX']);
+const nonnegative=new Set(['RE','RC','RB','VAF','VAR','ISE','ISC','ISS','IKF','IKR','CJC','CJE','CJS','VJC','VJE','VJS','MJC','MJE','MJS','TF','TR','KF','AF']);
+
+/** SI numbers with the common Russian and SPICE engineering suffixes. */
+export function parseEngineeringValue(input:string):number {
+ let s=input.trim().replace(',','.').replace(/\s+/g,'');let multiplier=1;
+ for(const [suffix,scale] of [['meg',1e6],['мк',1e-6],['М',1e6],['k',1e3],['K',1e3],['к',1e3],['m',1e-3],['м',1e-3],['u',1e-6],['µ',1e-6],['n',1e-9],['н',1e-9],['p',1e-12],['п',1e-12]] as [string,number][]){if(s.endsWith(suffix)){s=s.slice(0,-suffix.length);multiplier=scale;break;}}
+ if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s))throw Error('Введите число, например 1к, 10мк или 1.26e-14');
+ const n=Number(s)*multiplier;if(!Number.isFinite(n))throw Error('Число должно быть конечным');return n;
+}
+function validateParameter(key:string,value:number):void {
+ if(!BJT_FIELDS.includes(key))throw Error(`Неизвестный параметр ${key}`);
+ if(!Number.isFinite(value))throw Error(`${key}: требуется конечное число`);
+ if(positive.has(key)&&value<=0)throw Error(`${key}: значение должно быть больше нуля`);
+ if(nonnegative.has(key)&&value<0)throw Error(`${key}: отрицательное значение недопустимо`);
+}
+/** Patches only selected native float64 slots; every other byte remains intact.
+ * Validation is completed before the single record mutation. */
+export function setBjtParameters(doc:Doc,index:number,changes:Record<string,number>):void {
+ const rec=doc.records[index];if(!rec)throw Error('Элемент больше не существует');const c=component(rec,index);
+ if(!['NPN','PNP'].includes(c.kind))throw Error('Параметры SPICE BJT доступны только для транзистора');
+ modelParameters(c);const d=rec.data;let p:number;[,p]=readString(d,c.parameter_offset);let family:string;[family,p]=readString(d,p);
+ const v=new DataView(d.buffer,d.byteOffset,d.byteLength);if(family!=='SPICE-BJT'||d[p]!==0||d[p+1]!==1||v.getUint16(p+2,true)!==304||p+308>d.length)throw Error('Формат модели не поддерживается');
+ for(const [key,value] of Object.entries(changes))validateParameter(key,value);
+ const next=d.slice(),out=new DataView(next.buffer);for(const [key,value] of Object.entries(changes))out.setFloat64(p+4+BJT_FIELDS.indexOf(key)*8,value,true);rec.data=next;
+}
+const descriptors:Record<string,[string,string]>={IS:['Ток насыщения','А'],NF:['Коэффициент эмиссии прямой',''],NR:['Коэффициент эмиссии обратный',''],RE:['Сопротивление эмиттера','Ом'],RC:['Сопротивление коллектора','Ом'],RB:['Сопротивление базы','Ом'],VAF:['Напряжение Эрли прямое','В'],VAR:['Напряжение Эрли обратное','В'],ISE:['Ток утечки база–эмиттер','А'],ISC:['Ток утечки база–коллектор','А'],ISS:['Ток насыщения подложки','А'],NE:['Коэффициент эмиссии утечки БЭ',''],NC:['Коэффициент эмиссии утечки БК',''],NS:['Коэффициент эмиссии подложки',''],BF:['Коэффициент передачи прямой',''],BR:['Коэффициент передачи обратный',''],IKF:['Ток спада усиления прямой','А'],IKR:['Ток спада усиления обратный','А'],CJC:['Барьерная ёмкость БК при нуле','Ф'],CJE:['Барьерная ёмкость БЭ при нуле','Ф'],CJS:['Ёмкость подложки при нуле','Ф'],VJC:['Контактный потенциал БК','В'],VJE:['Контактный потенциал БЭ','В'],VJS:['Контактный потенциал подложки','В'],MJC:['Коэффициент градиента БК',''],MJE:['Коэффициент градиента БЭ',''],MJS:['Коэффициент градиента подложки',''],TF:['Время переноса прямое','с'],TR:['Время переноса обратное','с'],EG:['Ширина запрещённой зоны','эВ'],KF:['Коэффициент фликкерного шума',''],AF:['Показатель фликкерного шума',''],VCEO:['Предел напряжения КЭ модели','В'],VCBO:['Предел напряжения КБ модели','В'],VEBO:['Предел напряжения ЭБ модели','В'],ICMAX:['Предел тока коллектора модели','А'],IBMAX:['Предел тока базы модели','А'],PMAX:['Предел мощности модели','Вт']};
+const parameterGroups:[string,string[]][]=[['Передача и насыщение',['IS','NF','NR','BF','BR','IKF','IKR','VAF','VAR']],['Сопротивления и утечки',['RE','RC','RB','ISE','ISC','ISS','NE','NC','NS']],['Ёмкости переходов',['CJC','CJE','CJS','VJC','VJE','VJS','MJC','MJE','MJS']],['Время переноса и шум',['TF','TR','EG','KF','AF']],['Модельные ограничения',['VCEO','VCBO','VEBO','ICMAX','IBMAX','PMAX']]];
+function createDialog(title:string,content:string,wide=false):HTMLDialogElement {
+ const dialog=document.createElement('dialog');dialog.className='component-dialog'+(wide?' component-dialog-wide':'');dialog.setAttribute('aria-label',title);
+ dialog.innerHTML=`<header class="component-title"><span>${escape(title)}</span><button type="button" class="component-close" aria-label="Закрыть" data-close>×</button></header>${content}`;
+ document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());dialog.querySelector<HTMLButtonElement>('[data-close]')!.onclick=()=>dialog.close();return dialog;
+}
+function showModelParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>void)=>void):void {
+ const c=component(doc.records[index],index),values=modelParameters(c);
+ const dialog=createDialog(`Модель ${c.model??''}  SPICE BJT`,`<form class="component-model-form"><div class="component-model-scroll">${parameterGroups.map(([group,fields])=>`<fieldset><legend>${escape(group)}</legend><table class="component-properties-table"><tbody>${fields.map(key=>`<tr><th scope="row"><label for="bjt-${key}"><b>${key}</b> — ${escape(descriptors[key][0])}</label></th><td><input id="bjt-${key}" name="${key}" type="text" inputmode="decimal" value="${values[key]}" autocomplete="off" /></td><td class="component-unit">${escape(descriptors[key][1])}</td></tr>`).join('')}</tbody></table></fieldset>`).join('')}<p class="component-explanation">Модельные ограничения хранятся в записи TINA. Они могут отличаться от предельных значений в паспорте транзистора и не используются браузерным расчётом как паспортные ограничения.</p><p class="component-explanation">Параметры ISS и NS сохраняются в TSC. Расчёт модели с ненулевым ISS в браузере пока не поддерживается.</p></div><p class="component-error" role="alert" aria-live="polite"></p><footer><button type="submit">ОК</button><button type="button" data-cancel>Отмена</button></footer></form>`,true);
+ dialog.querySelector<HTMLButtonElement>('[data-cancel]')!.onclick=()=>dialog.close();
+ dialog.querySelector<HTMLFormElement>('form')!.onsubmit=e=>{e.preventDefault();try{const fd=new FormData(e.currentTarget as HTMLFormElement),changes:Record<string,number>={};for(const key of BJT_FIELDS){const value=parseEngineeringValue(String(fd.get(key)));validateParameter(key,value);if(value!==values[key])changes[key]=value;}if(Object.keys(changes).length)onRawCommit(()=>setBjtParameters(doc,index,changes));dialog.close();}catch(error){dialog.querySelector<HTMLElement>('.component-error')!.textContent=error instanceof Error?error.message:String(error);}};
+ dialog.showModal();
+}
+
+function showGeneratorParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>void)=>void):void {
+ const c=component(doc.records[index],index),settings=nativeGenerator(c);if(!settings)throw Error('Формат сигнала пока не поддерживается');
+ const field=(label:string,key:string,value:number,unit:string)=>`<tr data-signal-row="${key}"><th><label for="signal-${key}">${label}</label></th><td><input id="signal-${key}" name="${key}" value="${value}" autocomplete="off"></td><td class="component-unit">${unit}</td></tr>`;
+ const dialog=createDialog(`Сигнал ${c.label}`,`<form><div class="component-body"><table class="component-properties-table"><tbody><tr><th><label for="signal-waveform">Форма</label></th><td colspan="2"><select id="signal-waveform" name="waveform"><option value="sine" ${settings.waveform==='sine'?'selected':''}>Синусоидальная волна</option><option value="rectangle" ${settings.waveform==='rectangle'?'selected':''}>Прямоугольная волна</option></select></td></tr>${field('Внутреннее сопротивление','resistance',settings.resistance??0,'Ом')}${field('Амплитуда','amplitude',settings.amplitude,'В')}${field('Частота','frequency',settings.frequency,'Гц')}${field('Фаза','phase',settings.waveform==='sine'?settings.phase:0,'°')}${field('Фронт / спад','edge',settings.waveform==='rectangle'?settings.edge:1/settings.frequency*.001,'с')}</tbody></table><p class="component-explanation">Параметры сохраняются в файле TSC. Амплитуда задаётся относительно DC уровня генератора. Внутреннее сопротивление включено последовательно с источником.</p><p class="component-error" role="alert"></p></div><footer><button type="submit">ОК</button><button type="button" data-cancel>Отмена</button></footer></form>`);
+ const shape=dialog.querySelector<HTMLSelectElement>('[name=waveform]')!;
+ const update=()=>{for(const key of ['phase','edge']){const enabled=key==='phase'?shape.value==='sine':shape.value==='rectangle';dialog.querySelector<HTMLElement>(`[data-signal-row=${key}]`)!.hidden=!enabled;dialog.querySelector<HTMLInputElement>(`[name=${key}]`)!.disabled=!enabled;}};
+ shape.onchange=update;update();dialog.querySelector<HTMLButtonElement>('[data-cancel]')!.onclick=()=>dialog.close();
+ dialog.querySelector<HTMLFormElement>('form')!.onsubmit=e=>{e.preventDefault();try{
+  const fd=new FormData(e.currentTarget as HTMLFormElement),current=nativeGenerator(component(doc.records[index],index));if(!current)throw Error('Генератор изменён или больше не поддерживается');
+  const common={offset:current.offset,resistance:parseEngineeringValue(String(fd.get('resistance'))),amplitude:parseEngineeringValue(String(fd.get('amplitude'))),frequency:parseEngineeringValue(String(fd.get('frequency')))};
+  const next:NativeGeneratorSettings=shape.value==='sine'?{...common,waveform:'sine',phase:parseEngineeringValue(String(fd.get('phase')))}:{...common,waveform:'rectangle',edge:parseEngineeringValue(String(fd.get('edge')))};
+  onRawCommit(()=>setNativeGenerator(doc,index,next));dialog.close();
+ }catch(error){dialog.querySelector<HTMLElement>('.component-error')!.textContent=error instanceof Error?error.message:String(error);}};
+ dialog.showModal();
+}
+
+/** The host callback owns undo/history and wire movement. This dialog never
+ * changes common component properties before that callback accepts them. */
+export function showComponentProperties(doc:Doc,index:number,commit:(changes:Changes)=>void,onRawCommit?:(mutate:()=>void)=>void):void {
+ const c=component(doc.records[index],index),isBjt=['NPN','PNP'].includes(c.kind);
+ const field=(label:string,key:string,value:unknown,unit='')=>`<tr><th scope="row"><label for="component-${key}">${escape(label)}</label></th><td><input id="component-${key}" type="text" name="${key}" value="${escape(value)}" autocomplete="off" /></td><td class="component-unit">${escape(unit)}</td></tr>`;
+ const models=Object.entries(library.bjt_models).filter(([,m])=>m.polarity===c.kind).map(([name])=>name);if(c.model&&!models.includes(c.model))models.unshift(c.model);
+ const modelRow=isBjt?`<tr><th scope="row"><label for="component-model">Модель</label></th><td colspan="2"><div class="component-model-picker"><select id="component-model" name="model">${models.map(name=>`<option value="${escape(name)}" ${name===c.model?'selected':''}>${escape(name)}</option>`).join('')}</select><button type="button" data-model ${onRawCommit?'':'disabled'} title="Параметры модели SPICE BJT">…</button></div></td></tr>`:'';
+ const signal=nativeGenerator(c),signalRow=c.kind==='VG'?`<tr><th>Сигнал</th><td colspan="2"><button type="button" data-generator ${signal&&onRawCommit?'':'disabled'}>${signal?(signal.waveform==='sine'?'Синусоидальная волна':'Прямоугольная волна')+'…':'Формат пока не поддерживается'}</button></td></tr>`:'';
+ const dialog=createDialog(kindTitles[c.kind]??c.kind,`<form class="component-common-form"><div class="component-body"><div class="component-tab-title">Основные параметры</div><table class="component-properties-table"><tbody>${c.kind==='GND'?'':field('Обозначение','label',c.label)}${c.value===undefined?'':field(c.kind==='VG'?'DC уровень':'Номинал','value',c.value,units[c.kind]??'')}${modelRow}${signalRow}</tbody></table>${c.value===undefined?'':'<p class="component-explanation">Приставки: к, М, м, мк, н, п. Например: 1к, 10мк.</p>'}<details class="component-advanced"><summary>Расположение и подпись</summary><table class="component-properties-table"><tbody>${field('Координата X','x',c.x)}${field('Координата Y','y',c.y)}<tr><th scope="row"><label for="component-orientation">Поворот</label></th><td colspan="2"><select id="component-orientation" name="orientation">${[0,1,2,3].map(n=>`<option value="${n}" ${n===c.orientation?'selected':''}>${n*90}°</option>`).join('')}</select></td></tr>${c.kind==='GND'?'':field('Смещение подписи X','label_dx',c.label_dx)+field('Смещение подписи Y','label_dy',c.label_dy)}</tbody></table></details><p class="component-error" role="alert" aria-live="polite"></p></div><footer><button type="submit">ОК</button><button type="button" data-cancel>Отмена</button><button type="button" data-help>Справка</button></footer></form>`);
+ function readChanges():Changes {
+  const fd=new FormData(dialog.querySelector('form')!);const result:Changes={};
+  if(c.kind!=='GND'){const label=String(fd.get('label')??'');if(!label.trim())throw Error('Введите обозначение элемента');result.label=label;result.label_dx=parseEngineeringValue(String(fd.get('label_dx')));result.label_dy=parseEngineeringValue(String(fd.get('label_dy')));}
+  result.x=parseEngineeringValue(String(fd.get('x')));result.y=parseEngineeringValue(String(fd.get('y')));result.orientation=Number(fd.get('orientation'));
+  if(c.value!==undefined){const value=parseEngineeringValue(String(fd.get('value')));if(['R','C','L'].includes(c.kind)&&value<=0)throw Error('Номинал должен быть больше нуля');result.value=value;}
+  if(isBjt){const model=String(fd.get('model'));if(model!==c.model)result.model=model;}
+  for(const key of ['x','y','label_dx','label_dy'] as const)if(result[key]!==undefined&&(!Number.isInteger(result[key])||result[key]!< -32768||result[key]!>32767))throw Error('Координаты и смещения должны быть целыми числами от −32768 до 32767');
+  return result;
+ }
+ function report(error:unknown){dialog.querySelector<HTMLElement>('.component-error')!.textContent=error instanceof Error?error.message:String(error);}
+ dialog.querySelector<HTMLButtonElement>('[data-cancel]')!.onclick=()=>dialog.close();
+ dialog.querySelector<HTMLButtonElement>('[data-help]')!.onclick=()=>{const message=document.createElement('p');message.className='component-explanation';message.textContent='Изменения применяются кнопкой ОК. Многоточие рядом с моделью открывает её параметры. Поворот и координаты доступны в разделе «Расположение и подпись».';dialog.querySelector('.component-body')!.append(message);};
+ dialog.querySelector<HTMLFormElement>('form')!.onsubmit=e=>{e.preventDefault();try{commit(readChanges());dialog.close();}catch(error){report(error);}};
+ const modelButton=dialog.querySelector<HTMLButtonElement>('[data-model]');if(modelButton&&onRawCommit)modelButton.onclick=()=>{try{const changes=readChanges();const commonChanged=changes.model!==undefined||changes.label!==c.label||changes.x!==c.x||changes.y!==c.y||changes.orientation!==c.orientation||changes.label_dx!==c.label_dx||changes.label_dy!==c.label_dy;if(commonChanged)commit(changes);dialog.close();showModelParameters(doc,index,onRawCommit);}catch(error){report(error);}};
+ const generatorButton=dialog.querySelector<HTMLButtonElement>('[data-generator]');if(generatorButton&&onRawCommit)generatorButton.onclick=()=>{try{
+  const changes=readChanges();if(changes.value!==c.value||changes.label!==c.label||changes.x!==c.x||changes.y!==c.y||changes.orientation!==c.orientation||changes.label_dx!==c.label_dx||changes.label_dy!==c.label_dy)commit(changes);
+  dialog.close();showGeneratorParameters(doc,index,onRawCommit);
+ }catch(error){report(error);}};
+ dialog.showModal();dialog.querySelector<HTMLInputElement>('input')?.select();
+}
+
+FILE src/solver.ts
+import {exportSpice, components, type Doc} from './codec.ts';
+import {nativeGeneratorWaveform} from './native-generator.ts';
+
+export type Cell = number | [number,number];
+export interface Curve {parameter?:number; names:string[]; values:Cell[][]; plot:string}
+export interface SimulationConfig {kind:'op'|'dc'|'dc-family'|'ac'|'transient';input?:string;start?:number;stop?:number;points?:number;points_per_decade?:number;step_source?:string;step_values?:number[];amplitude?:number;frequency?:number;step?:number;waveform?:'sine'|'pulse'|'triangle'|'native';offset?:number;delay?:number;duty?:number;rise?:number;fall?:number;initial_conditions?:Record<string,number>;startup?:'op'|'uic'}
+export interface SimulationResult {curves:Curve[];log:string;netlist:string;mapping:ReturnType<typeof exportSpice>['mapping'];engine:string}
+export interface Job {netlist:string;parameter?:number;initialBias?:{netlist:string;nodes:string[]}}
+
+const finite=(n:unknown):n is number=>typeof n==='number'&&Number.isFinite(n);
+function requireNumber(n:unknown,label:string):number {if(!finite(n))throw new Error('Неверное значение: '+label);return n;}
+function setSource(lines:string[],name:string,value:number) {let found=false;const out=lines.map(l=>{const t=l.trim().split(/\s+/);if(t[0]!==name)return l;if(!/^[VI]/i.test(name)||t[3]?.toUpperCase()!=='DC')throw new Error('Нужен независимый источник постоянного тока или напряжения');found=true;return `${t.slice(0,3).join(' ')} DC ${value}`});if(!found)throw new Error('Источник не найден');return out;}
+
+/** Source waveform shared by voltage and current generators. Values use SI units. */
+export function transientWaveform(config:SimulationConfig,defaultOffset:number):string {
+ const amplitude=requireNumber(config.amplitude,'амплитуда'),frequency=requireNumber(config.frequency,'частота');
+ const offset=requireNumber(config.offset??defaultOffset,'смещение'),delay=requireNumber(config.delay??0,'задержка');
+ if(amplitude<0||frequency<=0||delay<0)throw new Error('Неверные параметры генератора');
+ const waveform=config.waveform??'sine',period=1/frequency;
+ if(waveform==='sine')return `SIN(${offset} ${amplitude} ${frequency} ${delay})`;
+ if(waveform==='triangle')return `PULSE(${offset-amplitude} ${offset+amplitude} ${delay} ${period/2} ${period/2} 0 ${period})`;
+ if(waveform!=='pulse')throw new Error('Неизвестная форма сигнала');
+ const duty=requireNumber(config.duty??50,'заполнение'),rise=requireNumber(config.rise??period*.001,'фронт'),fall=requireNumber(config.fall??period*.001,'спад');
+ if(duty<=0||duty>=100||rise<=0||fall<=0||rise+fall>=period||period*duty/100<=rise||period*duty/100+fall>=period)throw new Error('Импульс: заполнение 0–100%, положительные фронт и спад должны помещаться в период');
+ return `PULSE(${offset-amplitude} ${offset+amplitude} ${delay} ${rise} ${fall} ${period*duty/100-rise} ${period})`;
+}
+
+export function prepareJobs(doc:Doc,config:SimulationConfig):{jobs:Job[];mapping:SimulationResult['mapping']} {
+  const exported=exportSpice(doc),mapping=exported.mapping;
+  const base=exported.text.split(/\r?\n/).filter(l=>!/^\s*\.(op|end)\s*$/i.test(l));
+  const source=(label?:string)=>{const name=label&&mapping.names[label];if(!name||! /^[VI]/i.test(name))throw new Error('Выберите независимый источник');return name;};
+  const kind=config.kind;
+  let command='.op',excitation:string|undefined;
+  if(kind==='dc'||kind==='dc-family') {const a=requireNumber(config.start,'начало'),b=requireNumber(config.stop,'конец'),n=requireNumber(config.points,'число точек');if(!Number.isInteger(n)||n<2||n>100000||b<=a)throw new Error('Развёртка: от 2 до 100000 точек, конец больше начала');command=`.dc ${source(config.input)} ${a} ${b} ${(b-a)/(n-1)}`;}
+  else if(kind==='ac') {const a=requireNumber(config.start,'начальная частота'),b=requireNumber(config.stop,'конечная частота'),n=config.points_per_decade??50;if(!(a>0&&b>a&&Number.isInteger(n)&&n>=1&&n<=1000)||Math.log10(b/a)*n>100000)throw new Error('Неверный диапазон частот');command=`.ac dec ${n} ${a} ${b}`;excitation=source(config.input);}
+  else if(kind==='transient') {const a=config.waveform==='native'?0:requireNumber(config.amplitude,'амплитуда'),f=config.waveform==='native'?1:requireNumber(config.frequency,'частота'),stop=requireNumber(config.stop,'время'),step=requireNumber(config.step,'шаг');if(a<0||f<=0||step<=0||step>stop||stop/step>100000)throw new Error('Неверные параметры переходного процесса');if(config.startup!==undefined&&!['op','uic'].includes(config.startup))throw Error('Неизвестный режим запуска');command=`.tran ${step} ${stop} 0 ${step}${config.startup==='uic'?' uic':''}`;excitation=config.waveform==='native'?undefined:source(config.input);}
+  else if(kind!=='op')throw new Error('Неизвестный вид анализа');
+  const vals=kind==='dc-family'?config.step_values:[undefined];
+  if(!vals?.length||vals.length>100||vals.some(v=>v!==undefined&&!finite(v)))throw new Error('Семейство: от 1 до 100 конечных значений');
+  if(kind==='dc-family'&&(config.input===config.step_source||(config.points??0)*vals.length>500000))throw new Error('Для семейства нужны разные источники; максимум 500000 точек во всех кривых');
+  const jobs=vals.map(parameter=>{let lines=[...base];if(parameter!==undefined)lines=setSource(lines,source(config.step_source),parameter);
+    if(kind==='transient'&&config.waveform==='native'){
+      const generators=components(doc).filter(c=>c.kind==='VG');if(!generators.length)throw Error('В схеме нет генераторов TSC');
+      for(const c of generators){const wave=nativeGeneratorWaveform(c,config.stop!);lines=lines.map(l=>l.trim().split(/\s+/)[0]===mapping.names[c.label]?l+' '+wave:l);}
+    }
+    if(excitation)lines=lines.map(l=>{const t=l.trim().split(/\s+/);if(t[0]!==excitation)return l;if(t[3]?.toUpperCase()!=='DC')throw new Error('Нужен независимый источник');return kind==='ac'?l+' AC 1':`${t.slice(0,3).join(' ')} ${transientWaveform(config,Number(t[4]))}`;});
+    if(kind==='transient'&&config.initial_conditions)for(const [label,value] of Object.entries(config.initial_conditions)){
+      requireNumber(value,'начальное условие '+label);
+      const component=components(doc).find(c=>c.label===label),name=mapping.names[label];
+      if(!component||!['C','L'].includes(component.kind)||!name)throw Error('Начальное условие только для C/L: '+label);
+      let found=false;lines=lines.map(line=>{if(line.trim().split(/\s+/)[0]!==name)return line;found=true;return line+' IC='+value;});
+      if(!found)throw Error('Не найден элемент '+label);
+    }
+    const save=Object.values(mapping.names).filter(n=>/^Q/i.test(n)).map(n=>` @${n.toLowerCase()}[ic] @${n.toLowerCase()}[ib] @${n.toLowerCase()}[ie]`).join('');
+    const nodes=kind==='transient'&&config.waveform==='native'&&config.startup!=='uic'?components(doc).filter(c=>c.kind==='C'&&config.initial_conditions?.[c.label]===undefined).flatMap(c=>mapping.nodes[c.label]).filter(n=>n!=='0'):[];
+    const initialBias=nodes.length?{netlist:prepareJobs(doc,{kind:'op'}).jobs[0].netlist,nodes:[...new Set(nodes)]}:undefined;
+    return {parameter,initialBias,netlist:[...lines,'.options reltol=1e-6 abstol=1e-12 vntol=1e-8',command,'.save all'+save,'.control','set filetype=ascii','run','write /result.raw all','quit','.endc','.end',''].join('\n')};});
+  return {jobs,mapping};
+}
+
+/** TINA computes DC capacitor bias before applying the generator at t=0.
+ * Ngspice otherwise starts its transient OP from the sine's initial phase. */
+export async function resolveInitialBias(job:Job,run:(netlist:string)=>Promise<Curve>):Promise<string>{
+ if(!job.initialBias)return job.netlist;
+ const bias=await run(job.initialBias.netlist);
+ const conditions=job.initialBias.nodes.map(node=>{
+  const index=bias.names.indexOf(`v(${node})`),cell=bias.values[0]?.[index];
+  if(index<0||typeof cell!=='number'||!Number.isFinite(cell))throw Error('Не получена DC рабочая точка узла '+node);
+  return `v(${node})=${cell}`;
+ });
+ if(!/^\s*\.tran\s+/m.test(job.netlist))throw Error('Отсутствует команда переходного процесса');
+ return job.netlist.replace(/^\s*\.tran\s+/m,`.ic ${conditions.join(' ')}\n.tran `);
+}
+
+export function parseRaw(text:string):Curve {
+  const split=text.replace(/\r/g,'').split('Values:\n');if(split.length!==2)throw new Error('Движок не вернул численные данные');
+  const [header,raw]=split,count=Number(header.match(/No\. Variables:\s*(\d+)/)?.[1]),points=Number(header.match(/No\. Points:\s*(\d+)/)?.[1]);
+  if(!Number.isInteger(count)||count<1||count>10000||!Number.isInteger(points)||points<1||points*count>3000000)throw new Error('Слишком большой или неверный результат');
+  const complex=/Flags:.*complex/.test(header),names=(header.split('Variables:\n')[1]??'').split('\n').filter(l=>l.trim()).map(l=>l.trim().split(/\s+/)[1].toLowerCase());
+  const lines=raw.split('\n').filter(l=>l.trim());if(names.length!==count||lines.length!==points*count)throw new Error('Неполные данные расчёта');
+  const values:Cell[][]=[];for(let p=0;p<points;p++){const row:Cell[]=[];for(let c=0;c<count;c++){const tokens=lines[p*count+c].trim().split(/\s+/);if(c===0&&Number(tokens.shift())!==p)throw new Error('Нарушен порядок точек');const nums=tokens[0].split(',').map(Number);if(nums.length!==(complex?2:1)||!nums.every(Number.isFinite))throw new Error('Нечисловой результат');row.push(complex?[nums[0],nums[1]]:nums[0]);}values.push(row);}
+  return {plot:header.match(/Plotname:\s*([^\n]+)/)?.[1]??'Расчёт',names,values};
+}
+
+/** Ideal VM probes add no circuit load: their displayed voltage is first pin minus second. */
+export function addMeterVectors(curves:Curve[],mapping:SimulationResult['mapping']):Curve[] {
+  const meters=Object.entries(mapping.names).filter(([,name])=>name.startsWith('VM_'));
+  if(!meters.length)return curves;
+  return curves.map(curve=>{
+    const names=[...curve.names],values=curve.values.map(row=>[...row]);
+    for(const [label,name] of meters){
+      const pair=mapping.nodes[label],vector=`v(${name.toLowerCase()})`;
+      if(!pair||pair.length!==2)throw new Error('Не определены выводы вольтметра '+label);
+      if(names.includes(vector))throw new Error('Совпало имя вектора вольтметра '+label);
+      const indexes=pair.map(node=>node==='0'?-1:curve.names.indexOf(`v(${node.toLowerCase()})`));
+      if(pair[0]!==pair[1]&&indexes.some((index,k)=>index<0&&pair[k]!=='0'))throw new Error('Не найден потенциал узла для вольтметра '+label);
+      names.push(vector);
+      for(let i=0;i<values.length;i++){
+        if(pair[0]===pair[1]){values[i].push(curve.values[i].some(Array.isArray)?[0,0]:0);continue;}
+        const a:Cell=indexes[0]<0?0:curve.values[i][indexes[0]],b:Cell=indexes[1]<0?0:curve.values[i][indexes[1]];
+        if(Array.isArray(a)||Array.isArray(b)){const aa=Array.isArray(a)?a:[a,0],bb=Array.isArray(b)?b:[b,0];values[i].push([aa[0]-bb[0],aa[1]-bb[1]]);}else values[i].push(a-b);
+      }
+    }
+    return {...curve,names,values};
+  });
+}
+
+/** Each calculation owns a worker; cancel and timeout really stop WASM execution. */
+export async function simulate(doc:Doc,config:SimulationConfig,onProgress?:(done:number,total:number)=>void,signal?:AbortSignal):Promise<SimulationResult> {
+  const {jobs,mapping}=prepareJobs(doc,config);if(signal?.aborted)throw new DOMException('Расчёт отменён','AbortError');
+  return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./spice.worker.ts',import.meta.url),{type:'module'});let settled=false;
+    const finish=(error?:Error,result?:SimulationResult)=>{if(settled)return;settled=true;clearTimeout(timer);signal?.removeEventListener('abort',cancel);worker.terminate();if(error)reject(error);else resolve(result!);};
+    const cancel=()=>finish(new DOMException('Расчёт отменён','AbortError'));
+    const timer=setTimeout(()=>finish(new Error('Превышено время расчёта (90 секунд). Уменьшите число точек или кривых.')),90000);
+    signal?.addEventListener('abort',cancel,{once:true});worker.onerror=e=>finish(new Error('Ошибка расчётного движка: '+e.message));
+    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves,mapping),mapping,netlist:d.result.netlist??jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs});
+  });
+}
+
+export interface HParameters {uCE:number;iB:number;iC:number;uBE:number;deltaIB:number;deltaUCE:number;h11:number;h12:number;h21:number;h22:number;rIn:number;rOut:number;beta:number;simulation:SimulationResult}
+export interface HSettings {transistor?:string;baseSource?:string;collectorSource?:string;uCE?:number;iB?:number;deltaIB?:number;deltaUCE?:number}
+/** Validate the actual CE circuit, traversing only the connected collector ammeters. */
+export function hParameterConfig(doc:Doc,settings:HSettings={}):SimulationConfig {
+ const transistor=settings.transistor??'T1',baseSource=settings.baseSource??'IS1',collectorSource=settings.collectorSource??'VS1';
+ const uCE=settings.uCE??16,iB=settings.iB??40e-6,deltaIB=settings.deltaIB??1e-6,deltaUCE=settings.deltaUCE??.1;
+ if(![uCE,iB,deltaIB,deltaUCE].every(Number.isFinite)||deltaIB<=0||deltaUCE<=0||iB<=deltaIB||uCE<=deltaUCE)throw Error('Неверная рабочая точка для h-параметров');
+ if(components(doc).find(c=>c.label===transistor)?.kind!=='NPN')throw Error('Расчёт h-параметров предназначен для NPN с положительными IБ и UКЭ');
+ const map=exportSpice(doc).mapping,qp=map.nodes[transistor],bp=map.nodes[baseSource],vp=map.nodes[collectorSource];
+ if(!qp||!bp||!vp||qp.length!==3||qp[2]!=='0'||!map.names[baseSource]?.startsWith('I_')||!map.names[collectorSource]?.startsWith('V_')||vp[1]!==qp[2])throw Error('Проверьте подключения источников h-параметров: отрицательный вывод питания и эмиттер должны соединяться с землёй');
+ const sign=bp[0]===qp[1]&&bp[1]===qp[2]?-1:bp[1]===qp[1]&&bp[0]===qp[2]?1:0;
+ if(!sign||qp[1]==='0')throw Error('Источник тока базы должен быть подключён между базой и эмиттером');
+ for(const [label,ns] of Object.entries(map.nodes))if(label!==transistor&&label!==baseSource&&!map.names[label]?.startsWith('VM_')&&ns.includes(qp[1]))throw Error('К базе должны быть подключены только транзистор, источник тока и идеальный вольтметр');
+ const reached=new Set([qp[0]]);
+ for(let pass=0;pass<Object.keys(map.nodes).length;pass++){
+  let changed=false;
+  for(const [label,name] of Object.entries(map.names))if(name.startsWith('VAM_')){
+   const ns=map.nodes[label];if(!ns||ns.includes('0')||ns.includes(qp[1]))continue;
+   if(ns.some(n=>reached.has(n)))for(const n of ns)if(!reached.has(n)){reached.add(n);changed=true;}
+  }
+  if(!changed)break;
+ }
+ if(!reached.has(vp[0])||vp[0]==='0')throw Error('Источник питания не соединён с коллектором через провод или амперметр');
+ return {kind:'dc-family',input:collectorSource,start:uCE-deltaUCE,stop:uCE+deltaUCE,points:3,step_source:baseSource,step_values:[sign*(iB-deltaIB),sign*iB,sign*(iB+deltaIB)]};
+}
+/** Small-signal central differences at a chosen common-emitter operating point. */
+export async function estimateH(doc:Doc,settings:{transistor?:string;baseSource?:string;collectorSource?:string;uCE?:number;iB?:number;deltaIB?:number;deltaUCE?:number}={},signal?:AbortSignal):Promise<HParameters> {
+  const transistor=settings.transistor??'T1',baseSource=settings.baseSource??'IS1',collectorSource=settings.collectorSource??'VS1';
+  const uCE=settings.uCE??16,iB=settings.iB??40e-6,deltaIB=settings.deltaIB??1e-6,deltaUCE=settings.deltaUCE??.1;
+  const simulation=await simulate(doc,hParameterConfig(doc,settings),undefined,signal);
+  const pins=simulation.mapping.nodes[transistor],q=simulation.mapping.names[transistor]?.toLowerCase();if(!pins||pins.length!==3||!q?.startsWith('q'))throw new Error('Для h-параметров нужен биполярный транзистор');
+  const real=(cell:Cell)=>typeof cell==='number'?cell:cell[0];
+  const vector=(curve:Curve,p:number,name:string)=>{const k=curve.names.indexOf(name.toLowerCase());if(k<0)throw new Error('Не найден расчётный вектор '+name);return real(curve.values[p][k]);};
+  const voltage=(curve:Curve,p:number,node:string)=>node==='0'?0:vector(curve,p,`v(${node})`);
+  const ube=(curve:Curve,p:number)=>voltage(curve,p,pins[1])-voltage(curve,p,pins[2]);
+  const ic=(curve:Curve,p:number)=>vector(curve,p,`i(@${q}[ic])`);
+  const [minus,center,plus]=simulation.curves;
+  const h11=(ube(plus,1)-ube(minus,1))/(2*deltaIB),h12=(ube(center,2)-ube(center,0))/(2*deltaUCE),h21=(ic(plus,1)-ic(minus,1))/(2*deltaIB),h22=(ic(center,2)-ic(center,0))/(2*deltaUCE);
+  return {uCE,iB,iC:ic(center,1),uBE:ube(center,1),deltaIB,deltaUCE,h11,h12,h21,h22,rIn:h11,rOut:1/h22,beta:h21,simulation};
+}
+
+export async function calculateH(doc:Doc,options:{baseSource?:string;collectorSource?:string;transistor?:string;ib?:number;uce?:number;dib?:number;duce?:number}={},onProgress?:(done:number,total:number)=>void,signal?:AbortSignal) {
+  const transistor=options.transistor??'T1',baseSource=options.baseSource??'IS1',collectorSource=options.collectorSource??'VS1';
+  onProgress?.(0,1);
+  const result=await estimateH(doc,{transistor,baseSource,collectorSource,iB:options.ib,uCE:options.uce,deltaIB:options.dib,deltaUCE:options.duce},signal);onProgress?.(1,1);
+  return {...result,RinTr:result.rIn,RoutTr:result.rOut,point:{ib:result.iB,uce:result.uCE,ic:result.iC,ube:result.uBE},measurements:result.simulation.curves,formulas:{h11:'ΔUБЭ / ΔIБ при UКЭ = const, Ом',h12:'ΔUБЭ / ΔUКЭ при IБ = const',h21:'ΔIК / ΔIБ при UКЭ = const',h22:'ΔIК / ΔUКЭ при IБ = const, См',RinTr:'h11, Ом',RoutTr:'1 / h22, Ом',beta:'h21'},method:'Центральные разности по сетке 3 × 3: рабочая точка и симметричные приращения IБ и UКЭ. Движок ngspice WebAssembly.'};
+}
+
+CODEC TAIL
+export function generatorResistance(c:Component):number|null {
+ const d=c.record.data,p=c.parameter_offset;
+ if(c.kind!=='VG'||d.length<p+43||d[p+8]!==1||![4,5].includes(d[p+9])||d[p+34]!==0)return null;
+ const r=view(d).getFloat64(p+35,true);return Number.isFinite(r)&&r>=0?r:null;
+}
+export function exportSpice(doc:Doc):{text:string;mapping:{names:Record<string,string>;nodes:Record<string,string[]>}} {
+ const rows=['* Independent TINA-compatible editor export','.options TEMP=27'],names:Record<string,string>={},nodes:Record<string,string[]>={},models=new Map<string,string>(),used=new Set<string>();
+ const name=(prefix:string,label:string)=>prefix+'_'+label.replace(/[^a-zA-Z0-9_]/g,'_');
+ for(const {component:c,nodes:n} of connectivity(doc)){const k=c.kind;if(k==='GND')continue;let label:string;
+  if(['R','C','L'].includes(k)){label=name(k,c.label);rows.push(`${label} ${n.join(' ')} ${c.value}`);}
+  else if(['V','VS','VG','I','IS'].includes(k)){
+   const prefix=['I','IS'].includes(k)?'I':'V';label=name(prefix,c.label);
+   const resistance=k==='VG'?generatorResistance(c):0;
+   if(resistance===null)fail('Внутреннее сопротивление генератора '+c.label+' пока не распознано');
+   if(resistance>0){
+    const internal='vg_internal_'+c.index;let resistor='R_vg_series_'+c.index;
+    const occupied=new Set(components(doc).filter(c=>c.kind==='R').map(c=>name('R',c.label).toLowerCase()));
+    while(occupied.has(resistor.toLowerCase()))resistor+='_';
+    rows.push(`${label} ${internal} ${n[1]} DC ${c.value}`,`${resistor} ${internal} ${n[0]} ${resistance}`);
+   }else rows.push(`${label} ${n.join(' ')} DC ${c.value}`);
+  }
+  else if(['AM','AMV'].includes(k)){label=name('VAM',c.label);rows.push(`${label} ${n.join(' ')} 0`);}
+  else if(k==='VM'){label=name('VM',c.label);rows.push(`* ${label} measures V(${n.join(',')}); ideal infinite input impedance`);}
+  else if(['NPN','PNP'].includes(k)){label=name('Q',c.label);const m=name('M',c.model!),p=modelParameters(c);if(p.ISS!==0)fail('Модель с ненулевым током подложки пока не экспортируется');const excluded=['ISS','NS','VCEO','VCBO','VEBO','ICMAX','IBMAX','PMAX'];const text=`.model ${m} ${k} (${Object.entries(p).filter(([key])=>!excluded.includes(key)).map(([key,value])=>`${key}=${value}`).join(' ')})`;if(models.has(m)&&models.get(m)!==text)fail('Разные модели с одинаковым именем');models.set(m,text);rows.push(`${label} ${n.join(' ')} ${m}`);}
+  else return fail(`Экспорт элемента ${k} не реализован`);
+  if(used.has(label.toLowerCase())||Object.hasOwn(names,c.label))fail('Совпадают обозначения элементов');used.add(label.toLowerCase());names[c.label]=label;nodes[c.label]=n;
+ }
+ return {text:[...rows,...models.values(),'.op','.end',''].join('\n'),mapping:{names,nodes}};
+}
+export function toProject(doc:Doc,extra:Record<string,unknown>={}):Record<string,unknown> {return {...extra,format:'tina-obss-lossless-v1',records:doc.records.map(r=>({type_id:r.type,version:r.version,data_b64:to64(r.data)})),trailer_b64:to64(doc.trailer)};}
+export function fromProject(project:unknown):Doc {const p=project as {format:string;records:{type_id:number;version:number;data_b64:string}[];trailer_b64?:string};if(p.format!=='tina-obss-lossless-v1'||!Array.isArray(p.records))fail('Неизвестный формат проекта');return decode(encode({records:p.records.map(jsonRecord),trailer:from64(p.trailer_b64??'')}));}

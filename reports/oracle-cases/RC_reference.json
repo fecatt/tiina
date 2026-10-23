@@ -1,0 +1,203 @@
+{
+  "name": "RC laboratory verification",
+  "analysis": {
+    "kind": "transient",
+    "input": "Vin",
+    "waveform": "pulse",
+    "amplitude": 1,
+    "offset": 1,
+    "frequency": 100,
+    "delay": 0.001,
+    "stop": 0.025,
+    "step": 0.000001
+  },
+  "format": "tina-obss-lossless-v1",
+  "records": [
+    {
+      "type_id": 2,
+      "version": 0,
+      "data_b64": "FENpcmN1aXQgRGVzY3JpcHRpb24ABlYxLjEwABMxMC8wMi85NCAyMDowNyBDRVQALkNvbXBvbmVudCAmIGFuYWx5c2lzIHBhcmFtZXRlcnMgb2YgYSBjaXJjdWl0LgAXVElOQSA5LjMuMTMwLjMxNiBTRi1USQBCKGMpIENvcHlyaWdodCAxOTkzLDk0LDk1LDk2IERlc2lnblNvZnQgSW5jLgoNQWxsIHJpZ2h0cyByZXNlcnZlZC4AAAAAAA=="
+    },
+    {
+      "type_id": 512,
+      "version": 21,
+      "data_b64": "CiRDaXJjdWl0JAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAKICEAEAAAAAAADwPwEAAAAAAAAAAAA="
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "oADwAPAA8AACAKAA8ADwAPAA//8AAAAA//8ZVF8wMDAwMDAwNjIwMjYxMDIyMDAwMDAwAAEAAQAAAAA="
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "GAHwAGgB8AACABgB8ABoAfAA//8AAAAA//8ZVF8wMDAwMDAwNzIwMjYxMDIyMDAwMDAwAAEAAQAAAAA="
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "aAHwALgB8AACAGgB8AC4AfAA//8AAAAA//8ZVF8wMDAwMDAwODIwMjYxMDIyMDAwMDAwAAEAAQAAAAA="
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "oAAYAaAAaAECAKAAGAGgAGgB//8AAAAA//8ZVF8wMDAwMDAwOTIwMjYxMDIyMDAwMDAwAAEAAQAAAAA="
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "aAEYAaAAaAEDAGgBGAFoAWgBoABoAf//AAAAAP//GVRfMDAwMDAwMEEyMDI2MTAyMjAwMDAwMAABAAEAAAAA"
+    },
+    {
+      "type_id": 256,
+      "version": 22,
+      "data_b64": "uAEYAaAAaAEDALgBGAG4AWgBoABoAf//AAAAAP//GVRfMDAwMDAwMEIyMDI2MTAyMjAwMDAwMAABAAEAAAAA"
+    },
+    {
+      "type_id": 527,
+      "version": 66,
+      "data_b64": "oADwAP//3v8DBFZpbgAAAAIAAAAZVF8wMDAwMDAwMTIwMjYxMDIyMDAwMDAwAA1Wb2x0Z2VuIChWUykAAAD//wAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABAAAAAAAAAAAAAAAAAAAAAAAAAQAA"
+    },
+    {
+      "type_id": 522,
+      "version": 66,
+      "data_b64": "8ADwABwAy/8BA1IxAAABAgAAABlUXzAwMDAwMDAyMjAyNjEwMjIwMDAwMDAAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEAAAAAAECPQAAAoEABAAAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWUAAAA=="
+    },
+    {
+      "type_id": 523,
+      "version": 66,
+      "data_b64": "aAHwAAgA6P8AA0MxAAMAAgAAABlUXzAwMDAwMDAzMjAyNjEwMjIwMDAwMDAAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAGN7bWg98awPgAAoEABAAAAAACAhC5BAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABZQAAAAAAAAADwPwAA"
+    },
+    {
+      "type_id": 518,
+      "version": 66,
+      "data_b64": "uAHwAOH/IQABBVZvdXQAAAACAAAAGVRfMDAwMDAwMDQyMDI2MTAyMjAwMDAwMAABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAQEAAA=="
+    },
+    {
+      "type_id": 515,
+      "version": 66,
+      "data_b64": "oABoAQAAAQAAABlUXzAwMDAwMDA1MjAyNjEwMjIwMDAwMDAAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAA=="
+    },
+    {
+      "type_id": 62080,
+      "version": 24,
+      "data_b64": "AAEAAAAAAADwPwAAAABwBgldQACU8SEDAAAAje21oPfGsD4AAAAAAADwP43ttaD3xrA+AAEBAAA="
+    },
+    {
+      "type_id": 62081,
+      "version": 19,
+      "data_b64": "ZABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAFlAAQAA"
+    },
+    {
+      "type_id": 62082,
+      "version": 21,
+      "data_b64": "ZABkAGQAZAAAAAAAAAAkQAAAAAAAAPA/AAAAAICELkEAAAAAAAAAAAAAAACAhC5BAAAAAICELkEAAAAAZc3NQfyp8dJNYlA/AAAAAABAj0AAAAAAAADwPwEBAQ=="
+    },
+    {
+      "type_id": 62083,
+      "version": 18,
+      "data_b64": "AQIBAQICAAAAAAAAAACN7bWg98awPo3ttaD3xrA+"
+    },
+    {
+      "type_id": 62084,
+      "version": 17,
+      "data_b64": "DAAAAAAAAPC/AAAAAAAA8L8QAA=="
+    },
+    {
+      "type_id": 62085,
+      "version": 18,
+      "data_b64": "DAAAAAAAAPC/AAAAAAAA8L8AAAAAAAAAAAAAAAAAAAAAAAAA"
+    },
+    {
+      "type_id": 62086,
+      "version": 16,
+      "data_b64": "AwAAAAAAAAA0QAAAAAAAAERA"
+    },
+    {
+      "type_id": 62087,
+      "version": 18,
+      "data_b64": "AAA="
+    },
+    {
+      "type_id": 62088,
+      "version": 20,
+      "data_b64": "AAA="
+    },
+    {
+      "type_id": 62089,
+      "version": 18,
+      "data_b64": "AAA="
+    },
+    {
+      "type_id": 62090,
+      "version": 17,
+      "data_b64": "AAEEAAQAPYqIQg=="
+    },
+    {
+      "type_id": 62091,
+      "version": 16,
+      "data_b64": "AAAAAAAA8D+V1iboCy4RPgAAAAAAAPA/AAAAAAAAAAAAAAAAAADwPwAAAAAAAPC/je21oPfGsD6N7bWg98awPo3ttaD3xrA+je21oPfGsD6N7bWg98awPo3ttaD3xrA+AAAAAAAAAAAAAAAAAADwPwAAAAAAAElAAAAAAAAAAAAAAAAAAADwPwAAAAAAAElAAAAAAAAA8D8AAAAAAABJQAAAAAAAAAAA"
+    },
+    {
+      "type_id": 62092,
+      "version": 35,
+      "data_b64": "AAAAAAAAO0CN7bWg98awPhHqLYGZl3E9je21oPfGsD78qfHSTWJQPxHqLYGZl3E9/Knx0k1iUD+CdklowiU8PQAAAAAAAAAAAAAAAAAAAAAAAAAAAECPQAAAAAAAAERAldYm6AsuET4AAAAAAADwP/yp8dJNYlA/AAAAAAAANECamZmZmZnJP3sUrkfhepQ/AAAAAAAAFEAAAAAAAAAcQAAAAAAAAOA/myuhhpuEBj0AAAAgX6ACQqDC6/5LSLQ5AAAAAAAAJEAAAAAAAABZQCNCkgyhnMc7je21oPfGsD4AAAAAAADwPxHqLYGZl3E9AAAAAICELkEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAADgPwAAAAAAAPA/mpmZmZmZuT8AAAAAAABJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    },
+    {
+      "type_id": 62093,
+      "version": 16,
+      "data_b64": "AQ=="
+    },
+    {
+      "type_id": 62094,
+      "version": 16,
+      "data_b64": "AQc="
+    },
+    {
+      "type_id": 62095,
+      "version": 16,
+      "data_b64": "AQECAAAAAAAA8D8EWAIGAA=="
+    },
+    {
+      "type_id": 62096,
+      "version": 16,
+      "data_b64": "ZAAFAAoAAA=="
+    },
+    {
+      "type_id": 62097,
+      "version": 16,
+      "data_b64": "AAAAAAAAAAAAAABJQAE="
+    },
+    {
+      "type_id": 62098,
+      "version": 16,
+      "data_b64": "AQIAAPyp8dJNYlA/exSuR+F6hD8BAXsUrkfheoQ//Knx0k1iUD+amZmZmZm5PwAAAAAAAPA/mpmZmZmZuT+7vdfZ33zbPUivvJry13o+AAAAAAAAAAB9w5QlrUmyVAAAAADoAwAAAQAAgAEAAIA="
+    },
+    {
+      "type_id": 62099,
+      "version": 16,
+      "data_b64": "AAAAAgAAAAAAAAAAAAAAAAAAAA=="
+    },
+    {
+      "type_id": 62464,
+      "version": 16,
+      "data_b64": "AAAAAA=="
+    },
+    {
+      "type_id": 62465,
+      "version": 18,
+      "data_b64": "AAAAAAAAAAAHTm9uYW1lAAE="
+    },
+    {
+      "type_id": 272,
+      "version": 16,
+      "data_b64": "AAA="
+    },
+    {
+      "type_id": 255,
+      "version": 0,
+      "data_b64": ""
+    }
+  ],
+  "trailer_b64": ""
+}

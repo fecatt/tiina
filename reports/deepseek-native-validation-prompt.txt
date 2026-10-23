@@ -1,0 +1,89 @@
+Review these TypeScript h-parameter routines for source polarity/topology validation bugs. Native TINA confirms current source flows in native pin order; a base-to-emitter current source must use a NEGATIVE DC value for forward NPN bias. Provide a concise proposed unified fix: share topology validation for calculateH and estimateH, allow either base source direction using a sign; restrict supply to collector via only ideal ammeters; reject unrelated ammeter bypass. No new dependencies. Return code for helper + modifications and regression test suggestions. Source:
+t.values(mapping.names).filter(n=>/^Q/i.test(n)).map(n=>` @${n.toLowerCase()}[ic] @${n.toLowerCase()}[ib] @${n.toLowerCase()}[ie]`).join('');
+    return {parameter,netlist:[...lines,'.options reltol=1e-6 abstol=1e-12 vntol=1e-8',command,'.save all'+save,'.control','set filetype=ascii','run','write /result.raw all','quit','.endc','.end',''].join('\n')};});
+  return {jobs,mapping};
+}
+
+export function parseRaw(text:string):Curve {
+  const split=text.replace(/\r/g,'').split('Values:\n');if(split.length!==2)throw new Error('Движок не вернул численные данные');
+  const [header,raw]=split,count=Number(header.match(/No\. Variables:\s*(\d+)/)?.[1]),points=Number(header.match(/No\. Points:\s*(\d+)/)?.[1]);
+  if(!Number.isInteger(count)||count<1||count>10000||!Number.isInteger(points)||points<1||points*count>3000000)throw new Error('Слишком большой или неверный результат');
+  const complex=/Flags:.*complex/.test(header),names=(header.split('Variables:\n')[1]??'').split('\n').filter(l=>l.trim()).map(l=>l.trim().split(/\s+/)[1].toLowerCase());
+  const lines=raw.split('\n').filter(l=>l.trim());if(names.length!==count||lines.length!==points*count)throw new Error('Неполные данные расчёта');
+  const values:Cell[][]=[];for(let p=0;p<points;p++){const row:Cell[]=[];for(let c=0;c<count;c++){const tokens=lines[p*count+c].trim().split(/\s+/);if(c===0&&Number(tokens.shift())!==p)throw new Error('Нарушен порядок точек');const nums=tokens[0].split(',').map(Number);if(nums.length!==(complex?2:1)||!nums.every(Number.isFinite))throw new Error('Нечисловой результат');row.push(complex?[nums[0],nums[1]]:nums[0]);}values.push(row);}
+  return {plot:header.match(/Plotname:\s*([^\n]+)/)?.[1]??'Расчёт',names,values};
+}
+
+/** Ideal VM probes add no circuit load: their displayed voltage is first pin minus second. */
+export function addMeterVectors(curves:Curve[],mapping:SimulationResult['mapping']):Curve[] {
+  const meters=Object.entries(mapping.names).filter(([,name])=>name.startsWith('VM_'));
+  if(!meters.length)return curves;
+  return curves.map(curve=>{
+    const names=[...curve.names],values=curve.values.map(row=>[...row]);
+    for(const [label,name] of meters){
+      const pair=mapping.nodes[label],vector=`v(${name.toLowerCase()})`;
+      if(!pair||pair.length!==2)throw new Error('Не определены выводы вольтметра '+label);
+      if(names.includes(vector))throw new Error('Совпало имя вектора вольтметра '+label);
+      const indexes=pair.map(node=>node==='0'?-1:curve.names.indexOf(`v(${node.toLowerCase()})`));
+      if(pair[0]!==pair[1]&&indexes.some((index,k)=>index<0&&pair[k]!=='0'))throw new Error('Не найден потенциал узла для вольтметра '+label);
+      names.push(vector);
+      for(let i=0;i<values.length;i++){
+        if(pair[0]===pair[1]){values[i].push(curve.values[i].some(Array.isArray)?[0,0]:0);continue;}
+        const a:Cell=indexes[0]<0?0:curve.values[i][indexes[0]],b:Cell=indexes[1]<0?0:curve.values[i][indexes[1]];
+        if(Array.isArray(a)||Array.isArray(b)){const aa=Array.isArray(a)?a:[a,0],bb=Array.isArray(b)?b:[b,0];values[i].push([aa[0]-bb[0],aa[1]-bb[1]]);}else values[i].push(a-b);
+      }
+    }
+    return {...curve,names,values};
+  });
+}
+
+/** Each calculation owns a worker; cancel and timeout really stop WASM execution. */
+export async function simulate(doc:Doc,config:SimulationConfig,onProgress?:(done:number,total:number)=>void,signal?:AbortSignal):Promise<SimulationResult> {
+  const {jobs,mapping}=prepareJobs(doc,config);if(signal?.aborted)throw new DOMException('Расчёт отменён','AbortError');
+  return new Promise((resolve,reject)=>{const worker=new Worker(new URL('./spice.worker.ts',import.meta.url),{type:'module'});let settled=false;
+    const finish=(error?:Error,result?:SimulationResult)=>{if(settled)return;settled=true;clearTimeout(timer);signal?.removeEventListener('abort',cancel);worker.terminate();if(error)reject(error);else resolve(result!);};
+    const cancel=()=>finish(new DOMException('Расчёт отменён','AbortError'));
+    const timer=setTimeout(()=>finish(new Error('Превышено время расчёта (90 секунд). Уменьшите число точек или кривых.')),90000);
+    signal?.addEventListener('abort',cancel,{once:true});worker.onerror=e=>finish(new Error('Ошибка расчётного движка: '+e.message));
+    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves,mapping),mapping,netlist:jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs});
+  });
+}
+
+export interface HParameters {uCE:number;iB:number;iC:number;uBE:number;deltaIB:number;deltaUCE:number;h11:number;h12:number;h21:number;h22:number;rIn:number;rOut:number;beta:number;simulation:SimulationResult}
+/** Small-signal central differences at a chosen common-emitter operating point. */
+export async function estimateH(doc:Doc,settings:{transistor?:string;baseSource?:string;collectorSource?:string;uCE?:number;iB?:number;deltaIB?:number;deltaUCE?:number}={},signal?:AbortSignal):Promise<HParameters> {
+  const transistor=settings.transistor??'T1',baseSource=settings.baseSource??'IS1',collectorSource=settings.collectorSource??'VS1';
+  const uCE=settings.uCE??16,iB=settings.iB??40e-6,deltaIB=settings.deltaIB??1e-6,deltaUCE=settings.deltaUCE??.1;
+  if(![uCE,iB,deltaIB,deltaUCE].every(Number.isFinite)||deltaIB<=0||deltaUCE<=0||iB<=deltaIB||uCE<=deltaUCE)throw new Error('Неверная рабочая точка для h-параметров');
+  const map=exportSpice(doc).mapping,qp=map.nodes[transistor],bp=map.nodes[baseSource],vp=map.nodes[collectorSource];
+  if(!qp||!bp||!vp||qp.length!==3||!map.names[baseSource]?.startsWith('I_')||vp[1]!==qp[2]||vp[0]!==qp[0]&& !Object.values(map.names).some(n=>n.startsWith('VAM_')))throw Error('Проверьте подключения источников h-параметров: возврат питания должен соединяться с эмиттером');
+  const sign=bp[0]===qp[1]&&bp[1]===qp[2]?-1:bp[1]===qp[1]&&bp[0]===qp[2]?1:0;
+  if(!sign)throw Error('Источник тока базы должен быть подключён между базой и эмиттером');
+  const simulation=await simulate(doc,{kind:'dc-family',input:collectorSource,start:uCE-deltaUCE,stop:uCE+deltaUCE,points:3,step_source:baseSource,step_values:[sign*(iB-deltaIB),sign*iB,sign*(iB+deltaIB)]},undefined,signal);
+  const pins=simulation.mapping.nodes[transistor],q=simulation.mapping.names[transistor]?.toLowerCase();if(!pins||pins.length!==3||!q?.startsWith('q'))throw new Error('Для h-параметров нужен биполярный транзистор');
+  const real=(cell:Cell)=>typeof cell==='number'?cell:cell[0];
+  const vector=(curve:Curve,p:number,name:string)=>{const k=curve.names.indexOf(name.toLowerCase());if(k<0)throw new Error('Не найден расчётный вектор '+name);return real(curve.values[p][k]);};
+  const voltage=(curve:Curve,p:number,node:string)=>node==='0'?0:vector(curve,p,`v(${node})`);
+  const ube=(curve:Curve,p:number)=>voltage(curve,p,pins[1])-voltage(curve,p,pins[2]);
+  const ic=(curve:Curve,p:number)=>vector(curve,p,`i(@${q}[ic])`);
+  const [minus,center,plus]=simulation.curves;
+  const h11=(ube(plus,1)-ube(minus,1))/(2*deltaIB),h12=(ube(center,2)-ube(center,0))/(2*deltaUCE),h21=(ic(plus,1)-ic(minus,1))/(2*deltaIB),h22=(ic(center,2)-ic(center,0))/(2*deltaUCE);
+  return {uCE,iB,iC:ic(center,1),uBE:ube(center,1),deltaIB,deltaUCE,h11,h12,h21,h22,rIn:h11,rOut:1/h22,beta:h21,simulation};
+}
+
+export async function calculateH(doc:Doc,options:{baseSource?:string;collectorSource?:string;transistor?:string;ib?:number;uce?:number;dib?:number;duce?:number}={},onProgress?:(done:number,total:number)=>void,signal?:AbortSignal) {
+  const transistor=options.transistor??'T1',baseSource=options.baseSource??'IS1',collectorSource=options.collectorSource??'VS1';
+  if(components(doc).find(c=>c.label===transistor)?.kind!=='NPN')throw new Error('Этот расчёт h-параметров предназначен для NPN-транзистора с положительными IБ и UКЭ');
+  const {mapping,text}=exportSpice(doc),qnodes=mapping.nodes[transistor],bnodes=mapping.nodes[baseSource],cnodes=mapping.nodes[collectorSource];
+  if(!qnodes||qnodes.length!==3||qnodes[2]!=='0'||!mapping.names[baseSource]?.startsWith('I_')||!mapping.names[collectorSource]?.startsWith('V_')||!bnodes?.includes('0')||!bnodes.includes(qnodes[1])||!cnodes?.includes('0'))throw new Error('Для h-параметров нужна схема с общим эмиттером: источник тока между базой и землёй, источник напряжения в коллекторной цепи');
+  const joined=new Set([qnodes[0]]);for(let pass=0;pass<100;pass++){let changed=false;for(const [label,name] of Object.entries(mapping.names)){if(!name.startsWith('VAM_'))continue;const ns=mapping.nodes[label];if(ns?.some(n=>joined.has(n)))for(const n of ns)if(!joined.has(n)){joined.add(n);changed=true;}}if(!changed)break;}
+  if(!cnodes.some(n=>n!=='0'&&joined.has(n)))throw new Error('Источник коллекторного напряжения не соединён с коллектором через провод или амперметр');
+  const sourceTokens=(label:string)=>text.split(/\r?\n/).map(l=>l.trim().split(/\s+/)).find(t=>t[0]===mapping.names[label]);
+  const bi=sourceTokens(baseSource),cv=sourceTokens(collectorSource);
+  if(!bi||bi[1]!=='0'||bi[2]!==qnodes[1])throw new Error('Разверните источник тока базы: положительный ток должен идти от земли к базе');
+  if(!cv||cv[2]!=='0'||!joined.has(cv[1]))throw new Error('Разверните источник коллекторного напряжения: положительный вывод к коллектору, отрицательный к земле');
+  for(const [label,ns] of Object.entries(mapping.nodes))if(label!==transistor&&label!==baseSource&&!mapping.names[label].startsWith('VM_')&&ns.includes(qnodes[1]))throw new Error('Для измерения h-параметров к базе должны быть подключены только транзистор, источник тока и идеальный вольтметр');
+  onProgress?.(0,1);
+  const result=await estimateH(doc,{transistor,baseSource,collectorSource,iB:options.ib,uCE:options.uce,deltaIB:options.dib,deltaUCE:options.duce},signal);onProgress?.(1,1);
+  return {...result,RinTr:result.rIn,RoutTr:result.rOut,point:{ib:result.iB,uce:result.uCE,ic:result.iC,ube:result.uBE},measurements:result.simulation.curves,formulas:{h11:'ΔUБЭ / ΔIБ при UКЭ = const, Ом',h12:'ΔUБЭ / ΔUКЭ при IБ = const',h21:'ΔIК / ΔIБ при UКЭ = const',h22:'ΔIК / ΔUКЭ при IБ = const, См',RinTr:'h11, Ом',RoutTr:'1 / h22, Ом',beta:'h21'},method:'Центральные разности по сетке 3 × 3: рабочая точка и симметричные приращения IБ и UКЭ. Движок ngspice WebAssembly.'};
+}

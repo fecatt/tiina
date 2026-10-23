@@ -1,0 +1,31 @@
+BF240_vertex_native (PSpice format)
+**************************************
+**  This file was created by TINA   **
+**         www.tina.com             ** 
+**      (c) DesignSoft, Inc.        **          
+**     www.designsoftware.com       **
+**************************************
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\EXAMPLES\SPICE\TSPICE.LIB"
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\SPICELIB\Operational Amplifiers.LIB"
+.LIB
+.TEMP 27
+.AC DEC 20 10 1MEG
+.TRAN 2N 1U
+
+.OPTIONS ABSTOL=1U ITL1=150 ITL2=20 ITL4=10 TRTOL=7 
+.PROBE I(VAM1)
+
+VAM1        1 2 ; Current Arrow
+VS1         1 3 5
+IS1         4 0 10U
+QT1         2 4 0  Q_BF240_N_1 
+
+.MODEL Q_BF240_N_1 NPN( IS=12.6F NF=991M NR=991M RE=305M RC=1 
++      RB=10 VAF=56.7 VAR=28.3 ISE=376F ISC=376F 
++      ISS=0 NE=1.49 NC=1.49 NS=1 BF=180 
++      BR=5 IKF=22.7M IKR=22.7M CJC=1.17P CJE=1.99P 
++      CJS=0 VJC=6.33 VJE=3.91 VJS=750M MJC=450M 
++      MJE=520M MJS=0 TF=196P TR=25.5N EG=1.11 
++      KF=0 AF=1 )
+
+.END

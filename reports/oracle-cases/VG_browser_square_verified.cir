@@ -1,0 +1,28 @@
+VG_browser_square_verified (PSpice format)
+**************************************
+**  This file was created by TINA   **
+**         www.tina.com             ** 
+**      (c) DesignSoft, Inc.        **          
+**     www.designsoftware.com       **
+**************************************
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\EXAMPLES\SPICE\TSPICE.LIB"
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\SPICELIB\Operational Amplifiers.LIB"
+.LIB
+.TEMP 27
+.AC DEC 20 10 1MEG
+.TRAN 50U 25M
+.DC LIN Vin 0 1 10M
+
+.OPTIONS ABSTOL=1U ITL1=150 ITL2=20 ITL4=10 TRTOL=7 
+.PROBE V(1,0)
+
+Vin         2 3 DC 0 AC 1 0
++ PWL TIME_SCALE_FACTOR=4M VALUE_SCALE_FACTOR=1.2
++      REPEAT FOREVER
++       (0, 0) (1.25M 1) (498.75M 1) (501.25M -1) (998.75M -1) (1,0) ENDREPEAT
+Vin_DC      3 0 400M
+C1          1 0 1U IC=0 
+R1          2 1 1K 
+
+
+.END

@@ -1,0 +1,43 @@
+## Regression checklist
+
+**1. Donor extraction & identity**
+- Extract the AMV `type0x207` record as its own native donor; assert `typeof` id is `0x207` and **not** `0x206` (VM) or `0x223` (AM arrow). Add a guard test that fails if those substituted ids appear in the round-ammeter donor path.
+- Confirm round-ammeter donor is registered under its distinct `kind` key so `newComponent` resolves `library[kind]` unambiguously (no fallback shadowing to VM/AM).
+- Round-trip the donor through your codec: decode→encode and assert byte-for-byte equality **before** any library insertion.
+
+**2. newComponent**
+- Instantiate round ammeter: assert fresh UID (unique, not donor's), label set, and that pins/type/svg/solver resolve to the `0x207` path.
+- Negative test: VM-only fixture must not satisfy round-ammeter lookups.
+- Regression: existing components (VM, AM, others) unaffected — UID uniqueness across batch inserts.
+
+**3. Extraction fidelity**
+- Assert opaque bytes preserved verbatim post-extraction (compare raw spans, not re-serialized values).
+- Add MD5/SHA of the extracted native record as a golden so future edits surface silent drift.
+
+**4. Native text (type 262v257)**
+- Parser: header at offset 49 → font codec = counted string; then color(32), size(32), opaque(32), lineCount(32). Unknown 32-bit after lineCount preserved.
+- Each line = counted string + 4 unknown bytes; assert unknown bytes round-trip unchanged.
+- Boundary tests: 0 lines, 1 line, multi-line, empty string, max-length counted strings, truncated buffer (must throw, not misread).
+- Encoding tests: multi-byte/surrogate characters — counted length semantics must match the native (bytes vs chars) — verify against real fixtures, don't assume.
+- Assert all opaque fields (color/size/opaque flags/unknowns) survive edit-and-save cycles unchanged.
+
+**5. Font/style derivation**
+- Build before/after fixture pairs for: font change, size change, color change, style (bold/italic if applicable). Diff native fields to confirm *which* opaque bytes drive which visual change.
+- Derive mapping only from fixtures where a single attribute changed; add a table-driven test asserting each before→after delta maps to the expected native byte(s).
+- Reject speculative mapping: any field with no corroborating fixture pair stays pass-through opaque — cover with a test asserting it is not written on unrelated edits.
+
+**6. Text editor**
+- Replaces old editor; test load→edit→save→reload round-trip against native fixture, including unknown bytes and opaque fields.
+- Test that unchanged text yields zero native-byte diffs (editor must not rewrite fields gratuitously).
+- Empty/whitespace-only and line-count transitions (add/remove line) round-trip correctly.
+
+**7. Ctrl-Z hint removal**
+- Test: hint element absent from DOM/canvas after mount.
+- Test: Ctrl-Z / Ctrl-Shift-Z (redo) shortcuts **still** function in editor and canvas contexts; shortcut dispatch independent of the removed hint.
+
+**8. Global pitfalls**
+- No invented/stub format bytes — every field comes from a real fixture; lint or test that fails on placeholder constants.
+- Golden-fixture CI: native donor hash, before/after text pairs, and round-trip outputs committed.
+- Ensure solver/pin/SVG consumers still keyed to `0x207`; add integration test placing component and running solver.
+
+(model: deepseek/deepseek-v4.1-flash-1017, generation id: gen-1792757078-toTGJKR7IFVRmpbOjn6c, input tokens: 384, output tokens: 782, reasoning tokens: 0)

@@ -1,0 +1,10 @@
+{
+  "source": "Live original TINA DC table, native-bf240-forward-dc.png",
+  "circuit": "BF240_forward_bias.TSC",
+  "native": {
+    "ammeter_A": 0.00079667,
+    "base_voltage_V": 0.63728,
+    "supply_V": 5
+  },
+  "precision": "Values transcribed from displayed native table. Current rounding 0.01 uA; voltage display 0.01 mV. Independent solver tolerance 0.1%, not bit-identical."
+}

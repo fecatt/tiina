@@ -1,0 +1,87 @@
+Review concrete minimal fixes, concise. User reports dragging whole wire between stationary GND and VM creates extra stubs; current translateSelection translates all vertices and adds separate bridges. Need anchored endpoints on same wire and cleanup redundant orthogonal backtracks, preserve raw footer. Labels should drag alone with inverse component rotation; CtrlZ fails Russian keyboard because e.key is Cyrillic: use physical e.code. Identify regressions and propose tests.
+/** Reversible editor operations. Only explicitly understood component/wire records move. */
+import {decode,encode,component,components,wirePoints,pins,updateComponent,makeWire,newUid,readString,countedString,type Doc,type Rec,type Point} from './codec.ts';
+import {textRecord,updateText} from './native-text.ts';
+
+export interface Snapshot {bytes:Uint8Array;analysis?:unknown;name?:string}
+const cloneSnapshot=(s:Snapshot):Snapshot=>({bytes:s.bytes.slice(),...(s.analysis===undefined?{}:{analysis:structuredClone(s.analysis)}),...(s.name===undefined?{}:{name:s.name})});
+export function captureSnapshot(doc:Doc,analysis?:unknown,name?:string):Snapshot {return cloneSnapshot({bytes:encode(doc),analysis,name});}
+export class History {
+  private past:Snapshot[]=[];private future:Snapshot[]=[];readonly limit:number;
+  constructor(limit=60){if(!Number.isInteger(limit)||limit<1||limit>60)throw Error('История должна содержать от 1 до 60 действий');this.limit=limit;}
+  get canUndo(){return this.past.length>0;}get canRedo(){return this.future.length>0;}
+  get undoCount(){return this.past.length;}get redoCount(){return this.future.length;}
+  push(before:Snapshot){this.past.push(cloneSnapshot(before));if(this.past.length>this.limit)this.past.shift();this.future=[];}
+  undo(current:Snapshot):Snapshot|null {const previous=this.past.pop();if(!previous)return null;this.future.push(cloneSnapshot(current));return cloneSnapshot(previous);}
+  redo(current:Snapshot):Snapshot|null {const next=this.future.pop();if(!next)return null;this.past.push(cloneSnapshot(current));if(this.past.length>this.limit)this.past.shift();return cloneSnapshot(next);}
+  reset(){this.past=[];this.future=[];}
+}
+export interface SelectionClipboard {format:'tina-web-selection-v1';records:Rec[]}
+const cloneRecord=(r:Rec):Rec=>({type:r.type,version:r.version,data:r.data.slice()});
+const dataView=(a:Uint8Array)=>new DataView(a.buffer,a.byteOffset,a.byteLength);
+const join=(...chunks:Uint8Array[])=>{const out=new Uint8Array(chunks.reduce((n,b)=>n+b.length,0));let p=0;for(const b of chunks){out.set(b,p);p+=b.length;}return out;};
+const same=(a:Point,b:Point)=>a[0]===b[0]&&a[1]===b[1];
+const onSegment=(p:Point,a:Point,b:Point)=>(p[0]-a[0])*(b[1]-a[1])===(p[1]-a[1])*(b[0]-a[0])&&p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]);
+const onWire=(p:Point,pp:Point[])=>pp.some((b,i)=>i>0&&onSegment(p,pp[i-1],b));
+function coordinate(n:number){if(!Number.isInteger(n)||n< -32768||n>32767)throw Error('Координата выходит за диапазон TINA: от −32768 до 32767');return n;}
+function delta(dx:number,dy:number){if(!Number.isInteger(dx)||!Number.isInteger(dy))throw Error('Смещение должно быть целым числом');}
+function requireEditable(r:Rec){if(r.type===262){textRecord(r);return;}if(r.type===256){wirePoints(r);wireUidBounds(r);return;}component(r);}
+function indicesOf(doc:Doc,indices:Iterable<number>):number[]{const result=[...new Set(indices)].sort((a,b)=>a-b);for(const i of result){if(!Number.isInteger(i)||i<0||i>=doc.records.length)throw Error('Выбранный объект отсутствует');requireEditable(doc.records[i]);}return result;}
+/** Select all drawable records supported by this editor; analysis/opaque metadata remain untouched. */
+export function selectAll(doc:Doc):number[]{const found:number[]=[];doc.records.forEach((r,i)=>{try{requireEditable(r);found.push(i);}catch{/* Opaque records are preserved, but cannot be transformed. */}});return found;}
+export function copySelection(doc:Doc,indices:Iterable<number>):SelectionClipboard {return {format:'tina-web-selection-v1',records:indicesOf(doc,indices).map(i=>cloneRecord(doc.records[i]))};}
+/** Select a degree-two wire chain as one gesture, without rewriting native records. */
+export function wireChain(doc:Doc,index:number):number[]{
+ if(doc.records[index]?.type!==256)return [index];
+ const ww=doc.records.flatMap((r,i)=>{if(r.type!==256)return [];try{const pp=wirePoints(r);return [{i,r,pp,ends:[pp[0],pp.at(-1)!]}];}catch{return [];}}),cc=components(doc).flatMap(pins),chosen=new Set([index]),queue=[index];
+ const style=(w:typeof ww[number])=>Array.from(w.r.data.subarray(10+4*w.pp.length,18+4*w.pp.length)).join(',');
+ while(queue.length){const next=queue.shift();const w=ww.find(w=>w.i===next)!;for(const p of w.ends){if(cc.some(q=>same(p,q)))continue;const adjacent=ww.filter(o=>o.ends.some(q=>same(p,q)));if(adjacent.length!==2)continue;const other=adjacent.find(o=>o.i!==w.i)!;if(other.r.version!==w.r.version||style(other)!==style(w)||chosen.has(other.i))continue;chosen.add(other.i);queue.push(other.i);}}
+ return [...chosen].sort((a,b)=>a-b);
+}
+function wireUidBounds(r:Rec):[number,number]{const points=wirePoints(r),start=10+4*points.length+8;const [,end]=readString(r.data,start);return [start,end];}
+function translateWire(r:Rec,dx:number,dy:number){const pp=wirePoints(r).map(([x,y])=>[coordinate(x+dx),coordinate(y+dy)] as Point),d=r.data.slice(),v=dataView(d);[...pp[0],...pp.at(-1)!].forEach((n,i)=>v.setInt16(2*i,n,true));pp.forEach(([x,y],i)=>{v.setInt16(10+4*i,x,true);v.setInt16(12+4*i,y,true);});r.data=d;}
+function setWireUid(r:Rec,uid:string){const [start,end]=wireUidBounds(r);r.data=join(r.data.slice(0,start),countedString(uid),r.data.slice(end));}
+function insertionIndex(doc:Doc){const i=doc.records.findIndex(r=>r.type>=0xf000||r.type===255);return i<0?doc.records.length:i;}
+function commit(doc:Doc,staged:Doc){encode(staged);doc.records=staged.records;doc.trailer=staged.trailer;}
+function uniqueLabel(label:string,used:Set<string>){let candidate=label;const taken=(s:string)=>used.has(s.toLocaleLowerCase());if(taken(candidate)){const m=label.match(/^(.*?)(\d+)$/),prefix=m?m[1]:label+'_';let n=m?BigInt(m[2])+1n:2n;do{const suffix=String(n++);candidate=prefix.slice(0,254-suffix.length)+suffix;}while(taken(candidate));}used.add(candidate.toLocaleLowerCase());return candidate;}
+
+/** Clone raw properties, assign fresh identity, and insert before native analysis settings. */
+export function pasteSelection(doc:Doc,clipboard:SelectionClipboard,dx=16,dy=16):number[]{
+  delta(dx,dy);if(clipboard.format!=='tina-web-selection-v1'||!Array.isArray(clipboard.records))throw Error('Неверный буфер схемы');
+  clipboard.records.forEach(requireEditable);const staged=decode(encode(doc)),records=clipboard.records.map(cloneRecord);
+  const used=new Set(components(staged).filter(c=>c.kind!=='GND').map(c=>c.label.toLocaleLowerCase()));
+  for(const r of records){if(r.type===262){const t=textRecord(r);updateText(r,{x:coordinate(t.x+dx),y:coordinate(t.y+dy)});}else if(r.type===256){translateWire(r,dx,dy);setWireUid(r,newUid());}else{const c=component(r);updateComponent({records:[r],trailer:new Uint8Array()},0,{x:coordinate(c.x+dx),y:coordinate(c.y+dy),uid:newUid(),...(c.kind==='GND'?{}:{label:uniqueLabel(c.label,used)})});}}
+  const at=insertionIndex(staged);staged.records.splice(at,0,...records);commit(doc,staged);return records.map((_,i)=>at+i);
+}
+
+/** Move a group simultaneously. Fixed geometry retains its junctions; cut connections stretch via one bridge per junction. */
+export function translateSelection(doc:Doc,indices:Iterable<number>,dx:number,dy:number):number[]{
+  delta(dx,dy);const selected=indicesOf(doc,indices);if(!selected.length||(!dx&&!dy))return selected;
+  const staged=decode(encode(doc)),chosen=new Set(selected),all=selectAll(staged);
+  const geometries=all.filter(index=>staged.records[index].type!==262).map(index=>{const r=staged.records[index];if(r.type===256){const pp=wirePoints(r);return {index,wire:pp,points:[pp[0],pp.at(-1)!]};}return {index,wire:null,points:pins(component(r,index))};});
+  const candidates=new Map<string,Point>();for(const g of geometries)for(const p of g.points)candidates.set(p.join(','),p);
+  const touches=(g:typeof geometries[number],p:Point)=>g.points.some(q=>same(p,q));
+  const boundary:Point[]=[];for(const p of candidates.values())if(geometries.some(g=>chosen.has(g.index)&&touches(g,p))&&geometries.some(g=>!chosen.has(g.index)&&touches(g,p)))boundary.push(p);
+  for(const index of selected){const r=staged.records[index];if(r.type===262){const t=textRecord(r);updateText(r,{x:coordinate(t.x+dx),y:coordinate(t.y+dy)});}else if(r.type===256)translateWire(r,dx,dy);else{const c=component(r,index);updateComponent(staged,index,{x:coordinate(c.x+dx),y:coordinate(c.y+dy)});}}
+  const branches=boundary.map(p=>{const end:Point=[coordinate(p[0]+dx),coordinate(p[1]+dy)],route:Point[]=[p];if(dx&&dy)route.push([end[0],p[1]]);route.push(end);return makeWire(route);});
+  staged.records.splice(insertionIndex(staged),0,...branches);commit(doc,staged);return selected;
+}
+
+sheet.onpointerdown=e=>{if(e.button===1){pan={x:e.clientX,y:e.clientY,offset:[...offset]};sheet.setPointerCapture(e.pointerId);e.preventDefault();return;}if(e.button!==0)return;if(abort){status('Сначала завершите или остановите расчёт.');return;}sheet.focus();const p=native(e);
+ if(mode==='text'){textDialog(p);return;}
+ if(mode==='wire'||mode==='wire-direct'){if(!wireStart){wireStart=p;draw();status('Укажите второй конец провода.');}else if(p.toString()!==wireStart.toString()){edit(()=>{const points:Point[]=[wireStart!];if(mode==='wire'&&p[0]!==wireStart![0]&&p[1]!==wireStart![1])points.push([p[0],wireStart![1]]);points.push(p);addConnectedWire(doc,points);wireStart=null;});}return;}
+ if(mode!=='select'){edit(()=>{const prefix=['NPN','PNP'].includes(mode)?'T':mode==='I'?'IS':mode==='V'?'VS':mode;let n=1;const labels=components(doc).map(c=>c.label);while(labels.includes(prefix+n))n++;insert(newComponent(mode,p[0],p[1],prefix+n));});return;}
+ const target=(e.target as Element).closest<SVGElement>('[data-index]'),index=target?Number(target.dataset.index):-1;
+ if(e.shiftKey||e.ctrlKey){if(index>=0){const next=new Set(selectedIndices);if(next.has(index))next.delete(index);else next.add(index);setSelection([...next]);}return;}
+ if(index<0){setSelection([]);selectionBox={start:p,end:p};sheet.setPointerCapture(e.pointerId);return;}
+ if(!selectedIndices.has(index))setSelection(wireChain(doc,index));else selected=index;
+ drag={origin:p,snapshot:encode(doc),index};sheet.setPointerCapture(e.pointerId);
+
+};
+function insert(r:Rec){let i=doc.records.findIndex(r=>r.type>=0xf000);if(i<0)i=doc.records.length-1;doc.records.splice(i,0,r);selected=i;selectedIndices=new Set([i]);}
+sheet.onpointermove=e=>{if(pan){offset=[pan.offset[0]+e.clientX-pan.x,pan.offset[1]+e.clientY-pan.y];draw();return;}if(selectionBox){selectionBox.end=native(e);draw();return;}if(drag){const p=native(e);try{doc=decode(drag.snapshot);if(selectedIndices.size>1||[256,262].includes(doc.records[drag.index]?.type))translateSelection(doc,selection(),p[0]-drag.origin[0],p[1]-drag.origin[1]);else{const c=components(doc).find(c=>c.index===drag!.index)!;moveComponent(doc,c.index,c.x+p[0]-drag.origin[0],c.y+p[1]-drag.origin[1]);}draw();}catch{doc=decode(drag.snapshot);drag=null;}}};
+sheet.onpointerup=e=>{pan=null;if(selectionBox){const a=selectionBox.start,b=selectionBox.end,inside=(p:Point)=>p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]);const indices=components(doc).filter(c=>inside([c.x,c.y])).map(c=>c.index);indices.push(...texts(doc).filter(t=>inside([t.x,t.y])).map(t=>t.index));indices.push(...wires(doc).filter(w=>w.points.every(inside)).map(w=>w.index));selectionBox=null;setSelection(indices);}if(drag){if(encode(doc).toString()!==drag.snapshot.toString()){history.push(drag.snapshot);history=history.slice(-60);redoHistory=[];change();}drag=null;}if(sheet.hasPointerCapture(e.pointerId))sheet.releasePointerCapture(e.pointerId);};
+sheet.onpointercancel=()=>{if(drag)doc=decode(drag.snapshot);drag=null;pan=null;selectionBox=null;draw();};sheet.oncontextmenu=e=>e.preventDefault();
+sheet.ondblclick=()=>{drag=null;openProperties();};sheet.addEventListener('wheel',e=>{e.preventDefault();const b=sheet.getBoundingClientRect();setZoom(zoom*(e.deltaY<0?1.12:1/1.12),[e.clientX-b.left,e.clientY-b.top]);},{passive:false});
+document.addEventListener('keydown',e=>{if((e.target as HTMLElement).matches('input,select,textarea')||$<HTMLDialogElement>('#dialog').open)return;const shortcuts:Record<string,string>={t:'text',s:'save',o:'open',z:e.shiftKey?'redo':'undo',y:'redo',n:'new',c:'copy',x:'cut',v:'paste',a:'select-all'};if(e.ctrlKey&&shortcuts[e.key.toLowerCase()]){e.preventDefault();action(shortcuts[e.key.toLowerCase()]);}else if(e.key==='Escape'){selectionBox=null;setMode('select');}else if(e.key==='F5'){e.preventDefault();action('refresh');}else if(e.key.toLowerCase()==='r')action('rotate');else if(e.key==='Delete')action('delete');});
+$<HTMLInputElement>('#file').onchange=async e=>{const file=(e.target as HTMLInputElement).files?.[0];if(!file)return;try{if(file.size>128*1024*1024)throw Error('Файл слишком большой');let loaded:Doc,config:SimulationConfig={kind:'op'};if(file.name.toLowerCase().endsWith('.json')){const o=JSON.parse(await file.text());if(o.format==='tina-web-project-v1'){loaded=decode(un64(o.tsc));config=o.analysis??config;}else if(o.format==='tina-circuit-v1'){loaded=build(o);config=o.analysis??config;}else if(o.format==='tina-obss-lossless-v1'){loaded=fromProject(o);config=o.analysis??config;}else if(o.document?.format==='tina-obss-lossless-v1'){loaded=fromProject(o.document);config=o.analysis??config;}else throw Error('Неизвестный формат проекта редактора');}else loaded=decode(new Uint8Array(await file.arrayBuffer()));addDocument(loaded,file.name.replace(/\.[^.]+$/,''),config);status('Файл открыт. Неизвестные записи сохраняются без изменения.');}catch(e){error(e);}finally{(e.target as HTMLInputElement).value='';}};

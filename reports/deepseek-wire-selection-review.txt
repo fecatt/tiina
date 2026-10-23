@@ -1,0 +1,77 @@
+# Patch Proposal
+
+## 1. `translateSelection` – boundaries at endpoints only
+
+```diff
+-  const candidates=new Map<string,Point>();for(const g of geometries)for(const p of g.points)candidates.set(p.join(','),p);
+-  const touches=(g:typeof geometries[number],p:Point)=>g.wire?onWire(p,g.wire):g.points.some(q=>same(p,q));
+-  const boundary:Point[]=[];for(const p of candidates.values())if(geometries.some(g=>chosen.has(g.index)&&touches(g,p))&&geometries.some(g=>!chosen.has(g.index)&&touches(g,p)))boundary.push(p);
++  // Electrical connectivity in TINA is endpoint-only. An interior vertex of a wire is not a terminal,
++  // so it must never create a cut/bridge pair (that produced the phantom branch at a bend).
++  const endpoints=(g:typeof geometries[number]):Point[]=>g.wire?[g.wire[0],g.wire.at(-1)!]:g.points;
++  const touches=(g:typeof geometries[number],p:Point)=>endpoints(g).some(q=>same(p,q));
++  const candidates=new Map<string,Point>();for(const g of geometries)if(chosen.has(g.index))for(const p of endpoints(g))candidates.set(p.join(','),p);
++  const boundary:Point[]=[];for(const p of candidates.values())if(geometries.some(g=>!chosen.has(g.index)&&touches(g,p)))boundary.push(p);
+```
+
+## 2. `addConnectedWire` – split only on interior contact, refuse to join at multiway/pin
+
+```diff
+ export function addConnectedWire(doc:Doc,points:Point[]):void {
+   const same=(a:Point,b:Point)=>a[0]===b[0]&&a[1]===b[1];
+   const on=(p:Point,a:Point,b:Point)=>(p[0]-a[0])*(b[1]-a[1])===(p[1]-a[1])*(b[0]-a[0])&&p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]);
+   const candidate=makeWire(points);
+   const replacements: {index:number;records:Rec[]}[]=[];
+   for(let index=0;index<doc.records.length;index++){
+    const record=doc.records[index];if(record.type!==256)continue;
+-   let parts=[wirePoints(record)];
+-   for(const p of [points[0],points.at(-1)!])parts=parts.flatMap(part=>{
+-    if(same(p,part[0])||same(p,part.at(-1)!))return [part];
+-    const j=part.findIndex((b,j)=>j>0&&on(p,part[j-1],b));if(j<1)return [part];
+-    const left=part.slice(0,j);if(!same(left.at(-1)!,p))left.push(p);
+-    const right=part.slice(j);if(!same(right[0],p))right.unshift(p);return [left,right];
+-   });
+-   if(parts.length===1)continue;
++   const original=wirePoints(record);
++   let parts=[original];
++   for(const p of [points[0],points.at(-1)!])parts=parts.flatMap(part=>{
++    // Touching an existing END is native connectivity; do not split.
++    if(same(p,part[0])||same(p,part.at(-1)!))return [part];
++    // Interior contact → split (this is the case the current code is intended for).
++    const j=part.findIndex((b,j)=>j>0&&on(p,part[j-1],b));if(j<1)return [part];
++    const left=part.slice(0,j);if(!same(left.at(-1)!,p))left.push(p);
++    const right=part.slice(j);if(!same(right[0],p))right.unshift(p);return [left,right];
++   });
++   if(parts.length===1)continue;
++   // Safe normalization: only browser-authored wires (fresh-stamp uid) with a single shared endpoint may be
++   // recombined; and never when either side already has another documented connection.
++   if(isBrowserAuthored(record) && canNormalize(parts,doc,index)){
++    replacements.push({index,records:[rebuildWire(record,parts.flat())]});continue;
++   }
+    const tailStart=10+4*wirePoints(record).length;
+    const [,uidEnd]=readString(record.data,tailStart+8);
+    const records=parts.map((part,i)=>{const fresh=makeWire(part),geometry=fresh.data.slice(0,10+4*part.length);return {...record,data:join(geometry,record.data.slice(tailStart,tailStart+8),i?countedString(newUid()):record.data.slice(tailStart+8,uidEnd),record.data.slice(uidEnd))};});
+    replacements.push({index,records});
+  }
+```
+New helpers (concise):
+```ts
+const isBrowserAuthored=(r:Rec)=>{const [s]=wireUidBounds(r);const [,e]=readString(r.data,10+4*wirePoints(r).length+8);return /^w[0-9a-z]{20,}$/i.test(new TextDecoder().decode(r.data.slice(s,e)));};
+function canNormalize(parts:Point[][],doc:Doc,self:number):boolean{
+  // Only two collinear parts joined at a shared endpoint, no component pin at that shared point.
+  if(parts.length!==2)return false;
+  const [a,b]=parts, shared=[a.at(-1)!,b[0],a[0],b.at(-1)!].find(p=>parts.some(x=>same(x[0],p))&&parts.some(x=>same(x.at(-1)!,p)));
+  // collinearity
+  if(!shared)return false;
+  const isCollinear=(p:Point[],q:Point[])=>((p.at(-1)![0]-p[0][0])*(q.at(-1)![1]-q[0][1])===(p.at(-1)![1]-p[0][1])*(q.at(-1)![0]-q[0][0]));
+  if(!isCollinear(a,b))return false;
+  // no pin / no third record meets shared point
+  return !doc.records.some((r,i)=>i!==self&&r.type!==256&&r.type!==262&&hasPinAt(r,shared));
+}
+```
+
+## Behavior notes
+
+**Original behavior (bug):** `translateSelection` used `onWire` over every vertex, so a wire passing through an interior bend of a selected wire was treated as a cut point, emitting a one-bridge-per-vertex phantom branch when only the two true endpoints carry electrical contact. `addConnectedWire` unconditionally re-joined touching endpoints, silently merging into multiway junctions and component pins.
+
+**Patched behavior:** groups connect only at endpoint-to-endpoint contact (matches native electrical semantics); the phantom-branch class of bug is eliminated. Browser-authored collinear wire pairs (fresh `w…` uid, single interior split, no third record or pin at the shared point) normalize into one selectable wire; imported/opaque wires and any contact at a real multiway junction or component pin are left verbatim, so no opaque data or connectivity is altered.

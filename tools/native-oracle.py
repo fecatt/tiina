@@ -25,7 +25,8 @@ import time
 def dialog_file(command,path,target=None):
  # Resolve the current process/editor instead of retaining a stale HWND after restart.
  editors=[r for r in windows(None) if r['visible'] and r['class']=='TSchematicEditor']
- if len(editors)!=1:raise RuntimeError('Expected one visible TINA editor')
+ if target is not None:editors=[r for r in editors if r['hwnd']==target]
+ if len(editors)!=1:raise RuntimeError('Expected one explicitly selected visible TINA editor')
  process_id=w.DWORD();u.GetWindowThreadProcessId(editors[0]['hwnd'],ctypes.byref(process_id));pid=process_id.value
  if target is not None:
   target_pid=w.DWORD();u.GetWindowThreadProcessId(target,ctypes.byref(target_pid))

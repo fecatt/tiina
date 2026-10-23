@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {decode,encode,newComponent,component,pins,KINDS,build,exportSpice} from '../src/codec.ts';
+import {run} from './ngspice-runner.ts';
+const source=decode(fs.readFileSync(new URL('../reports/oracle-cases/text_native18.TSC',import.meta.url)));
+const donor=source.records.find(r=>r.type===0x207)!;assert(donor);
+const fresh=newComponent('AMV',200,240,'AM2'),a=component(fresh),native=component(donor);
+assert.equal(fresh.type,0x207);assert.equal(a.kind,'AMV');assert.equal(a.pin_count,2);assert.notEqual(a.uid,native.uid);
+assert.deepEqual(pins(a),[[200,240],[200,280]]);
+assert.deepEqual(fresh.data.slice(a.parameter_offset),Uint8Array.from(donor.data.slice(native.parameter_offset)));
+for(const kind of Object.values(KINDS))assert.equal(component(newComponent(kind,200,240,kind+'1')).kind,kind,'every advertised kind must have a real creation template');
+const circuit=build({format:'tina-circuit-v1',components:[{kind:'V',label:'V1',x:160,y:200,value:5},{kind:'GND',x:160,y:240},{kind:'R',label:'R1',x:200,y:200,value:1000},{kind:'AMV',label:'AM1',x:240,y:200}],wires:[[[160,200],[200,200]],[[240,240],[160,240]]]});
+const net=exportSpice(circuit);assert.match(net.text,/VAM_AM1 \d+ 0 0/);
+assert.deepEqual(encode(decode(encode(circuit))),encode(circuit));
+const result=await run(net.text.replace(/^\s*\.end\s*$/gmi,'')),current=result.names.findIndex(n=>n.toLowerCase()==='i(vam_am1)');
+assert(current>=0);assert(Math.abs(Number(result.values[0][current])-.005)<1e-10,'5 V across 1 kOhm reads +5 mA through round meter');
+console.log('Round ammeter: native type0x207 donor, fresh identity, pins, opaque parameters, solver branch and all advertised creation templates passed');

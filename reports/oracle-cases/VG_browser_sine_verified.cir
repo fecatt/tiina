@@ -1,0 +1,26 @@
+VG_browser_sine_verified (PSpice format)
+**************************************
+**  This file was created by TINA   **
+**         www.tina.com             ** 
+**      (c) DesignSoft, Inc.        **          
+**     www.designsoftware.com       **
+**************************************
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\EXAMPLES\SPICE\TSPICE.LIB"
+.LIB "C:\Users\fedor\AppData\Local\Programs\TinaTI\DesignSoft\Tina 9 - TI\SPICELIB\Operational Amplifiers.LIB"
+.LIB
+.TEMP 27
+.AC DEC 20 10 1MEG
+.TRAN 50U 25M
+.DC LIN Vin 0 1 10M
+
+.OPTIONS ABSTOL=1U ITL1=150 ITL2=20 ITL4=10 TRTOL=7 
+.PROBE V(1,0)
+
+Vin         2 3 DC 0 AC 1 0
++ SIN( 0 750M 500 0 0 45 )
+Vin_DC      3 0 250M
+C1          1 0 1U IC=0 
+R1          2 1 1K 
+
+
+.END

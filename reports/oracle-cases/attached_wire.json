@@ -1,0 +1,1 @@
+{"format":"tina-circuit-v1","components":[{"kind":"GND","x":200,"y":360},{"kind":"VM","label":"VM1","x":440,"y":200}],"wires":[[[200,360],[440,360],[440,240]]]}

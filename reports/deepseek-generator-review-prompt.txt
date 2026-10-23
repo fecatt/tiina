@@ -1,0 +1,54 @@
+Review for concrete bugs only. This module is based on observed native TSC fields. Native sine phase serialization is p+26+90 and verified by reloading original TINA; do not change that. Square verified native text export. Give at most 5 actionable issues and proposed edge tests, no speculation.
+import type {Component} from './codec.ts';
+
+export function nativeGenerator(c:Component){
+ const d=c.record.data,p=c.parameter_offset;
+ if(c.kind!=='VG'||d.length<p+42||d[p+8]!==1||![4,5].includes(d[p+9]))return null;
+ const v=new DataView(d.buffer,d.byteOffset,d.byteLength);
+ const offset=v.getFloat64(p,true),amplitude=v.getFloat64(p+10,true),frequency=v.getFloat64(p+18,true),parameter=v.getFloat64(p+26,true),resistance=v.getFloat64(p+34,true);
+ if(![offset,amplitude,frequency,parameter,resistance].every(Number.isFinite)||amplitude<0||frequency<=0||resistance!==0)return null;
+ if(d[p+9]===4)return {waveform:'sine' as const,offset,amplitude,frequency,phase:parameter+90};
+ if(parameter<=0||parameter>=1/frequency/2)return null;
+ return {waveform:'rectangle' as const,offset,amplitude,frequency,edge:parameter};
+}
+
+/** Narrow v66 rectangular VG layout, checked against native properties, XML and PSpice.
+ * Other signal IDs remain opaque; their meaning must not be guessed. */
+export function nativeRectangle(c:Component){
+ const s=nativeGenerator(c);if(!s||s.waveform!=='rectangle')return null;
+ const {offset,amplitude,frequency,edge}=s;return {offset,amplitude,frequency,edge};
+}
+
+export function nativeGeneratorWaveform(c:Component,stop:number):string {
+ const s=nativeGenerator(c);if(!s)throw Error(`Генератор ${c.label}: форма сигнала или сопротивление TSC пока не подтверждены`);
+ return s.waveform==='sine'?`SIN(${s.offset} ${s.amplitude} ${s.frequency} 0 0 ${s.phase})`:nativeRectangleWaveform(c,stop);
+}
+
+/** TINA's square starts at the DC offset, reaches +A after t, and changes
+ * polarity across half-period ±t. This differs from a low-start SPICE PULSE. */
+export function nativeRectangleWaveform(c:Component,stop:number):string {
+ const s=nativeRectangle(c);if(!s)throw Error(`Генератор ${c.label}: форма сигнала или сопротивление TSC пока не подтверждены`);
+ if(!Number.isFinite(stop)||stop<=0)throw Error('Неверное время расчёта');
+ const period=1/s.frequency,cycles=Math.ceil(stop/period);
+ if(cycles>16000)throw Error('Слишком много периодов генератора TSC');
+ const points:[number,number][]=[];
+ for(let i=0;i<=cycles;i++){
+  const t=i*period;
+  const local:[number,number][]=[[0,0],[s.edge,1],[period/2-s.edge,1],[period/2+s.edge,-1],[period-s.edge,-1]];
+  for(const [dt,a] of local)points.push([t+dt,s.offset+a*s.amplitude]);
+ }
+ return `PWL(${points.map(([t,a])=>`${t} ${a}`).join(' ')})`;
+}
+
+Bias initialization:
+(job:Job,run:(netlist:string)=>Promise<Curve>):Promise<string>{
+ if(!job.initialBias)return job.netlist;
+ const bias=await run(job.initialBias.netlist);
+ const conditions=job.initialBias.nodes.map(node=>{
+  const index=bias.names.indexOf(`v(${node})`),cell=bias.values[0]?.[index];
+  if(index<0||typeof cell!=='number'||!Number.isFinite(cell))throw Error('Не получена DC рабочая точка узла '+node);
+  return `v(${node})=${cell}`;
+ });
+ return job.netlist.replace(/^\.tran /m,`.ic ${conditions.join(' ')}\n.tran `);
+}
+

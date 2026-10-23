@@ -1,0 +1,2021 @@
+{
+  "scope": "Local TINA 9 - TI .TSC examples and clcf.cat data only. No executable decompilation or native UI validation.",
+  "corpus_files": 1482,
+  "components": {
+    "switch": {
+      "type_hex": "0x235",
+      "all_versions_counts": {
+        "66": 2,
+        "54": 2,
+        "57": 1
+      },
+      "v66_count": 2,
+      "common_drawing_bytes_after_package": 54,
+      "samples": [
+        {
+          "source": "EXAMPLES\\NSC Test Circuits\\LMV710 Test Circuit.TSC",
+          "index": 22,
+          "version": 66,
+          "size": 155,
+          "label": "SW-SPST1",
+          "x": 184,
+          "y": 240,
+          "rotation": 0,
+          "pins": 2,
+          "label_dx": 8,
+          "label_dy": -43,
+          "uid": "T_03E514F020110824190309",
+          "package": "SW_SPST_SS-12F56 (SW-SPST)",
+          "parameter_offset": 133,
+          "parameter_hex": "00000000000065cdcd41000000000000000000000000",
+          "wire_offsets": [
+            [
+              -56,
+              -80
+            ],
+            [
+              -48,
+              -80
+            ],
+            [
+              -48,
+              -48
+            ],
+            [
+              -8,
+              -40
+            ],
+            [
+              -8,
+              -32
+            ],
+            [
+              -8,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              16,
+              -64
+            ],
+            [
+              56,
+              -64
+            ],
+            [
+              80,
+              -64
+            ]
+          ],
+          "record_b64": "uADwAAgA1f8ACVNXLVNQU1QxAAAAAgAAABlUXzAzRTUxNEYwMjAxMTA4MjQxOTAzMDkAG1NXX1NQU1RfU1MtMTJGNTYgKFNXLVNQU1QpAAAA//8AAAAAAAAAAAABAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAQAAAAAAAGXNzUEAAAAAAAAAAAAAAAA=",
+          "decoded_parameters": {
+            "state_u16": 0,
+            "double_at_2": 1000000000.0,
+            "double_at_10": 0.0,
+            "tail_u32": 0
+          }
+        },
+        {
+          "source": "EXAMPLES\\WAV file examples\\Distortion.TSC",
+          "index": 46,
+          "version": 66,
+          "size": 155,
+          "label": "SW-SPST1",
+          "x": 344,
+          "y": 200,
+          "rotation": 3,
+          "pins": 2,
+          "label_dx": 13,
+          "label_dy": -15,
+          "uid": "T_0D71EEE020100508233049",
+          "package": "SW_SPST_SS-12F56 (SW-SPST)",
+          "parameter_offset": 133,
+          "parameter_hex": "01000000000065cdcd41000000000000000000000000",
+          "wire_offsets": [
+            [
+              -80,
+              -48
+            ],
+            [
+              -80,
+              -40
+            ],
+            [
+              -80,
+              24
+            ],
+            [
+              -80,
+              40
+            ],
+            [
+              -80,
+              80
+            ],
+            [
+              -64,
+              -40
+            ],
+            [
+              -64,
+              24
+            ],
+            [
+              -24,
+              -40
+            ],
+            [
+              -24,
+              24
+            ],
+            [
+              -8,
+              24
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              24
+            ],
+            [
+              40,
+              -48
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              40,
+              16
+            ],
+            [
+              40,
+              80
+            ]
+          ],
+          "record_b64": "WAHIAA0A8f8BCVNXLVNQU1QxAAMAAgAAABlUXzBENzFFRUUwMjAxMDA1MDgyMzMwNDkAG1NXX1NQU1RfU1MtMTJGNTYgKFNXLVNQU1QpAAAA//8AAAAAAAAAAAABAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAEEAAAAAAAEAAQEAAAAAAGXNzUEAAAAAAAAAAAAAAAA=",
+          "decoded_parameters": {
+            "state_u16": 1,
+            "double_at_2": 1000000000.0,
+            "double_at_10": 0.0,
+            "tail_u32": 0
+          }
+        }
+      ],
+      "findings": {
+        "pins_canonical": [
+          [
+            0,
+            0
+          ],
+          [
+            40,
+            0
+          ]
+        ],
+        "pins_confidence": "Strong geometric inference; 0,0 and40,0 confirmed simultaneously in Distortion donor.",
+        "state_mapping": "Two states 0/1 observed, but ON/OFF meaning not confirmed. Do not silently equate1=closed.",
+        "resistance_inference": "1e9 at+2 likely open resistance;0 at+10 likely closed resistance. Parameter names not independently confirmed."
+      }
+    },
+    "diode": {
+      "type_hex": "0x218",
+      "all_versions_counts": {
+        "53": 2,
+        "54": 22,
+        "57": 29,
+        "66": 14,
+        "55": 1
+      },
+      "v66_count": 14,
+      "common_drawing_bytes_after_package": 54,
+      "samples": [
+        {
+          "source": "EXAMPLES\\WAV file examples\\Distortion.TSC",
+          "index": 47,
+          "version": 66,
+          "size": 172,
+          "label": "D2",
+          "x": 384,
+          "y": 176,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": -7,
+          "label_dy": -27,
+          "uid": "T_06D622C020071001194243",
+          "package": "DO41-10 (1N1183)",
+          "parameter_offset": 117,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -64,
+              -56
+            ],
+            [
+              -64,
+              -40
+            ],
+            [
+              -64,
+              8
+            ],
+            [
+              -64,
+              56
+            ],
+            [
+              -64,
+              64
+            ],
+            [
+              -24,
+              -64
+            ],
+            [
+              -24,
+              -40
+            ],
+            [
+              -24,
+              0
+            ],
+            [
+              -16,
+              -64
+            ],
+            [
+              0,
+              -64
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              56
+            ],
+            [
+              40,
+              -64
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              40,
+              56
+            ],
+            [
+              56,
+              -80
+            ],
+            [
+              56,
+              -64
+            ],
+            [
+              56,
+              0
+            ],
+            [
+              56,
+              8
+            ],
+            [
+              56,
+              48
+            ],
+            [
+              56,
+              56
+            ]
+          ],
+          "record_b64": "gAGwAPn/5f8AA0QyAAEAAgAAABlUXzA2RDYyMkMwMjAwNzEwMDExOTQyNDMAEURPNDEtMTAgKDFOMTE4MykAAAD//wAAAAAAAAAAAAEAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABBzFOMTE4MwAJU3RhbmRhcmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\WAV file examples\\Distortion.TSC",
+          "index": 48,
+          "version": 66,
+          "size": 172,
+          "label": "D1",
+          "x": 320,
+          "y": 136,
+          "rotation": 3,
+          "pins": 2,
+          "label_dx": -7,
+          "label_dy": 13,
+          "uid": "T_0413B79420071001194240",
+          "package": "DO41-10 (1N1183)",
+          "parameter_offset": 117,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -72,
+              64
+            ],
+            [
+              -72,
+              80
+            ],
+            [
+              -16,
+              -72
+            ],
+            [
+              -16,
+              -64
+            ],
+            [
+              -16,
+              0
+            ],
+            [
+              -16,
+              16
+            ],
+            [
+              -16,
+              56
+            ],
+            [
+              -16,
+              64
+            ],
+            [
+              0,
+              -64
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              40,
+              -64
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              56,
+              0
+            ],
+            [
+              64,
+              -64
+            ],
+            [
+              64,
+              -24
+            ],
+            [
+              64,
+              0
+            ]
+          ],
+          "record_b64": "QAGIAPn/DQAAA0QxAAMAAgAAABlUXzA0MTNCNzk0MjAwNzEwMDExOTQyNDAAEURPNDEtMTAgKDFOMTE4MykAAAD//wAAAAAAAAAAAAEAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABBzFOMTE4MwAJU3RhbmRhcmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV110.TSC",
+          "index": 51,
+          "version": 66,
+          "size": 168,
+          "label": "D1",
+          "x": 784,
+          "y": 200,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_10833A1020120702122539",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -80,
+              -40
+            ],
+            [
+              -80,
+              0
+            ],
+            [
+              -72,
+              -40
+            ],
+            [
+              -32,
+              -40
+            ],
+            [
+              -16,
+              -40
+            ],
+            [
+              24,
+              -40
+            ],
+            [
+              40,
+              -8
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              48,
+              -40
+            ],
+            [
+              48,
+              -16
+            ],
+            [
+              48,
+              -8
+            ],
+            [
+              80,
+              -40
+            ]
+          ],
+          "record_b64": "EAPIACQA5f8AA0QxAAEAAgAAABlUXzEwODMzQTEwMjAxMjA3MDIxMjI1MzkADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV110.TSC",
+          "index": 52,
+          "version": 66,
+          "size": 168,
+          "label": "D2",
+          "x": 784,
+          "y": 240,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_10833FF020120702122549",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -80,
+              -40
+            ],
+            [
+              -80,
+              0
+            ],
+            [
+              -72,
+              -80
+            ],
+            [
+              -56,
+              -40
+            ],
+            [
+              -56,
+              0
+            ],
+            [
+              -40,
+              -40
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -32,
+              -40
+            ],
+            [
+              8,
+              -40
+            ],
+            [
+              24,
+              -40
+            ],
+            [
+              64,
+              -40
+            ],
+            [
+              80,
+              -8
+            ],
+            [
+              80,
+              0
+            ]
+          ],
+          "record_b64": "EAPwACQA5f8AA0QyAAEAAgAAABlUXzEwODMzRkYwMjAxMjA3MDIxMjI1NDkADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV110.TSC",
+          "index": 53,
+          "version": 66,
+          "size": 168,
+          "label": "D3",
+          "x": 784,
+          "y": 280,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_1083229020120702122552",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -56,
+              -40
+            ],
+            [
+              -40,
+              -40
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -32,
+              -80
+            ],
+            [
+              -16,
+              -40
+            ],
+            [
+              -16,
+              0
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              -40
+            ],
+            [
+              48,
+              -40
+            ],
+            [
+              64,
+              -40
+            ]
+          ],
+          "record_b64": "EAMYASQA5f8AA0QzAAEAAgAAABlUXzEwODMyMjkwMjAxMjA3MDIxMjI1NTIADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\TLC555_ASTABLE.TSC",
+          "index": 43,
+          "version": 66,
+          "size": 172,
+          "label": "D1",
+          "x": 336,
+          "y": 344,
+          "rotation": 3,
+          "pins": 2,
+          "label_dx": 12,
+          "label_dy": 71,
+          "uid": "T_08C719A020110616160324",
+          "package": "DO35-10 (1N4148)",
+          "parameter_offset": 117,
+          "parameter_hex": "07314e3431343800095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -72,
+              -72
+            ],
+            [
+              -64,
+              -72
+            ],
+            [
+              -24,
+              -72
+            ],
+            [
+              -8,
+              -72
+            ],
+            [
+              -8,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              -72
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              48,
+              -72
+            ],
+            [
+              56,
+              -72
+            ],
+            [
+              56,
+              0
+            ],
+            [
+              64,
+              -72
+            ],
+            [
+              64,
+              0
+            ]
+          ],
+          "record_b64": "UAFYAQwARwABA0QxAAMAAgAAABlUXzA4QzcxOUEwMjAxMTA2MTYxNjAzMjQAEURPMzUtMTAgKDFONDE0OCkAAAD//wAAAAAAAAAAAAEAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABBzFONDE0OAAJU3RhbmRhcmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "1N4148",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\TLC556_ASTABLE.TSC",
+          "index": 43,
+          "version": 66,
+          "size": 172,
+          "label": "D1",
+          "x": 336,
+          "y": 344,
+          "rotation": 3,
+          "pins": 2,
+          "label_dx": 12,
+          "label_dy": 71,
+          "uid": "T_08C719A020110616160324",
+          "package": "DO35-10 (1N4148)",
+          "parameter_offset": 117,
+          "parameter_hex": "07314e3431343800095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -72,
+              -72
+            ],
+            [
+              -64,
+              -72
+            ],
+            [
+              -24,
+              -72
+            ],
+            [
+              -8,
+              -72
+            ],
+            [
+              -8,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              -72
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              48,
+              -72
+            ],
+            [
+              56,
+              -72
+            ],
+            [
+              56,
+              0
+            ],
+            [
+              64,
+              -72
+            ],
+            [
+              64,
+              0
+            ]
+          ],
+          "record_b64": "UAFYAQwARwABA0QxAAMAAgAAABlUXzA4QzcxOUEwMjAxMTA2MTYxNjAzMjQAEURPMzUtMTAgKDFONDE0OCkAAAD//wAAAAAAAAAAAAEAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABBzFONDE0OAAJU3RhbmRhcmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "1N4148",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV120.TSC",
+          "index": 45,
+          "version": 66,
+          "size": 168,
+          "label": "D1",
+          "x": 696,
+          "y": 200,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_1112477020120703091350",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -80,
+              -40
+            ],
+            [
+              -80,
+              0
+            ],
+            [
+              -72,
+              -40
+            ],
+            [
+              -32,
+              -40
+            ],
+            [
+              -16,
+              -40
+            ],
+            [
+              24,
+              -40
+            ],
+            [
+              40,
+              -8
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              48,
+              -40
+            ],
+            [
+              48,
+              -16
+            ],
+            [
+              48,
+              -8
+            ],
+            [
+              80,
+              -40
+            ]
+          ],
+          "record_b64": "uALIACQA5f8AA0QxAAEAAgAAABlUXzExMTI0NzcwMjAxMjA3MDMwOTEzNTAADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV120.TSC",
+          "index": 46,
+          "version": 66,
+          "size": 168,
+          "label": "D2",
+          "x": 696,
+          "y": 240,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_1112419020120703091350",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -80,
+              -40
+            ],
+            [
+              -80,
+              0
+            ],
+            [
+              -72,
+              -40
+            ],
+            [
+              -56,
+              -40
+            ],
+            [
+              -40,
+              -40
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -32,
+              -40
+            ],
+            [
+              8,
+              -40
+            ],
+            [
+              24,
+              -40
+            ],
+            [
+              64,
+              -40
+            ],
+            [
+              80,
+              -8
+            ],
+            [
+              80,
+              0
+            ]
+          ],
+          "record_b64": "uALwACQA5f8AA0QyAAEAAgAAABlUXzExMTI0MTkwMjAxMjA3MDMwOTEzNTAADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\DRV120.TSC",
+          "index": 47,
+          "version": 66,
+          "size": 168,
+          "label": "D3",
+          "x": 696,
+          "y": 280,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_11123BB020120703091350",
+          "package": "DO5 (1N1183)",
+          "parameter_offset": 113,
+          "parameter_hex": "07314e3131383300095374616e6461726400000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -40,
+              -40
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -32,
+              -40
+            ],
+            [
+              -16,
+              -40
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              -40
+            ],
+            [
+              48,
+              -40
+            ],
+            [
+              64,
+              -40
+            ]
+          ],
+          "record_b64": "uAIYASQA5f8AA0QzAAEAAgAAABlUXzExMTIzQkIwMjAxMjA3MDMwOTEzNTAADURPNSAoMU4xMTgzKQAAAP//AAAAAAAAAAAAAQAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEHMU4xMTgzAAlTdGFuZGFyZAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAQAA",
+          "decoded_parameters": {
+            "model": "1N1183",
+            "family": "Standard",
+            "has_embedded_model": 0,
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\Smps\\TPS40210\\TPS40210_AVG.TSC",
+          "index": 59,
+          "version": 66,
+          "size": 295,
+          "label": "D1",
+          "x": 576,
+          "y": 352,
+          "rotation": 0,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_0460F3CC20090918112905",
+          "package": "CASE403A (MBRS340T3)",
+          "parameter_offset": 121,
+          "parameter_hex": "0a4d425253333430543300095374616e64617264000102000000422e4d4f44454c204d42525333343054332044202849533d3138322e313833752052533d33312e32366d204e3d312e3430332042563d323030204942563d302e316d00000000001d2b434a4f3d3439322e37323870204d3d302e3436342054543d316e290000000000065b416c6c5d000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -32,
+              -80
+            ],
+            [
+              -32,
+              -64
+            ],
+            [
+              -8,
+              0
+            ],
+            [
+              -8,
+              56
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              8,
+              56
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              72,
+              0
+            ]
+          ],
+          "record_b64": "QAJgASQA5f8AA0QxAAAAAgAAABlUXzA0NjBGM0NDMjAwOTA5MTgxMTI5MDUAFUNBU0U0MDNBIChNQlJTMzQwVDMpAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAQpNQlJTMzQwVDMACVN0YW5kYXJkAAECAAAAQi5NT0RFTCBNQlJTMzQwVDMgRCAoSVM9MTgyLjE4M3UgUlM9MzEuMjZtIE49MS40MDMgQlY9MjAwIElCVj0wLjFtAAAAAAAdK0NKTz00OTIuNzI4cCBNPTAuNDY0IFRUPTFuKQAAAAAABltBbGxdAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "MBRS340T3",
+            "family": "Standard",
+            "has_embedded_model": 1,
+            "model_lines": [
+              {
+                "text": ".MODEL MBRS340T3 D (IS=182.183u RS=31.26m N=1.403 BV=200 IBV=0.1m",
+                "flags_u32": 0
+              },
+              {
+                "text": "+CJO=492.728p M=0.464 TT=1n)",
+                "flags_u32": 0
+              }
+            ],
+            "group": "[All]",
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\Smps\\TPS40211\\TPS40211_AVG.TSC",
+          "index": 56,
+          "version": 66,
+          "size": 295,
+          "label": "D2",
+          "x": 632,
+          "y": 328,
+          "rotation": 0,
+          "pins": 2,
+          "label_dx": 36,
+          "label_dy": -27,
+          "uid": "T_12372DD020120903150817",
+          "package": "CASE403A (MBRS340T3)",
+          "parameter_offset": 121,
+          "parameter_hex": "0a4d425253333430543300095374616e64617264000102000000422e4d4f44454c204d42525333343054332044202849533d3138322e313833752052533d33312e32366d204e3d312e3430332042563d323030204942563d302e316d00000000001d2b434a4f3d3439322e37323870204d3d302e3436342054543d316e290000000000065b416c6c5d000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -64,
+              -48
+            ],
+            [
+              -64,
+              0
+            ],
+            [
+              -64,
+              48
+            ],
+            [
+              -24,
+              -56
+            ],
+            [
+              -24,
+              -48
+            ],
+            [
+              -24,
+              48
+            ],
+            [
+              -24,
+              56
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              64,
+              0
+            ]
+          ],
+          "record_b64": "eAJIASQA5f8AA0QyAAAAAgAAABlUXzEyMzcyREQwMjAxMjA5MDMxNTA4MTcAFUNBU0U0MDNBIChNQlJTMzQwVDMpAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAQpNQlJTMzQwVDMACVN0YW5kYXJkAAECAAAAQi5NT0RFTCBNQlJTMzQwVDMgRCAoSVM9MTgyLjE4M3UgUlM9MzEuMjZtIE49MS40MDMgQlY9MjAwIElCVj0wLjFtAAAAAAAdK0NKTz00OTIuNzI4cCBNPTAuNDY0IFRUPTFuKQAAAAAABltBbGxdAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "MBRS340T3",
+            "family": "Standard",
+            "has_embedded_model": 1,
+            "model_lines": [
+              {
+                "text": ".MODEL MBRS340T3 D (IS=182.183u RS=31.26m N=1.403 BV=200 IBV=0.1m",
+                "flags_u32": 0
+              },
+              {
+                "text": "+CJO=492.728p M=0.464 TT=1n)",
+                "flags_u32": 0
+              }
+            ],
+            "group": "[All]",
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\Smps\\LM5116\\LM5116_TRANS.TSC",
+          "index": 209,
+          "version": 66,
+          "size": 286,
+          "label": "D2",
+          "x": 104,
+          "y": 600,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": -13,
+          "label_dy": -25,
+          "uid": "T_06DA745020120802104648",
+          "package": "",
+          "parameter_offset": 101,
+          "parameter_hex": "09434d50443230303300095374616e64617264000102000000362e4d4f44454c20434d504432303033204420282049533d34362e364e2052533d302e3536322042563d323530204942563d363030550000000000352b20434a4f3d332e32323134452d3132204d3d2e333535323820564a3d2e33393035204e3d322e32362054543d37322e304e20290000000000065b416c6c5d000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -72,
+              64
+            ],
+            [
+              -32,
+              0
+            ],
+            [
+              -32,
+              64
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              64
+            ],
+            [
+              32,
+              64
+            ],
+            [
+              40,
+              0
+            ]
+          ],
+          "record_b64": "aABYAvP/5/8AA0QyAAEAAgAAABlUXzA2REE3NDUwMjAxMjA4MDIxMDQ2NDgAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEJQ01QRDIwMDMACVN0YW5kYXJkAAECAAAANi5NT0RFTCBDTVBEMjAwMyBEICggSVM9NDYuNk4gUlM9MC41NjIgQlY9MjUwIElCVj02MDBVAAAAAAA1KyBDSk89My4yMjE0RS0xMiBNPS4zNTUyOCBWSj0uMzkwNSBOPTIuMjYgVFQ9NzIuME4gKQAAAAAABltBbGxdAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "CMPD2003",
+            "family": "Standard",
+            "has_embedded_model": 1,
+            "model_lines": [
+              {
+                "text": ".MODEL CMPD2003 D ( IS=46.6N RS=0.562 BV=250 IBV=600U",
+                "flags_u32": 0
+              },
+              {
+                "text": "+ CJO=3.2214E-12 M=.35528 VJ=.3905 N=2.26 TT=72.0N )",
+                "flags_u32": 0
+              }
+            ],
+            "group": "[All]",
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        },
+        {
+          "source": "EXAMPLES\\Smps\\LM5116\\LM5116_TRANS.TSC",
+          "index": 213,
+          "version": 66,
+          "size": 286,
+          "label": "D1",
+          "x": 1000,
+          "y": 440,
+          "rotation": 1,
+          "pins": 2,
+          "label_dx": -7,
+          "label_dy": 12,
+          "uid": "T_06DA511020120802104648",
+          "package": "",
+          "parameter_offset": 101,
+          "parameter_hex": "09434d50443230303300095374616e64617264000102000000362e4d4f44454c20434d504432303033204420282049533d34362e364e2052533d302e3536322042563d323530204942563d363030550000000000352b20434a4f3d332e32323134452d3132204d3d2e333535323820564a3d2e33393035204e3d322e32362054543d37322e304e20290000000000065b416c6c5d000000000000000000000000000000000000000000f03f0000000000000000000000010000",
+          "wire_offsets": [
+            [
+              -72,
+              -40
+            ],
+            [
+              -40,
+              -80
+            ],
+            [
+              -40,
+              40
+            ],
+            [
+              -8,
+              40
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              32,
+              40
+            ],
+            [
+              40,
+              -40
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              80,
+              -40
+            ],
+            [
+              80,
+              0
+            ],
+            [
+              80,
+              40
+            ]
+          ],
+          "record_b64": "6AO4Afn/DAAAA0QxAAEAAgAAABlUXzA2REE1MTEwMjAxMjA4MDIxMDQ2NDgAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAEJQ01QRDIwMDMACVN0YW5kYXJkAAECAAAANi5NT0RFTCBDTVBEMjAwMyBEICggSVM9NDYuNk4gUlM9MC41NjIgQlY9MjUwIElCVj02MDBVAAAAAAA1KyBDSk89My4yMjE0RS0xMiBNPS4zNTUyOCBWSj0uMzkwNSBOPTIuMjYgVFQ9NzIuME4gKQAAAAAABltBbGxdAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAEAAA==",
+          "decoded_parameters": {
+            "model": "CMPD2003",
+            "family": "Standard",
+            "has_embedded_model": 1,
+            "model_lines": [
+              {
+                "text": ".MODEL CMPD2003 D ( IS=46.6N RS=0.562 BV=250 IBV=600U",
+                "flags_u32": 0
+              },
+              {
+                "text": "+ CJO=3.2214E-12 M=.35528 VJ=.3905 N=2.26 TT=72.0N )",
+                "flags_u32": 0
+              }
+            ],
+            "group": "[All]",
+            "opaque_tail": "0000000000000000000000000000000000000000f03f0000000000000000000000010000"
+          }
+        }
+      ],
+      "findings": {
+        "pins_canonical": [
+          [
+            0,
+            0
+          ],
+          [
+            40,
+            0
+          ]
+        ],
+        "polarity": "Anode/cathode mapping not confirmed by local record bytes alone.",
+        "embedded_model": "has_embedded_model u8; if1 then u32linecount; each line countedCP1251string+u32opaque flags; countedgroup follows. Preserve opaque tail.",
+        "catalog_models": "Catalog Standard modelnames need clcf.cat resolution. These .TSC records do not contain complete numeric models."
+      }
+    },
+    "voltage_probe": {
+      "type_hex": "0x205",
+      "all_versions_counts": {
+        "54": 592,
+        "53": 11,
+        "66": 1139,
+        "57": 705,
+        "55": 62
+      },
+      "v66_count": 1139,
+      "common_drawing_bytes_after_package": 53,
+      "samples": [
+        {
+          "source": "EXAMPLES\\Filters_Others\\10MHz LPF SK.TSC",
+          "index": 22,
+          "version": 66,
+          "size": 104,
+          "label": "Vout",
+          "x": 552,
+          "y": 216,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_0379FA9820070125022416",
+          "package": "",
+          "parameter_offset": 102,
+          "parameter_hex": "0101",
+          "wire_offsets": [
+            [
+              -80,
+              0
+            ],
+            [
+              -72,
+              -64
+            ],
+            [
+              -32,
+              -64
+            ],
+            [
+              -32,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "record_b64": "KALYAPz/7P8ABVZvdXQAAAABAAAAGVRfMDM3OUZBOTgyMDA3MDEyNTAyMjQxNgABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAQE=",
+          "opaque_flags": [
+            1,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\Smps\\QS Manual Circuits\\Average model TPS61000.TSC",
+          "index": 48,
+          "version": 66,
+          "size": 104,
+          "label": "VOut",
+          "x": 632,
+          "y": 88,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_0D77C03C20061108191903",
+          "package": "",
+          "parameter_offset": 102,
+          "parameter_hex": "0001",
+          "wire_offsets": [
+            [
+              -48,
+              0
+            ],
+            [
+              -48,
+              24
+            ],
+            [
+              -48,
+              64
+            ],
+            [
+              -48,
+              80
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "record_b64": "eAJYAPz/7P8ABVZPdXQAAAABAAAAGVRfMEQ3N0MwM0MyMDA2MTEwODE5MTkwMwABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAAE=",
+          "opaque_flags": [
+            0,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\Smps\\QS Manual Circuits\\Average model TPS61000.TSC",
+          "index": 55,
+          "version": 66,
+          "size": 105,
+          "label": "AC In",
+          "x": 480,
+          "y": 136,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": 17,
+          "label_dy": -7,
+          "uid": "T_06A7A65C20070115003803",
+          "package": "",
+          "parameter_offset": 103,
+          "parameter_hex": "0000",
+          "wire_offsets": [
+            [
+              -56,
+              16
+            ],
+            [
+              -56,
+              56
+            ],
+            [
+              0,
+              -48
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              16
+            ],
+            [
+              0,
+              56
+            ],
+            [
+              64,
+              -48
+            ],
+            [
+              64,
+              -32
+            ],
+            [
+              64,
+              8
+            ],
+            [
+              64,
+              16
+            ]
+          ],
+          "record_b64": "4AGIABEA+f8ABkFDIEluAAAAAQAAABlUXzA2QTdBNjVDMjAwNzAxMTUwMDM4MDMAAQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAA",
+          "opaque_flags": [
+            0,
+            0
+          ]
+        },
+        {
+          "source": "EXAMPLES\\Smps\\QS Manual Circuits\\Startup Transient TPS61000.TSC",
+          "index": 51,
+          "version": 66,
+          "size": 104,
+          "label": "VOut",
+          "x": 632,
+          "y": 88,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": 23,
+          "label_dy": -7,
+          "uid": "T_0D77C03C20061108191903",
+          "package": "",
+          "parameter_offset": 102,
+          "parameter_hex": "0001",
+          "wire_offsets": [
+            [
+              -48,
+              -24
+            ],
+            [
+              -48,
+              0
+            ],
+            [
+              -48,
+              24
+            ],
+            [
+              -48,
+              64
+            ],
+            [
+              -48,
+              80
+            ],
+            [
+              -40,
+              -24
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "record_b64": "eAJYABcA+f8ABVZPdXQAAAABAAAAGVRfMEQ3N0MwM0MyMDA2MTEwODE5MTkwMwABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAAE=",
+          "opaque_flags": [
+            0,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\Smps\\QS Manual Circuits\\Startup Transient TPS61000.TSC",
+          "index": 52,
+          "version": 66,
+          "size": 103,
+          "label": "VSW",
+          "x": 312,
+          "y": 64,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_0D95803020061108191918",
+          "package": "",
+          "parameter_offset": 101,
+          "parameter_hex": "0001",
+          "wire_offsets": [
+            [
+              -80,
+              24
+            ],
+            [
+              -40,
+              24
+            ],
+            [
+              -8,
+              0
+            ],
+            [
+              -8,
+              24
+            ],
+            [
+              -8,
+              72
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              32,
+              24
+            ],
+            [
+              72,
+              24
+            ],
+            [
+              80,
+              24
+            ]
+          ],
+          "record_b64": "OAFAAPz/7P8ABFZTVwAAAAEAAAAZVF8wRDk1ODAzMDIwMDYxMTA4MTkxOTE4AAEAAAD//wAAAAAAAAAAAAEAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAQ==",
+          "opaque_flags": [
+            0,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\Smps\\QS Manual Circuits\\Startup Transient TPS61000.TSC",
+          "index": 55,
+          "version": 66,
+          "size": 103,
+          "label": "VFB",
+          "x": 496,
+          "y": 200,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_0CFF000420061109102040",
+          "package": "",
+          "parameter_offset": 101,
+          "parameter_hex": "0001",
+          "wire_offsets": [
+            [
+              -72,
+              -48
+            ],
+            [
+              -72,
+              -8
+            ],
+            [
+              -64,
+              56
+            ],
+            [
+              -56,
+              56
+            ],
+            [
+              -56,
+              64
+            ],
+            [
+              -16,
+              -56
+            ],
+            [
+              -16,
+              0
+            ],
+            [
+              -16,
+              24
+            ],
+            [
+              -16,
+              32
+            ],
+            [
+              -16,
+              72
+            ],
+            [
+              -16,
+              80
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              32,
+              -56
+            ],
+            [
+              32,
+              -48
+            ]
+          ],
+          "record_b64": "8AHIAPz/7P8ABFZGQgAAAAEAAAAZVF8wQ0ZGMDAwNDIwMDYxMTA5MTAyMDQwAAEAAAD//wAAAAAAAAAAAAEAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAQ==",
+          "opaque_flags": [
+            0,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\TI Test Circuits\\LM4782.TSC",
+          "index": 35,
+          "version": 66,
+          "size": 114,
+          "label": "Vout",
+          "x": 664,
+          "y": 424,
+          "rotation": 3,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_07FFA91020120218060040",
+          "package": "NOPCB (VF)",
+          "parameter_offset": 112,
+          "parameter_hex": "0001",
+          "wire_offsets": [
+            [
+              0,
+              -80
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              72
+            ],
+            [
+              24,
+              -80
+            ],
+            [
+              64,
+              -80
+            ],
+            [
+              64,
+              -16
+            ]
+          ],
+          "record_b64": "mAKoAfz/7P8ABVZvdXQAAwABAAAAGVRfMDdGRkE5MTAyMDEyMDIxODA2MDA0MAALTk9QQ0IgKFZGKQAAAP//AAAAAAAAAAAAAQAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAB",
+          "opaque_flags": [
+            0,
+            1
+          ]
+        },
+        {
+          "source": "EXAMPLES\\NSC Test Circuits\\LMV710 Test Circuit.TSC",
+          "index": 15,
+          "version": 66,
+          "size": 103,
+          "label": "VF1",
+          "x": 264,
+          "y": 176,
+          "rotation": 0,
+          "pins": 1,
+          "label_dx": -4,
+          "label_dy": -20,
+          "uid": "T_03B0812420070110090700",
+          "package": "",
+          "parameter_offset": 101,
+          "parameter_hex": "0101",
+          "wire_offsets": [
+            [
+              -80,
+              64
+            ],
+            [
+              -64,
+              0
+            ],
+            [
+              -24,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "record_b64": "CAGwAPz/7P8ABFZGMQAAAAEAAAAZVF8wM0IwODEyNDIwMDcwMTEwMDkwNzAwAAEAAAD//wAAAAAAAAAAAAEAAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQABAQ==",
+          "opaque_flags": [
+            1,
+            1
+          ]
+        }
+      ],
+      "flag_distribution": {
+        "0101": 160,
+        "0001": 901,
+        "0000": 3,
+        "0002": 75
+      },
+      "findings": {
+        "pins_canonical": [
+          [
+            0,
+            0
+          ]
+        ],
+        "flags": "00 01,01 01,00 02,00 00. Meaning not confirmed; preserve.",
+        "simulation": "Ideal single-ended probe: V(node)-V(0), adds no load."
+      }
+    },
+    "ideal_opamp": {
+      "type_hex": "0x257",
+      "all_versions_counts": {
+        "66": 2
+      },
+      "v66_count": 2,
+      "common_drawing_bytes_after_package": 53,
+      "samples": [
+        {
+          "source": "EXAMPLES\\WAV file examples\\Distortion.TSC",
+          "index": 43,
+          "version": 66,
+          "size": 102,
+          "label": "IOP1",
+          "x": 224,
+          "y": 120,
+          "rotation": 0,
+          "pins": 3,
+          "label_dx": 0,
+          "label_dy": -40,
+          "uid": "T_0705675820071001201840",
+          "package": "",
+          "parameter_offset": 102,
+          "parameter_hex": "",
+          "wire_offsets": [
+            [
+              -64,
+              -56
+            ],
+            [
+              -64,
+              -48
+            ],
+            [
+              -64,
+              -8
+            ],
+            [
+              -64,
+              16
+            ],
+            [
+              -64,
+              32
+            ],
+            [
+              -64,
+              72
+            ],
+            [
+              -40,
+              16
+            ],
+            [
+              -32,
+              -56
+            ],
+            [
+              -32,
+              -16
+            ],
+            [
+              -32,
+              16
+            ],
+            [
+              -24,
+              -56
+            ],
+            [
+              16,
+              -56
+            ],
+            [
+              32,
+              -56
+            ],
+            [
+              32,
+              0
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              80,
+              0
+            ]
+          ],
+          "record_b64": "4AB4AAAA2P8ABUlPUDEAAAADAAAAGVRfMDcwNTY3NTgyMDA3MTAwMTIwMTg0MAABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEA"
+        },
+        {
+          "source": "EXAMPLES\\WAV file examples\\Bass Treble Tone Control.TSC",
+          "index": 44,
+          "version": 66,
+          "size": 102,
+          "label": "IOP1",
+          "x": 440,
+          "y": 232,
+          "rotation": 0,
+          "pins": 3,
+          "label_dx": 0,
+          "label_dy": -40,
+          "uid": "T_06E6203420071001200310",
+          "package": "",
+          "parameter_offset": 102,
+          "parameter_hex": "",
+          "wire_offsets": [
+            [
+              -72,
+              -48
+            ],
+            [
+              -48,
+              16
+            ],
+            [
+              -48,
+              24
+            ],
+            [
+              -32,
+              -48
+            ],
+            [
+              -32,
+              -16
+            ],
+            [
+              -32,
+              16
+            ],
+            [
+              -24,
+              -48
+            ],
+            [
+              32,
+              0
+            ]
+          ],
+          "record_b64": "uAHoAAAA2P8ABUlPUDEAAAADAAAAGVRfMDZFNjIwMzQyMDA3MTAwMTIwMDMxMAABAAAA//8AAAAAAAAAAAABAAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEA"
+        }
+      ],
+      "findings": {
+        "pins_canonical": [
+          [
+            -32,
+            -16
+          ],
+          [
+            -32,
+            16
+          ],
+          [
+            32,
+            0
+          ]
+        ],
+        "pin_polarity": "Output at32,0 strongly established; signs of two inputs not established.",
+        "model": "No saved gain/bandwidth/saturation parameters in either v66 donor. Do not infer finite gain or rail limits. Use only an explicitly documented independent ideal approximation until native semantics confirmed."
+      }
+    }
+  },
+  "diode_catalog": {
+    "descriptor_offset": 2252982,
+    "descriptor_fields": [
+      "IS",
+      "N",
+      "BV",
+      "RZ",
+      "IBV",
+      "RS",
+      "CJ0",
+      "VJ",
+      "MJ",
+      "FC",
+      "TT",
+      "EG",
+      "XTI",
+      "AF",
+      "KF",
+      "VRMAX",
+      "IZMAX",
+      "IFMAX",
+      "PMAX"
+    ],
+    "block_size": 178,
+    "description_size": 26,
+    "model_double_count": 19,
+    "models": {
+      "1N4148": {
+        "name_offset": 1916639,
+        "block_offset": 5216029,
+        "description": "General purpose",
+        "values": {
+          "IS": 1e-09,
+          "N": 1.7,
+          "BV": 75.0,
+          "RZ": 10.0,
+          "IBV": 5e-06,
+          "RS": 0.002,
+          "CJ0": 4e-12,
+          "VJ": 0.75,
+          "MJ": 0.33,
+          "FC": 0.5,
+          "TT": 2.59e-08,
+          "EG": 1.11,
+          "XTI": 3.0,
+          "AF": 0.0,
+          "KF": 1.0,
+          "VRMAX": 100.0,
+          "IZMAX": 1.0,
+          "IFMAX": 1.0,
+          "PMAX": 1.0
+        },
+        "block_b64": "D0dlbmVyYWwgcHVycG9zZQAAAAAAAAAAAACV1iboCy4RPjMzMzMzM/s/AAAAAADAUkAAAAAAAAAkQPFo44i1+NQ+/Knx0k1iYD8R6i2BmZeRPQAAAAAAAOg/H4XrUbge1T8AAAAAAADgP/REZXlWz1s+w/UoXI/C8T8AAAAAAAAIQAAAAAAAAAAAAAAAAAAA8D8AAAAAAABZQAAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPw=="
+      },
+      "1N1183": {
+        "name_offset": 1915521,
+        "block_offset": 5208375,
+        "description": "General-Purpose",
+        "values": {
+          "IS": 3.6e-08,
+          "N": 1.6,
+          "BV": 50.0,
+          "RZ": 10.0,
+          "IBV": 0.005,
+          "RS": 0.002,
+          "CJ0": 4.6e-10,
+          "VJ": 0.55,
+          "MJ": 0.44,
+          "FC": 0.5,
+          "TT": 4.347e-07,
+          "EG": 1.11,
+          "XTI": 3.0,
+          "AF": 0.0,
+          "KF": 1.0,
+          "VRMAX": 100.0,
+          "IZMAX": 1.0,
+          "IFMAX": 1.0,
+          "PMAX": 1.0
+        },
+        "block_b64": "D0dlbmVyYWwtUHVycG9zZQAAAAAAAAAAAABnsStlzVNjPpqZmZmZmfk/AAAAAAAASUAAAAAAAAAkQHsUrkfhenQ//Knx0k1iYD+XgB7UZ5z/PZqZmZmZmeE/KVyPwvUo3D8AAAAAAADgPysmgdEWLJ0+w/UoXI/C8T8AAAAAAAAIQAAAAAAAAAAAAAAAAAAA8D8AAAAAAABZQAAAAAAAAPA/AAAAAAAA8D8AAAAAAADwPw=="
+      }
+    },
+    "caution": "AF/KF descriptor labels imply AF=0,KF=1 in bothmodels, opposite typicalSPICEdefaults. Mapping not numerically validated. RZ is customTINA breakdown resistance, not standard ngspiceD parameter."
+  },
+  "legacy_caution": "v51/53/54/55/57 instances counted only. Common header layouts differ; do not use v66 parser for those versions."
+}

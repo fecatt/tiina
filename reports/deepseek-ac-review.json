@@ -1,0 +1,27 @@
+{
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "answer": "# План реализации на TypeScript: AC transfer function из ngspice\n\n## 1. Типы и парсинг\n\n```ts\ninterface Complex { re: number; im: number; }\ninterface AcPoint { freq: number; h: Complex; gainDb: number; phaseDeg: number; }\n\n// ngspice возвращает vectors: freq[], v(out) — real/imag interleaved или split\nfunction toComplex(re: number[], im: number[], i: number): Complex\n```\n\nИсточник: `tina`-совместимый поток `ac.curves` — частоты уже есть, но нет отношений; вычисляем `H` на месте, не храним голые массивы дольше одного шага обработки.\n\n## 2. Передаточная функция H(f)\n\n```ts\nfunction transferAt(i: number, vout: {re:number[];im:number[]}, vin: {re:number[];im:number[]}): Complex | null {\n  const vIn = complex(vin.re[i], vin.im[i]);\n  const vOut = complex(vout.re[i], vout.im[i]);\n  const d = vIn.re*vIn.re + vIn.im*vIn.im;\n  if (d < EPS) return null;                    // ноль входа\n  return { re: (vOut.re*vIn.re + vOut.im*vIn.im)/d,\n           im: (vOut.im*vIn.re - vOut.re*vIn.im)/d };\n}\n```\n\n`EPS = 1e-30` — масштабировать по `max|Vin|`. На `null`: `gainDb = NaN`, точка помечается `invalid`, в межчастотную интерполяцию не попадает.\n\n## 3. Gain и фаза\n\n```ts\ngainDb  = 20 * Math.log10(Math.hypot(h.re, h.im));           // dB\nphaseDeg = Math.atan2(h.im, h.re) * 180 / Math.PI;          // [-180,180]\n```\n\n**Развёртка фазы (unwrap)** для устойчивого отображения и поиска -3dB: `while (Δ > 180) p -= 360`, аналогично для `-180`.\n\n## 4. Поиск -3 дБ (лог-частотная интерполяция)\n\nИдея: `gainDb` линеен по `log10(f)` между точками → ищем корень `gainDb(f) = ref - 3`.\n\n```ts\nfunction cutoffs(freq: number[], gain: number[], refDb: number, invalid: boolean[]) {\n  const target = refDb - 3;\n  const hits: number[] = [];\n  for (let i = 1; i < freq.length; i++) {\n    if (invalid[i] || invalid[i-1]) continue;\n    const g0 = gain[i-1] - target, g1 = gain[i] - target;\n    if (g0 === 0) { hits.push(freq[i-1]); continue; }\n    if (g0 * g1 < 0) {\n      const t = g0 / (g0 - g1);\n      hits.push(Math.pow(10, Math.log10(freq[i-1]) + t*(Math.log10(freq[i]) - Math.log10(freq[i-1]))));\n    }\n  }\n  return { fLow: hits[0] ?? null, fHigh: hits[1] ?? null };\n}\n```\n\n`refDb` — базовый уровень: `max(gainDb)` или `gainDb[0]` в полосе пропускания (параметр режима `peak|dc`). Возвращаем `{ fLow, fHigh, bw = fHigh-fLow }`.\n\n## 5. Пайплайн\n\n```ts\nfunction measure(vout, vin, freq, opts): { points: AcPoint[]; fLow; fHigh; bw } {\n  const points = freq.map((f,i) => {\n    const h = transferAt(i, vout, vin);\n    return h ? {freq:f, h, gainDb:20*Math.log10(Math.hypot(h.re,h.im)),\n                phaseDeg: Math.atan2(h.im,h.re)*180/Math.PI}\n             : {freq:f, h:{re:NaN,im:NaN}, gainDb:NaN, phaseDeg:NaN};\n  });\n  unwrapPhase(points);\n  const inv = points.map(p => Number.isNaN(p.gainDb));\n  const ref = opts.ref === 'peak' ? Math.max(...points.map(p=>p.gainDb).filter(Number.isFinite)) : points[0].gainDb;\n  return { points, ...cutoffs(freq, points.map(p=>p.gainDb), ref, inv) };\n}\n```\n\nМиграция из TINA: обёртка `tinaToNgspice(curves)` собирает `{freq, vin, vout}`, дальше — общий `measure()`. Кэш `H` в `WeakMap` по паре vectors, чтобы не пересчитывать на каждый рендер.\n\n## 6. Четыре аналитических теста (acceptance)\n\n1. **RC ФНЧ**, `Vout/Vin = 1/(1+jωRC)`, R=1k, C=1µF.\n   - `fc = 1/(2πRC) ≈ 159.15 Hz` → `fHigh ≈ 159.15 ± 0.5`.\n   - `gainDb(fc) ≈ -3.01`, `phaseDeg(fc) ≈ -45`.\n   - `gainDb(10·fc) ≈ -20.04`.\n\n2. **RC ФВЧ**, `H = jωRC/(1+jωRC)`, те же номиналы.\n   - `fLow ≈ 159.15`, `phaseDeg(fc) ≈ +45`, `gainDb(DC) → -∞` (проверка `invalid[-?]` не сломала интерполяцию).\n\n3. **Резонансный RLC (последовательный, снять с L/C)**, `Q=10`, `f0=1kHz`.\n   - `gainDb_peak ≈ Q ≈ 20 dB`, `f0` пика в пределах 1% точности по log-сетке.\n   - `fHigh - fLow ≈ f0/Q = 100 Hz ± 5%`.\n   - Фаза: `+90°` (ёмкость) → `-90°` после `f0`, монотонная после unwrap.\n\n4. **Идеальный делитель / буфер**, `Vout = 0.5·Vin` (инвертирующий ×2 даёт `gainDb = +6.02`).\n   - `gainDb = -6.02 ± 1e-6` на всех частотах, `phaseDeg = 0` (или 180° для инверсии), `fLow = fHigh = null` (нет -3dB в диапазоне).\n   - Отдельно: **нулевой вход** — положить `Vin=0+0i` на одной точке → `invalid[i]=true`, cutoffs не падает, точка исключена из интерполяции.\n\nВсе тесты детерминированы, эталонные значения — формулы выше, сетка логарифмическая `10^(‑1..5)` с 200 точками.",
+  "usage": {
+    "prompt_tokens": 103,
+    "completion_tokens": 1755,
+    "total_tokens": 1858,
+    "cost": 0.000273653,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.000273653,
+      "upstream_inference_prompt_cost": 1.0403e-05,
+      "upstream_inference_completions_cost": 0.00026325
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 131,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  }
+}

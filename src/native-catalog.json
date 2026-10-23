@@ -1,0 +1,781 @@
+{
+  "metadata": {
+    "source": "TINA-TI 9 - TI/compregy.tcr",
+    "sourceEncoding": "windows-1251",
+    "edition": "TINA-TI 9.3.150",
+    "note": "Порядок и названия из реестра установленной TI. Запись каталога не доказывает доступность анализа в редакции TI; цифровые генераторы присутствуют в каталоге, но отключены.",
+    "symbolSet": "EU",
+    "colors": {
+      "background": "#FFFFFF",
+      "component": "#008000",
+      "label": "#008080",
+      "meterLabel": "#800080",
+      "wire": "#3C0000",
+      "grid": "#C0C0C0",
+      "pin": "#008000",
+      "pinCap": "#FF0000",
+      "selected": "#FF0000"
+    },
+    "colorSource": "tina.bak / Schematic Editor Color Sets / Set1"
+  },
+  "groups": [
+    {
+      "label": "Основные",
+      "helpTopic": "basic",
+      "items": [
+        {
+          "label": "Земля",
+          "typeId": 2,
+          "className": "TGnd",
+          "helpTopic": "basic/ground",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 515,
+          "kind": "GND"
+        },
+        {
+          "label": "Источник напряжения",
+          "typeId": 14,
+          "className": "TVSource",
+          "helpTopic": "sources/voltage_source",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 527,
+          "kind": "VS"
+        },
+        {
+          "label": "Батарея",
+          "typeId": 67,
+          "className": "TBattery",
+          "helpTopic": "sources/battery",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 580,
+          "kind": "V"
+        },
+        {
+          "label": "Генератор напряжения",
+          "typeId": 16,
+          "className": "TVGenerator",
+          "helpTopic": "sources/voltage_generator",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 529,
+          "kind": "VG"
+        },
+        {
+          "label": "Вольтметр",
+          "typeId": 5,
+          "className": "TVoltageMeter",
+          "helpTopic": "meters/voltage_meter",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 518,
+          "kind": "VM"
+        },
+        {
+          "label": "Амперметр",
+          "typeId": 6,
+          "className": "TAmperMeter",
+          "helpTopic": "meters/ampere_meter",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 519,
+          "kind": "AMV"
+        },
+        {
+          "label": "Резистор",
+          "typeId": 9,
+          "className": "TResistor",
+          "helpTopic": "basic/resistor",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 522,
+          "kind": "R"
+        },
+        {
+          "label": "Потенциометр",
+          "typeId": 36,
+          "className": "TPotenciometer",
+          "helpTopic": "basic/potentiometer",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 549,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Конденсатор",
+          "typeId": 10,
+          "className": "TCapacitor",
+          "helpTopic": "basic/capacitor",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 523,
+          "kind": "C"
+        },
+        {
+          "label": "Катушка индуктивности",
+          "typeId": 11,
+          "className": "THndlNonLinMagneticComps",
+          "helpTopic": "basic/inductor",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 524,
+          "kind": "L"
+        },
+        {
+          "label": "Нелинейная катушка индуктивности",
+          "typeId": -300,
+          "className": "THndlNonLinMagneticComps",
+          "helpTopic": "basic/nonlinear_inductor",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Связанные катушки",
+          "typeId": 12,
+          "className": "TCoupledInds",
+          "helpTopic": "basic/coupled_inductor",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 525,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Трансформаторы",
+          "typeId": -301,
+          "className": "THndlNonLinMagneticComps",
+          "helpTopic": "basic/transformers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Ключ",
+          "typeId": 52,
+          "className": "TSwitch",
+          "helpTopic": "switches/switch",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 565,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Терморезистор",
+          "typeId": -302,
+          "className": "THndlNonLinMagneticComps",
+          "helpTopic": "basic/thermistor",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Пересечение без соединения",
+          "typeId": 3,
+          "className": "TJumper",
+          "helpTopic": "special/jumper",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 516,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Начальное условие1",
+          "typeId": 81,
+          "className": "TInitCond1",
+          "helpTopic": "special/initial_condition1",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 594,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Начальное условие2",
+          "typeId": 82,
+          "className": "TInitCond2",
+          "helpTopic": "special/initial_condition2",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 595,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Группа узлов1",
+          "typeId": 83,
+          "className": "TNodeset1",
+          "helpTopic": "special/nodeset1",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 596,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Группа узлов2",
+          "typeId": 84,
+          "className": "TNodeset2",
+          "helpTopic": "special/nodeset2",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 597,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        }
+      ]
+    },
+    {
+      "label": "Ключи",
+      "helpTopic": "switches",
+      "items": [
+        {
+          "label": "Ключ",
+          "typeId": 52,
+          "className": "TSwitch",
+          "helpTopic": "switches/switch",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 565,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Переключатель",
+          "typeId": 59,
+          "className": "TSwitch",
+          "helpTopic": "switches/alternate_switch",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 572,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Ключ контролируемый временем",
+          "typeId": 35,
+          "className": "TTimeSwitch",
+          "helpTopic": "switches/time-ctld_switch",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 548,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Ключ контролируемый напряжением",
+          "typeId": 32,
+          "className": "TVoltageSwitch",
+          "helpTopic": "switches/voltage-ctld_switch",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 545,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Однополюсное открытое реле",
+          "typeId": 70,
+          "className": "TRelay",
+          "helpTopic": "switches/single_pole_open_relay",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 583,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Однополюсное закрытое реле",
+          "typeId": 71,
+          "className": "TRelay",
+          "helpTopic": "switches/single_pole_closed_relay",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 584,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Однополюсное переключающее реле",
+          "typeId": 72,
+          "className": "TRelay",
+          "helpTopic": "switches/single_pole_changeover_relay",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 585,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        }
+      ]
+    },
+    {
+      "label": "Измерительные приборы",
+      "helpTopic": "meters",
+      "items": [
+        {
+          "label": "Внешний вывод для измерения напряжения",
+          "typeId": 4,
+          "className": "TVoltagePin",
+          "helpTopic": "meters/voltage_pin",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 517,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Вольтметр",
+          "typeId": 5,
+          "className": "TVoltageMeter",
+          "helpTopic": "meters/voltage_meter",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 518,
+          "kind": "VM"
+        },
+        {
+          "label": "Открытая цепь",
+          "typeId": 33,
+          "className": "TVoltageTap",
+          "helpTopic": "meters/open_circuit",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 546,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Амперметр",
+          "typeId": 6,
+          "className": "TAmperMeter",
+          "helpTopic": "meters/ampere_meter",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 519,
+          "kind": "AMV"
+        },
+        {
+          "label": "Указатель тока",
+          "typeId": 34,
+          "className": "TCurrentArrow",
+          "helpTopic": "meters/current_arrow",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 547,
+          "kind": "AM"
+        },
+        {
+          "label": "Ваттметр",
+          "typeId": 7,
+          "className": "TPowerMeter",
+          "helpTopic": "meters/power_meter",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 520,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Омметр",
+          "typeId": 8,
+          "className": "TImpedanceMeter",
+          "helpTopic": "meters/impedance_meter",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 521,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Динамик",
+          "typeId": 60,
+          "className": "TSpeaker",
+          "helpTopic": "meters/speaker",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 573,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Триггер с устойчивым состоянием",
+          "typeId": 700,
+          "className": "TTriggerComp",
+          "helpTopic": "special/steady_state_trigger",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 1213,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Сенсор с устойчивым состоянием",
+          "typeId": 701,
+          "className": "TSteadyStateSensor",
+          "helpTopic": "special/steady_state_sensor",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 1214,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        }
+      ]
+    },
+    {
+      "label": "Источники",
+      "helpTopic": "sources",
+      "items": [
+        {
+          "label": "Источник напряжения",
+          "typeId": 14,
+          "className": "TVSource",
+          "helpTopic": "sources/voltage_source",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 527,
+          "kind": "VS"
+        },
+        {
+          "label": "Батарея",
+          "typeId": 67,
+          "className": "TBattery",
+          "helpTopic": "sources/battery",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 580,
+          "kind": "V"
+        },
+        {
+          "label": "Источник тока",
+          "typeId": 13,
+          "className": "TCSource",
+          "helpTopic": "sources/current_source",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 526,
+          "kind": "I"
+        },
+        {
+          "label": "Генератор напряжения",
+          "typeId": 16,
+          "className": "TVGenerator",
+          "helpTopic": "sources/voltage_generator",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 529,
+          "kind": "VG"
+        },
+        {
+          "label": "Генератор тока",
+          "typeId": 15,
+          "className": "TCGenerator",
+          "helpTopic": "sources/current_generator",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 528,
+          "kind": "IS"
+        },
+        {
+          "label": "Controlled Sources",
+          "typeId": -304,
+          "className": "THndlNonLinMagneticComps",
+          "helpTopic": "basic/controlled_sources",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Data Generator 4-bit",
+          "typeId": 10494,
+          "className": "TDLS",
+          "helpTopic": "sources/data_generator",
+          "unsupported": true,
+          "digital": true,
+          "recordTypeId": 11007,
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+        },
+        {
+          "label": "Data Generator 8-bit",
+          "typeId": 10495,
+          "className": "TDLS",
+          "helpTopic": "sources/data_generator",
+          "unsupported": true,
+          "digital": true,
+          "recordTypeId": 11008,
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+        },
+        {
+          "label": "SPI",
+          "typeId": 10493,
+          "className": "TDLS",
+          "helpTopic": "sources/spi_generator",
+          "unsupported": true,
+          "digital": true,
+          "recordTypeId": 11006,
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+        }
+      ]
+    },
+    {
+      "label": "Полупроводники",
+      "helpTopic": "semiconductors/index",
+      "items": [
+        {
+          "label": "Идеальный операционный усилитель",
+          "typeId": 86,
+          "className": "TIdealOpamp",
+          "helpTopic": "semiconductors/ideal_op_amplifier",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 599,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Операционный усилитель",
+          "typeId": 85,
+          "className": "TOpamp",
+          "helpTopic": "semiconductors/operational_amplifier",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 598,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "555 Таймер",
+          "typeId": 45,
+          "className": "T555",
+          "helpTopic": "ad_da-555/555_timer",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 558,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Диод",
+          "typeId": 23,
+          "className": "TDiode",
+          "helpTopic": "semiconductors/diode",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 536,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Стабилитрон",
+          "typeId": 43,
+          "className": "TZener",
+          "helpTopic": "semiconductors/zener_diode",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 556,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Светодиод",
+          "typeId": 44,
+          "className": "TLED",
+          "helpTopic": "semiconductors/led",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 557,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Параметрический диод",
+          "typeId": 53,
+          "className": "TVaricap",
+          "helpTopic": "semiconductors/varicap_diode",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 566,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Диод Шотки",
+          "typeId": 64,
+          "className": "TSchottky",
+          "helpTopic": "semiconductors/schottky_diode",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 577,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "NPN биполярный транзистор",
+          "typeId": 87,
+          "className": "TNPN",
+          "helpTopic": "semiconductors/npn_bipolar_transistor",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 600,
+          "kind": "NPN"
+        },
+        {
+          "label": "PNP биполярный транзистор",
+          "typeId": 88,
+          "className": "TPNP",
+          "helpTopic": "semiconductors/pnp_bipolar_transistor",
+          "unsupported": false,
+          "digital": false,
+          "recordTypeId": 601,
+          "kind": "PNP"
+        },
+        {
+          "label": "N-канальный обогащенный МОП-транзистор",
+          "typeId": 89,
+          "className": "TNMOSInc",
+          "helpTopic": "semiconductors/nmos_enhancement-type",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 602,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "P-канальный обогащенный МОП-транзистор",
+          "typeId": 90,
+          "className": "TPMOSInc",
+          "helpTopic": "semiconductors/pmos_enhancement-type",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 603,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "N-канальный полевой транзистор с р-n-переходом",
+          "typeId": 93,
+          "className": "TJFETN",
+          "helpTopic": "semiconductors/junction_fet_n-channel",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 606,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "P-канальный полевой транзистор с р-n-переходом",
+          "typeId": 94,
+          "className": "TJFETP",
+          "helpTopic": "semiconductors/junction_fet_p-channel",
+          "unsupported": true,
+          "digital": false,
+          "recordTypeId": 607,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        }
+      ]
+    },
+    {
+      "label": "Макроэлементы Spice",
+      "helpTopic": "manufacturers_models/index",
+      "items": [
+        {
+          "label": "Операционный усилитель",
+          "typeId": -1100,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/operational_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Дифференциальный усилитель",
+          "typeId": -1440,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/operational_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Полно-дифференциальный усилитель",
+          "typeId": -1450,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/operational_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Измерительный усилитель",
+          "typeId": -1110,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/instrumentation_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Variable Gain Amplifiers",
+          "typeId": -1510,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/variable_gain_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Компараторы",
+          "typeId": -1120,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/comparators",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Регуляторы напряжения",
+          "typeId": -1200,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/voltage_regulators",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Буферы",
+          "typeId": -1140,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/buffers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Current Shunt Monitors",
+          "typeId": -1460,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/operational_amplifiers",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "SMPS",
+          "typeId": -1480,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/smps",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "AD Converters",
+          "typeId": -1490,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/adconverters",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "DA Converters",
+          "typeId": -1530,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/daconverters",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Другие компоненты",
+          "typeId": -1150,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/other_components",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        },
+        {
+          "label": "Inductors",
+          "typeId": -1520,
+          "className": "TSpiceMacroCompHandler",
+          "helpTopic": "manufacturers_models/inductors",
+          "unsupported": true,
+          "digital": false,
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+        }
+      ]
+    }
+  ]
+}

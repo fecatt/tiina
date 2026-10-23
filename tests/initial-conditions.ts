@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {build,presets,newComponent} from '../src/codec.ts';
+import {prepareJobs} from '../src/solver.ts';
+const doc=build(presets.output);doc.records.push(newComponent('C',800,800,'C1'));
+const base={kind:'transient' as const,input:'VS1',amplitude:0,frequency:100,stop:.01,step:1e-6};
+const net=prepareJobs(doc,{...base,startup:'uic',initial_conditions:{C1:2}}).jobs[0].netlist;
+assert.match(net,/C[^\n]* IC=2/);assert.match(net,/\.tran[^\n]* uic/);
+assert.throws(()=>prepareJobs(doc,{...base,initial_conditions:{T1:1}}),/C\/L/);
+assert.throws(()=>prepareJobs(doc,{...base,initial_conditions:{C1:NaN}}),/значение/);
+assert.doesNotMatch(prepareJobs(doc,base).jobs[0].netlist,/ uic| IC=/);
+console.log('Initial condition validation and transient startup passed');

@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {transientWaveform,prepareJobs} from '../src/solver.ts';
+import {build,presets} from '../src/codec.ts';
+const base={kind:'transient' as const,amplitude:2,frequency:1000,stop:.005,step:1e-6};
+assert.equal(transientWaveform(base,3),'SIN(3 2 1000 0)');
+assert.equal(transientWaveform({...base,waveform:'triangle',offset:4,delay:.001},3),'PULSE(2 6 0.001 0.0005 0.0005 0 0.001)');
+assert.equal(transientWaveform({...base,waveform:'pulse'},3),'PULSE(1 5 0 0.000001 0.000001 0.000499 0.001)');
+for(const invalid of [{duty:0},{duty:100},{rise:-1},{fall:1},{offset:NaN},{delay:-1},{waveform:'unknown'}])assert.throws(()=>transientWaveform({...base,waveform:'pulse',...invalid} as any,0));
+const job=prepareJobs(build(presets.output),{...base,input:'VS1',waveform:'triangle'}).jobs[0];
+assert.match(job.netlist,/PULSE\(/);assert.match(job.netlist,/\.tran 0.000001 0.005 0 0.000001/);
+console.log('Waveform generator tests passed');

@@ -23,6 +23,7 @@ import {toolbarIcon,componentIcon} from './icons.ts';
 import {editorToolbar} from './ui-layout.ts';
 import {componentSymbol,type ComponentSymbolState} from './component-symbols.ts';
 import {loadNativeSymbolVectors} from './native-symbol-vectors.ts';
+import {loadNativePalette} from './native-palette.ts';
 import {nativeDc,nativeControl,nativeControlValues,nativeAc,setNativeAc,nativeTransient,setNativeTransient,setNativeControl,setNativeDc} from './native-analysis.ts';
 import {showControlProperty,showDcTransferDialog,showAcTransferDialog,showTransientDialog} from './native-analysis-dialogs.ts';
 import {defaultPlotAxis,showPlotAxisDialog,type PlotAxisSettings} from './plot-settings.ts';
@@ -497,4 +498,4 @@ function signalStatsDialog(){
 }
 
 updateMenuChecks();
-loadNativeSymbolVectors().then(()=>draw()).catch(error=>console.warn(error.message));
+Promise.allSettled([loadNativeSymbolVectors(),loadNativePalette()]).then(()=>{palette();draw();});

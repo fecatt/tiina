@@ -16,7 +16,8 @@
       "pinCap": "#FF0000",
       "selected": "#FF0000"
     },
-    "colorSource": "tina.bak / Schematic Editor Color Sets / Set1"
+    "colorSource": "tina.bak / Schematic Editor Color Sets / Set1",
+    "glyphSource": "COMPREGE.BMP;29x29 EU image-list cells;indices from compregy.tcr"
   },
   "groups": [
     {
@@ -31,7 +32,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 515,
-          "kind": "GND"
+          "kind": "GND",
+          "glyphIndex": 0
         },
         {
           "label": "Источник напряжения",
@@ -41,7 +43,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 527,
-          "kind": "VS"
+          "kind": "VS",
+          "glyphIndex": 19
         },
         {
           "label": "Батарея",
@@ -51,7 +54,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 580,
-          "kind": "V"
+          "kind": "V",
+          "glyphIndex": 127
         },
         {
           "label": "Генератор напряжения",
@@ -61,7 +65,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 529,
-          "kind": "VG"
+          "kind": "VG",
+          "glyphIndex": 21
         },
         {
           "label": "Вольтметр",
@@ -71,7 +76,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 518,
-          "kind": "VM"
+          "kind": "VM",
+          "glyphIndex": 13
         },
         {
           "label": "Амперметр",
@@ -81,7 +87,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 519,
-          "kind": "AMV"
+          "kind": "AMV",
+          "glyphIndex": 15
         },
         {
           "label": "Резистор",
@@ -91,7 +98,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 522,
-          "kind": "R"
+          "kind": "R",
+          "glyphIndex": 2
         },
         {
           "label": "Потенциометр",
@@ -101,7 +109,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 549,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 3
         },
         {
           "label": "Конденсатор",
@@ -111,7 +120,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 523,
-          "kind": "C"
+          "kind": "C",
+          "glyphIndex": 4
         },
         {
           "label": "Катушка индуктивности",
@@ -121,7 +131,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 524,
-          "kind": "L"
+          "kind": "L",
+          "glyphIndex": 6
         },
         {
           "label": "Нелинейная катушка индуктивности",
@@ -130,7 +141,8 @@
           "helpTopic": "basic/nonlinear_inductor",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 142
         },
         {
           "label": "Связанные катушки",
@@ -140,7 +152,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 525,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 134
         },
         {
           "label": "Трансформаторы",
@@ -149,7 +162,8 @@
           "helpTopic": "basic/transformers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 80
         },
         {
           "label": "Ключ",
@@ -159,7 +173,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 565,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 9
         },
         {
           "label": "Терморезистор",
@@ -168,7 +183,8 @@
           "helpTopic": "basic/thermistor",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 150
         },
         {
           "label": "Пересечение без соединения",
@@ -178,7 +194,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 516,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 1
         },
         {
           "label": "Начальное условие1",
@@ -188,7 +205,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 594,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 146
         },
         {
           "label": "Начальное условие2",
@@ -198,7 +216,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 595,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 147
         },
         {
           "label": "Группа узлов1",
@@ -208,7 +227,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 596,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 148
         },
         {
           "label": "Группа узлов2",
@@ -218,7 +238,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 597,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 149
         }
       ]
     },
@@ -234,7 +255,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 565,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 9
         },
         {
           "label": "Переключатель",
@@ -244,7 +266,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 572,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 129
         },
         {
           "label": "Ключ контролируемый временем",
@@ -254,7 +277,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 548,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 96
         },
         {
           "label": "Ключ контролируемый напряжением",
@@ -264,7 +288,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 545,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 10
         },
         {
           "label": "Однополюсное открытое реле",
@@ -274,7 +299,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 583,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 137
         },
         {
           "label": "Однополюсное закрытое реле",
@@ -284,7 +310,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 584,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 138
         },
         {
           "label": "Однополюсное переключающее реле",
@@ -294,7 +321,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 585,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 139
         }
       ]
     },
@@ -310,7 +338,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 517,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 11
         },
         {
           "label": "Вольтметр",
@@ -320,7 +349,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 518,
-          "kind": "VM"
+          "kind": "VM",
+          "glyphIndex": 13
         },
         {
           "label": "Открытая цепь",
@@ -330,7 +360,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 546,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 14
         },
         {
           "label": "Амперметр",
@@ -340,7 +371,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 519,
-          "kind": "AMV"
+          "kind": "AMV",
+          "glyphIndex": 15
         },
         {
           "label": "Указатель тока",
@@ -350,7 +382,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 547,
-          "kind": "AM"
+          "kind": "AM",
+          "glyphIndex": 16
         },
         {
           "label": "Ваттметр",
@@ -360,7 +393,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 520,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 17
         },
         {
           "label": "Омметр",
@@ -370,7 +404,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 521,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 18
         },
         {
           "label": "Динамик",
@@ -380,7 +415,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 573,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 92
         },
         {
           "label": "Триггер с устойчивым состоянием",
@@ -390,7 +426,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 1213,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 214
         },
         {
           "label": "Сенсор с устойчивым состоянием",
@@ -400,7 +437,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 1214,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 215
         }
       ]
     },
@@ -416,7 +454,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 527,
-          "kind": "VS"
+          "kind": "VS",
+          "glyphIndex": 19
         },
         {
           "label": "Батарея",
@@ -426,7 +465,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 580,
-          "kind": "V"
+          "kind": "V",
+          "glyphIndex": 127
         },
         {
           "label": "Источник тока",
@@ -436,7 +476,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 526,
-          "kind": "I"
+          "kind": "I",
+          "glyphIndex": 20
         },
         {
           "label": "Генератор напряжения",
@@ -446,7 +487,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 529,
-          "kind": "VG"
+          "kind": "VG",
+          "glyphIndex": 21
         },
         {
           "label": "Генератор тока",
@@ -456,7 +498,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 528,
-          "kind": "IS"
+          "kind": "IS",
+          "glyphIndex": 22
         },
         {
           "label": "Controlled Sources",
@@ -465,7 +508,8 @@
           "helpTopic": "basic/controlled_sources",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 24
         },
         {
           "label": "Data Generator 4-bit",
@@ -475,7 +519,8 @@
           "unsupported": true,
           "digital": true,
           "recordTypeId": 11007,
-          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано.",
+          "glyphIndex": 189
         },
         {
           "label": "Data Generator 8-bit",
@@ -485,7 +530,8 @@
           "unsupported": true,
           "digital": true,
           "recordTypeId": 11008,
-          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано.",
+          "glyphIndex": 193
         },
         {
           "label": "SPI",
@@ -495,7 +541,8 @@
           "unsupported": true,
           "digital": true,
           "recordTypeId": 11006,
-          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано."
+          "editionNote": "Присутствует в реестре, цифровой анализ не относится к базовой TINA-TI; не реализовано.",
+          "glyphIndex": 189
         }
       ]
     },
@@ -511,7 +558,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 599,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 29
         },
         {
           "label": "Операционный усилитель",
@@ -521,7 +569,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 598,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 30
         },
         {
           "label": "555 Таймер",
@@ -531,27 +580,31 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 558,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 69
         },
         {
           "label": "Диод",
           "typeId": 23,
           "className": "TDiode",
           "helpTopic": "semiconductors/diode",
-          "unsupported": true,
+          "kind": "D",
+          "unsupported": false,
           "digital": false,
           "recordTypeId": 536,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "glyphIndex": 31
         },
         {
           "label": "Стабилитрон",
           "typeId": 43,
           "className": "TZener",
           "helpTopic": "semiconductors/zener_diode",
-          "unsupported": true,
+          "unsupported": false,
           "digital": false,
           "recordTypeId": 556,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "kind": "ZENER",
+          "glyphIndex": 32
         },
         {
           "label": "Светодиод",
@@ -561,7 +614,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 557,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 33
         },
         {
           "label": "Параметрический диод",
@@ -571,17 +625,20 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 566,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 114
         },
         {
           "label": "Диод Шотки",
           "typeId": 64,
           "className": "TSchottky",
           "helpTopic": "semiconductors/schottky_diode",
-          "unsupported": true,
+          "unsupported": false,
           "digital": false,
           "recordTypeId": 577,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "kind": "SCHOTTKY",
+          "glyphIndex": 115
         },
         {
           "label": "NPN биполярный транзистор",
@@ -591,7 +648,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 600,
-          "kind": "NPN"
+          "kind": "NPN",
+          "glyphIndex": 34
         },
         {
           "label": "PNP биполярный транзистор",
@@ -601,7 +659,8 @@
           "unsupported": false,
           "digital": false,
           "recordTypeId": 601,
-          "kind": "PNP"
+          "kind": "PNP",
+          "glyphIndex": 35
         },
         {
           "label": "N-канальный обогащенный МОП-транзистор",
@@ -611,7 +670,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 602,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 36
         },
         {
           "label": "P-канальный обогащенный МОП-транзистор",
@@ -621,7 +681,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 603,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 37
         },
         {
           "label": "N-канальный полевой транзистор с р-n-переходом",
@@ -631,7 +692,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 606,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 40
         },
         {
           "label": "P-канальный полевой транзистор с р-n-переходом",
@@ -641,7 +703,8 @@
           "unsupported": true,
           "digital": false,
           "recordTypeId": 607,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 41
         }
       ]
     },
@@ -656,7 +719,8 @@
           "helpTopic": "manufacturers_models/operational_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 119
         },
         {
           "label": "Дифференциальный усилитель",
@@ -665,7 +729,8 @@
           "helpTopic": "manufacturers_models/operational_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 208
         },
         {
           "label": "Полно-дифференциальный усилитель",
@@ -674,7 +739,8 @@
           "helpTopic": "manufacturers_models/operational_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 206
         },
         {
           "label": "Измерительный усилитель",
@@ -683,7 +749,8 @@
           "helpTopic": "manufacturers_models/instrumentation_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 132
         },
         {
           "label": "Variable Gain Amplifiers",
@@ -692,7 +759,8 @@
           "helpTopic": "manufacturers_models/variable_gain_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 231
         },
         {
           "label": "Компараторы",
@@ -701,7 +769,8 @@
           "helpTopic": "manufacturers_models/comparators",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 207
         },
         {
           "label": "Регуляторы напряжения",
@@ -710,7 +779,8 @@
           "helpTopic": "manufacturers_models/voltage_regulators",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 158
         },
         {
           "label": "Буферы",
@@ -719,7 +789,8 @@
           "helpTopic": "manufacturers_models/buffers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 131
         },
         {
           "label": "Current Shunt Monitors",
@@ -728,7 +799,8 @@
           "helpTopic": "manufacturers_models/operational_amplifiers",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 205
         },
         {
           "label": "SMPS",
@@ -737,7 +809,8 @@
           "helpTopic": "manufacturers_models/smps",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 221
         },
         {
           "label": "AD Converters",
@@ -746,7 +819,8 @@
           "helpTopic": "manufacturers_models/adconverters",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 226
         },
         {
           "label": "DA Converters",
@@ -755,7 +829,8 @@
           "helpTopic": "manufacturers_models/daconverters",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 232
         },
         {
           "label": "Другие компоненты",
@@ -764,7 +839,8 @@
           "helpTopic": "manufacturers_models/other_components",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 120
         },
         {
           "label": "Inductors",
@@ -773,7 +849,8 @@
           "helpTopic": "manufacturers_models/inductors",
           "unsupported": true,
           "digital": false,
-          "unsupportedReason": "Компонент пока не реализован в браузерной версии."
+          "unsupportedReason": "Компонент пока не реализован в браузерной версии.",
+          "glyphIndex": 6
         }
       ]
     }

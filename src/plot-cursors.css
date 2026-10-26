@@ -1,0 +1,6 @@
+.cursor-measurements{width:min(900px,100%);border-collapse:collapse;font:12px "Segoe UI",Arial,sans-serif;color:var(--ui-ink)}
+.cursor-measurements th,.cursor-measurements td{border:1px solid var(--ui-line);padding:3px 8px;text-align:left}
+.cursor-measurements input,.cursor-measurements select{width:100%;min-width:0;height:25px;border:1px solid var(--ui-line);border-radius:3px;padding:2px 5px;font:12px "Segoe UI",Arial,sans-serif;background:var(--ui-panel);color:var(--ui-ink);box-sizing:border-box}
+.cursor-measurements th:first-child{width:50px}.cursor-measurements td:nth-child(2){width:32%}.cursor-difference{margin-top:5px;font-size:12px}
+.graph-tools button[aria-pressed="true"]{box-shadow:var(--ui-pressed);background:var(--ui-panel)}
+.plot [data-axis]{cursor:pointer}.plot text{font-family:"Segoe UI",Arial,sans-serif;fill:var(--ui-ink)}

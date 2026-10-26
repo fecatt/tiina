@@ -1,0 +1,118 @@
+/* One shared visual system. Native command names and schematic SVG stay intact. */
+:root{--ui-chrome:#f8f9fa;--ui-panel:#ffffff;--ui-line:#dadce0;--ui-ink:#202124;--ui-muted:#5f6368;--ui-disabled:#9aa0a6;--ui-hover:#f1f3f4;--ui-active:#e8eaed;--face:var(--ui-chrome);--selection:var(--ui-active);--ui-radius:6px;--ui-raised:none;--ui-pressed:inset 0 3px 5px -2px #0005,inset 0 -2px 4px -1px #fffc;--ui-window:0 12px 36px #00000026,0 2px 6px #00000012;font-family:Arial,sans-serif;color:var(--ui-ink);background:var(--ui-chrome)}
+body,#app{background:var(--ui-chrome)!important;color:var(--ui-ink);font:14px Arial,sans-serif}
+button,input,select,textarea{font-family:Arial,sans-serif}
+button:disabled{color:var(--ui-disabled)!important;opacity:1!important;filter:none}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--ui-muted)!important;outline-offset:2px!important}
+/* Flat controls at rest. Only pressed/selected controls are recessed. */
+.tool,.component-button,.full-button,.native-text-toolbar button,.native-text-side button,.component-dialog button,.catalog-dialog button,.modal button{background:var(--ui-chrome)!important;color:var(--ui-ink)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;box-shadow:var(--ui-raised)!important}
+.tool:hover:enabled,.component-button:hover:enabled,.full-button:hover:enabled,.component-dialog button:hover:enabled,.catalog-dialog button:hover:enabled,.modal button:hover:enabled{background:var(--ui-hover)!important;border-color:var(--ui-line)!important}
+.tool:active,.tool.active,.tool.active:hover,.tool[aria-pressed="true"],.component-button:active,.component-button.active,.component-button.active:hover,.full-button:active,.component-dialog button:active,.catalog-dialog button:active,.modal button:active,.native-text-toolbar button:active,.native-text-side button:active{background:var(--ui-active)!important;border-color:var(--ui-line)!important;box-shadow:var(--ui-pressed)!important}
+/* Editor chrome: clear groups, no imitation empty component slots. */
+.titlebar{height:26px!important;background:var(--ui-chrome)!important;border-bottom:0!important;padding:0 12px!important;font-size:12px!important;color:var(--ui-muted)}
+.menu{height:30px!important;min-height:30px;background:var(--ui-chrome)!important;border:0!important;padding:0 8px!important;font-size:13px!important}
+.menu summary{height:28px!important;padding:6px 9px!important;border:0!important;border-radius:4px!important}
+.menu summary:hover,.menu details[open]>summary{background:var(--ui-hover)!important}
+.toolbar{height:48px!important;min-height:48px!important;padding:5px 10px 7px!important;gap:0!important;background:var(--ui-chrome)!important;border:0!important;border-bottom:1px solid var(--ui-line)!important;box-shadow:none!important}
+.tool{width:32px!important;height:32px!important;min-width:32px!important;padding:3px!important}
+.toolbar .tool{margin:0!important;border-radius:1px!important;box-shadow:var(--ui-raised)!important}
+.toolbar .tool+.tool{border-left:0!important}
+.toolbar .tool:first-child,.toolbar .sep+.tool{border-radius:6px 0 0 6px!important}
+.toolbar .tool:has(+.sep),.toolbar .tool:has(+select){border-radius:0 6px 6px 0!important}
+.toolbar .tool:has(.macro-editor-icon){border-radius:6px!important}
+
+.toolbar .tool.active,.toolbar .tool[aria-pressed="true"],.toolbar .tool:active{box-shadow:var(--ui-pressed)!important}
+.tool svg{width:24px!important;height:24px!important}
+.sep{height:25px!important;border:0!important;border-left:1px solid var(--ui-line)!important;margin:0 7px!important;width:1px!important}
+.toolbar select,.component-picker select,.props-grid input,.props-grid select{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;color:var(--ui-ink)!important;height:30px!important;font-size:13px!important;padding:3px 7px!important}
+.component-picker{padding-left:12px!important}.component-picker select{width:205px!important}
+/* A single component tray, with cells in one recessed rail and attached tabs. */
+.palette{height:52px!important;min-height:52px!important;background:var(--ui-chrome)!important;border:0!important;border-top:1px solid var(--ui-line)!important;padding:6px 8px 8px!important;gap:0!important;box-shadow:inset 0 2px 3px #00000014!important}
+.palette:before,.palette:after{display:none!important;content:none!important}
+.palette .component-button{width:40px!important;min-width:40px!important;height:37px!important;margin:0!important;padding:4px!important;background:var(--ui-chrome)!important;border:0!important;border-top:1px solid var(--ui-line)!important;border-bottom:1px solid var(--ui-line)!important;border-right:1px solid var(--ui-line)!important;border-radius:0!important;box-shadow:none!important}
+.palette .component-button:first-child{border-left:1px solid var(--ui-line)!important;border-radius:5px 0 0 5px!important}
+.palette .component-button:last-child{border-radius:0 5px 5px 0!important}
+.palette .component-button:hover:enabled{background:var(--ui-hover)!important;box-shadow:none!important}
+.palette .component-button.active,.palette .component-button:active{background:var(--ui-active)!important;box-shadow:inset 0 2px 3px #0002!important}
+.palette .component-button svg{width:28px!important;height:28px!important}
+.categories{height:33px!important;min-height:33px!important;position:relative;background:var(--ui-chrome)!important;align-items:flex-start!important;border:0!important;border-top:0!important;padding:0 8px!important;gap:3px!important;overflow-y:hidden!important}
+.category{position:relative;height:27px!important;margin:0!important;padding:4px 10px!important;background:var(--ui-chrome)!important;border:0!important;border-left:1px solid var(--ui-line)!important;border-right:1px solid var(--ui-line)!important;border-bottom:1px solid var(--ui-line)!important;border-radius:0!important;box-shadow:none!important;font:13px Arial,sans-serif!important;color:var(--ui-ink)!important}
+.category:first-child{border-left:1px solid var(--ui-line)!important}
+.category:not(.active){border-top:1px solid var(--ui-line)!important}
+.categories:after{content:"";flex:1;min-width:0;border-top:1px solid var(--ui-line);height:1px}
+.category:not(.active){border-radius:0 0 4px 4px!important}
+.category:hover{background:var(--ui-chrome)!important}
+.category.active,.category.active:hover{height:31px!important;margin-top:0!important;padding-top:5px!important;background:var(--ui-chrome)!important;border:1px solid var(--ui-line)!important;border-top:0!important;border-radius:0 0 6px 6px!important;box-shadow:0 1px 2px #00000016!important;color:var(--ui-ink)!important;font-weight:400!important;z-index:1}
+/* Menus retain a left label column and a separate right shortcut column. */
+.dropdown,#editor-context{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:7px!important;padding:6px!important;box-shadow:0 8px 24px #31313126!important;color:var(--ui-ink)!important}
+.dropdown button,#editor-context button{min-height:30px!important;background:transparent!important;border:0!important;border-radius:4px!important;box-shadow:none!important;text-align:left!important;color:var(--ui-ink)!important;font:13px Arial,sans-serif!important}
+.dropdown button.menu-active:enabled,.menu-submenu.menu-active>button:enabled,.dropdown button:focus-visible,#editor-context button:hover:enabled{background:var(--ui-hover)!important;color:var(--ui-ink)!important;outline:0!important}
+.dropdown kbd{color:var(--ui-muted)!important}.dropdown hr{border-color:var(--ui-line)!important;margin:5px 2px!important}
+.bottom-navigation,.document-tabs,.tabs,.footer,.right-panel,.rightpanel{background:var(--ui-chrome)!important;border-color:var(--ui-line)!important;box-shadow:none!important}
+.bottom-navigation{height:30px!important;border-top:1px solid var(--ui-line)!important}.bottom-navigation .tabs,.bottom-navigation .document-tabs{height:29px!important;min-height:29px!important}
+.bottom-navigation .document-tabs{display:flex!important;align-items:stretch!important;gap:3px!important;overflow-x:auto!important}
+.document-tab{position:relative!important;flex:0 0 auto!important;height:29px!important;margin-top:-1px!important;padding:5px 12px!important;background:transparent!important;border:1px solid var(--ui-line)!important;border-top:0!important;border-radius:0 0 5px 5px!important;box-shadow:none!important;color:var(--ui-muted)!important;font-size:12px!important;white-space:nowrap!important}
+.document-tab.active{z-index:1!important;background:var(--ui-active)!important;color:var(--ui-ink)!important;border-color:var(--ui-line)!important;border-top:1px solid var(--ui-active)!important;border-radius:0 0 5px 5px!important;box-shadow:none!important}
+.document-add{flex:0 0 32px!important;width:32px!important;height:28px!important;margin:0!important;padding:0!important;border:0!important;border-radius:4px!important;background:transparent!important;color:var(--ui-muted)!important;font:20px/1 Arial,sans-serif!important;cursor:pointer!important}
+.document-add:hover{background:var(--ui-hover)!important;color:var(--ui-ink)!important}.document-add:active{background:var(--ui-active)!important}
+.tab{height:28px!important;padding:5px 12px!important;background:transparent!important;border:0!important;border-right:1px solid var(--ui-line)!important;border-radius:0!important;box-shadow:none!important;color:var(--ui-muted)!important;font-size:12px!important}
+.tab.active{background:var(--ui-active)!important;color:var(--ui-ink)!important;box-shadow:inset 0 2px #696969!important}
+.footer{height:26px!important;min-height:26px!important;padding:0 10px!important;font-size:12px!important;color:var(--ui-muted)!important}.footer>span{border-color:var(--ui-line)!important}
+/* Windows: one title, form and action pattern; small forms do not have dead space. */
+.component-dialog,.catalog-dialog,.modal{padding:0!important;background:var(--ui-panel)!important;color:var(--ui-ink)!important;border:1px solid var(--ui-line)!important;border-radius:10px!important;box-shadow:var(--ui-window)!important;font:14px/1.45 Arial,sans-serif!important;overflow:hidden!important}
+.component-dialog::backdrop,.catalog-dialog::backdrop,.modal::backdrop{background:#24242417!important}
+.component-title,.catalog-title,.modal header{display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:52px!important;height:auto!important;padding:14px 20px!important;background:var(--ui-panel)!important;border-bottom:1px solid var(--ui-line)!important;color:var(--ui-ink)!important;font:600 16px/1.4 Arial,sans-serif!important}
+.component-title .component-close,.catalog-title button{width:28px!important;min-width:28px!important;height:28px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--ui-muted)!important;font:22px Arial,sans-serif!important;border-radius:4px!important}
+.component-title .component-close:hover,.catalog-title button:hover{background:var(--ui-hover)!important}
+.component-dialog{width:min(520px,calc(100vw - 40px))!important;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 40px)!important;min-width:0!important}
+.component-common-form,.component-dialog>form:not(.component-model-form){max-height:calc(100dvh - 100px)!important;min-height:0!important}
+.component-dialog .component-body{padding:12px 24px 18px!important;min-height:0!important;overflow:auto!important}
+.component-properties-table{width:100%!important;background:transparent!important;border:0!important;border-collapse:separate!important;border-spacing:0 8px!important;table-layout:fixed!important}
+.component-properties-table th,.component-properties-table td{height:auto!important;min-height:34px!important;background:transparent!important;border:0!important;line-height:1.4!important;vertical-align:middle!important;font:14px/1.4 Arial,sans-serif!important;padding:0!important}
+.component-properties-table th{width:44%!important;padding:5px 16px 5px 0!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-weight:400!important;text-align:left!important;color:var(--ui-ink)!important}
+.component-properties-table td.component-property-flag{width:24px!important;padding-left:9px!important}
+.component-dialog input:not([type=checkbox]),.component-dialog select,.modal input:not([type=checkbox]),.modal select,.modal textarea,.catalog-dialog input[type=search],.catalog-dialog select{box-sizing:border-box!important;min-height:34px!important;height:34px!important;padding:6px 9px!important;background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:4px!important;color:var(--ui-ink)!important;font:14px/1.4 Arial,sans-serif!important;box-shadow:inset 0 1px 2px #31313108!important}
+.component-dialog input:focus,.modal input:focus,.modal textarea:focus,.catalog-dialog input:focus,.catalog-dialog select:focus{outline:2px solid #a6a6a64d!important;outline-offset:1px!important;border-color:var(--ui-line)!important}
+.component-dialog input:disabled,.component-unavailable th,.component-unavailable input:disabled{color:var(--ui-disabled)!important;background:transparent!important;border-color:var(--ui-line)!important}
+.component-dialog input[type=checkbox]{width:14px!important;height:14px!important;margin:0!important;accent-color:#6f6f6f}
+.component-dialog .component-value-link{display:inline!important;width:auto!important;min-width:0!important;height:auto!important;padding:5px 0!important;background:transparent!important;border:0!important;box-shadow:none!important;color:var(--ui-ink)!important;text-align:left!important;text-decoration:underline;text-underline-offset:3px}
+.component-dialog .component-model-combo{width:100%!important;min-height:34px!important;padding:6px 9px!important;text-align:left!important;display:flex!important;align-items:center!important;justify-content:space-between!important;font-size:14px!important}
+.component-dialog footer,.catalog-dialog footer,.modal footer{flex-shrink:0!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;margin:0!important;padding:15px 20px 18px!important;gap:10px!important;border-top:1px solid var(--ui-line)!important;background:var(--ui-chrome)!important}
+.component-dialog footer button,.catalog-dialog footer button,.modal footer button{height:34px!important;min-width:90px!important;padding:6px 14px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;font:14px Arial,sans-serif!important;outline:0!important}
+.component-ok,.catalog-ok,#text-ok{color:#218247!important}.component-cancel,.catalog-cancel,#text-cancel{color:#b64848!important}.component-help,.catalog-help{color:var(--ui-muted)!important}
+.component-parameters-dialog{width:min(480px,calc(100vw - 24px))!important}.component-parameters-dialog .component-properties-table th{width:38%!important}
+.component-model-scroll{padding:18px!important}.component-dialog-wide{width:min(800px,calc(100vw - 24px))!important}.component-dialog-wide .component-properties-table th{width:68%!important}
+.component-error{margin:8px 0 0!important;color:#a33636!important;font-size:13px!important}
+.component-dialog:has(.component-common-form tbody tr:nth-child(8)){width:min(680px,calc(100vw - 40px))!important}
+.component-dialog .component-title{border-bottom:0!important;padding:20px 24px 10px!important}
+.component-dialog footer{background:var(--ui-panel)!important;border-top:0!important;padding:8px 24px 22px!important}
+/* Catalog is a work area, not an oversized three-field form. */
+.catalog-dialog{width:min(1040px,92vw)!important;height:min(780px,86vh)!important;max-height:calc(100dvh - 28px)!important}
+.catalog-dialog .catalog-title{height:54px!important;min-height:54px!important}
+.catalog-dialog form{height:calc(100% - 54px)!important;min-height:0!important}
+.catalog-main{grid-template-columns:240px minmax(0,1fr)!important;gap:24px!important;padding:20px!important;min-height:0!important}
+.catalog-left{gap:13px!important}.catalog-dialog label,.catalog-param-title{font:14px Arial,sans-serif!important;color:var(--ui-ink)!important}.catalog-dialog .catalog-type-label select{height:100%!important;min-height:120px!important;flex:1 1 auto!important;padding:5px!important}
+.catalog-stability{padding:9px 12px!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;background:var(--ui-chrome)!important;margin-bottom:16px!important}
+.catalog-description{padding:6px 0 12px!important;font:13px Arial,sans-serif!important;color:var(--ui-muted)!important}
+.catalog-params{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important}
+.catalog-param{min-height:34px!important;grid-template-columns:minmax(0,1fr) 105px!important;gap:16px!important;padding:7px 12px!important;border:0!important;border-bottom:1px solid var(--ui-line)!important;font-size:14px!important}
+.catalog-param-name small{font:13px Arial,sans-serif!important;color:var(--ui-ink)!important}.catalog-param-value{color:var(--ui-ink)!important;border:0!important;text-align:right!important;font:14px Arial,sans-serif!important}.catalog-count{font-size:12px!important;color:var(--ui-muted)!important}
+/* Text, font and analysis windows use the same controls without oversized icon buttons. */
+.modal .body{padding:20px!important}.modal label,.native-font-body label{font-size:13px!important;color:var(--ui-ink)!important}.modal .form{gap:16px!important}
+.native-text-toolbar{padding:10px!important;gap:6px!important;background:var(--ui-chrome)!important;border-color:var(--ui-line)!important}
+.native-text-toolbar button,.native-text-side button{height:30px!important;min-width:30px!important;padding:2px 5px!important;font:14px Arial,sans-serif!important}
+.native-text-work{padding:12px!important;gap:10px!important;height:240px!important}.native-text-work textarea{height:100%!important;resize:vertical!important;padding:10px!important;border-radius:4px!important;font-size:14px!important;min-height:120px!important}.native-text-side{width:34px!important;gap:9px!important}
+@media(max-width:700px){.toolbar{padding-left:5px!important;gap:3px!important}.component-picker{display:none!important}.catalog-main{grid-template-columns:1fr!important;grid-template-rows:auto minmax(180px,1fr)!important;gap:16px!important;padding:14px!important;overflow:auto!important}.catalog-left{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}.catalog-type-label{grid-column:1/-1;min-height:110px!important}.catalog-dialog{width:96vw!important;height:92vh!important}.catalog-right{min-height:250px!important}.component-dialog .component-body{padding:12px 16px!important}.component-properties-table th{width:52%!important;font-size:13px!important}.component-dialog footer,.catalog-dialog footer,.modal footer{padding:12px 14px 15px!important;gap:7px!important}.component-dialog footer button,.catalog-dialog footer button,.modal footer button{min-width:75px!important}.categories{overflow-x:auto!important}.version{display:none}}
+
+/* Surface response follows Squishy Toggle Buttons (reference31), not its circular shape. */
+.tool,.full-button,.component-dialog button,.catalog-dialog button,.modal button{transition:box-shadow 180ms cubic-bezier(.23,1,.32,1),background-color 180ms ease!important}
+@media(prefers-reduced-motion:reduce){.tool,.full-button,.component-dialog button,.catalog-dialog button,.modal button{transition:none!important}}
+
+/* Buttons are flat at rest; only a press/selected tool has an inset shadow. */
+.tool,.component-button,.full-button,.native-text-toolbar button,.native-text-side button,.component-dialog button,.catalog-dialog button,.modal button,
+.tool:hover:enabled,.component-button:hover:enabled,.full-button:hover:enabled,.component-dialog button:hover:enabled,.catalog-dialog button:hover:enabled,.modal button:hover:enabled{box-shadow:none!important}
+.toolbar .tool,.toolbar .tool:hover:enabled{box-shadow:none!important}
+.tool:active,.tool.active,.tool.active:hover,.tool[aria-pressed="true"],.toolbar .tool:active,.toolbar .tool.active,.toolbar .tool[aria-pressed="true"],.component-button:active,.component-button.active,.palette .component-button.active,.palette .component-button:active,.full-button:active,.component-dialog button:active,.catalog-dialog button:active,.modal button:active,.native-text-toolbar button:active,.native-text-side button:active{box-shadow:inset 0 3px 5px -2px #0005,inset 0 -2px 4px -1px #fffc!important}
+
+button:disabled svg{filter:grayscale(1);opacity:.36}
+.component-dialog select:disabled,.catalog-dialog select:disabled{color:var(--ui-disabled)!important}

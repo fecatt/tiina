@@ -4,7 +4,7 @@ export type NativeGeneratorSettings={offset:number;amplitude:number;frequency:nu
 
 export function nativeGenerator(c:Component):NativeGeneratorSettings|null{
  const d=c.record.data,p=c.parameter_offset;
- if(c.kind!=='VG'||d.length<p+43||d[p+8]!==1||![4,5].includes(d[p+9]))return null;
+ if(c.kind!=='VG'||d.length<p+43||![0,1].includes(d[p+8])||![4,5].includes(d[p+9]))return null;
  const v=new DataView(d.buffer,d.byteOffset,d.byteLength);
  const offset=v.getFloat64(p,true),amplitude=v.getFloat64(p+10,true),frequency=v.getFloat64(p+18,true),parameter=v.getFloat64(p+26,true),resistance=generatorResistance(c);
  if(![offset,amplitude,frequency,parameter,1/frequency,offset-amplitude,offset+amplitude].every(Number.isFinite)||amplitude<0||frequency<=0||resistance===null)return null;

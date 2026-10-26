@@ -3,13 +3,18 @@ import {nativeGeneratorWaveform} from './native-generator.ts';
 
 export type Cell = number | [number,number];
 export interface Curve {parameter?:number; names:string[]; values:Cell[][]; plot:string}
-export interface SimulationConfig {kind:'op'|'dc'|'dc-family'|'ac'|'transient';input?:string;start?:number;stop?:number;points?:number;points_per_decade?:number;step_source?:string;step_values?:number[];amplitude?:number;frequency?:number;step?:number;waveform?:'sine'|'pulse'|'triangle'|'native';offset?:number;delay?:number;duty?:number;rise?:number;fall?:number;initial_conditions?:Record<string,number>;startup?:'op'|'uic'}
+export interface SimulationConfig {kind:'op'|'dc'|'dc-family'|'ac'|'transient';input?:string;start?:number;stop?:number;points?:number;points_per_decade?:number;ac_intervals?:number;ac_logarithmic?:boolean;ac_display?:'magnitude'|'phase'|'both';step_source?:string;step_values?:number[];amplitude?:number;frequency?:number;step?:number;waveform?:'sine'|'pulse'|'triangle'|'native';offset?:number;delay?:number;duty?:number;rise?:number;fall?:number;initial_conditions?:Record<string,number>;startup?:'op'|'uic'}
 export interface SimulationResult {curves:Curve[];log:string;netlist:string;mapping:ReturnType<typeof exportSpice>['mapping'];engine:string}
 export interface Job {netlist:string;parameter?:number;initialBias?:{netlist:string;nodes:string[]}}
 
 const finite=(n:unknown):n is number=>typeof n==='number'&&Number.isFinite(n);
 function requireNumber(n:unknown,label:string):number {if(!finite(n))throw new Error('Неверное значение: '+label);return n;}
 function setSource(lines:string[],name:string,value:number) {let found=false;const out=lines.map(l=>{const t=l.trim().split(/\s+/);if(t[0]!==name)return l;if(!/^[VI]/i.test(name)||t[3]?.toUpperCase()!=='DC')throw new Error('Нужен независимый источник постоянного тока или напряжения');found=true;return `${t.slice(0,3).join(' ')} DC ${value}`});if(!found)throw new Error('Источник не найден');return out;}
+function setParameter(lines:string[],name:string,kind:string,value:number){
+ if(!['R','C','L'].includes(kind))return setSource(lines,name,value);
+ if(value<=0)throw Error('Номинал R, C, L должен быть положительным');let found=false;
+ const out=lines.map(line=>{const t=line.trim().split(/\s+/);if(t[0]!==name)return line;found=true;t[3]=String(value);return t.join(' ');});if(!found)throw Error('Объект управления не найден');return out;
+}
 
 /** Source waveform shared by voltage and current generators. Values use SI units. */
 export function transientWaveform(config:SimulationConfig,defaultOffset:number):string {
@@ -28,17 +33,17 @@ export function transientWaveform(config:SimulationConfig,defaultOffset:number):
 export function prepareJobs(doc:Doc,config:SimulationConfig):{jobs:Job[];mapping:SimulationResult['mapping']} {
   const exported=exportSpice(doc),mapping=exported.mapping;
   const base=exported.text.split(/\r?\n/).filter(l=>!/^\s*\.(op|end)\s*$/i.test(l));
-  const source=(label?:string)=>{const name=label&&mapping.names[label];if(!name||! /^[VI]/i.test(name))throw new Error('Выберите независимый источник');return name;};
+  const source=(label?:string)=>{const c=components(doc).find(c=>c.label===label),name=label&&mapping.names[label];if(!name||!c||!['V','VS','VG','I','IS'].includes(c.kind))throw new Error('Выберите независимый источник');return name;};
   const kind=config.kind;
   let command='.op',excitation:string|undefined;
-  if(kind==='dc'||kind==='dc-family') {const a=requireNumber(config.start,'начало'),b=requireNumber(config.stop,'конец'),n=requireNumber(config.points,'число точек');if(!Number.isInteger(n)||n<2||n>100000||b<=a)throw new Error('Развёртка: от 2 до 100000 точек, конец больше начала');command=`.dc ${source(config.input)} ${a} ${b} ${(b-a)/(n-1)}`;}
-  else if(kind==='ac') {const a=requireNumber(config.start,'начальная частота'),b=requireNumber(config.stop,'конечная частота'),n=config.points_per_decade??50;if(!(a>0&&b>a&&Number.isInteger(n)&&n>=1&&n<=1000)||Math.log10(b/a)*n>100000)throw new Error('Неверный диапазон частот');command=`.ac dec ${n} ${a} ${b}`;excitation=source(config.input);}
-  else if(kind==='transient') {const a=config.waveform==='native'?0:requireNumber(config.amplitude,'амплитуда'),f=config.waveform==='native'?1:requireNumber(config.frequency,'частота'),stop=requireNumber(config.stop,'время'),step=requireNumber(config.step,'шаг');if(a<0||f<=0||step<=0||step>stop||stop/step>100000)throw new Error('Неверные параметры переходного процесса');if(config.startup!==undefined&&!['op','uic'].includes(config.startup))throw Error('Неизвестный режим запуска');command=`.tran ${step} ${stop} 0 ${step}${config.startup==='uic'?' uic':''}`;excitation=config.waveform==='native'?undefined:source(config.input);}
+  if(kind==='dc'||kind==='dc-family') {const a=requireNumber(config.start,'начало'),b=requireNumber(config.stop,'конец'),n=requireNumber(config.points,'число точек');if(!Number.isInteger(n)||n<2||n>100000||b<=a)throw new Error('Развёртка: от 2 до 100000 точек, конец больше начала');const step=(b-a)/(n-1);command=`.dc ${source(config.input)} ${a} ${b+Math.abs(step)*1e-6} ${step}`;}
+  else if(kind==='ac') {const a=requireNumber(config.start,'начальная частота'),b=requireNumber(config.stop,'конечная частота'),n=config.points_per_decade??50;if(!(a>0&&b>a&&Number.isInteger(n)&&n>=1&&n<=1000)||Math.log10(b/a)*n>100000)throw new Error('Неверный диапазон частот');if(config.ac_intervals!==undefined){const total=config.ac_intervals;if(!Number.isInteger(total)||total<1||total>65535)throw new Error('Неверное число позиций');if(config.ac_logarithmic===false)command=`.ac lin ${total+1} ${a} ${b}`;else{const perDecade=total/Math.log10(b/a),exact=Math.abs(perDecade-Math.round(perDecade))<1e-9;command=`.ac dec ${exact?Math.round(perDecade):Math.ceil(perDecade)*4} ${a} ${b*(1+1e-12)}`;}}else command=`.ac dec ${n} ${a} ${b}`;excitation=source(config.input);}
+  else if(kind==='transient') {const a=config.waveform==='native'?0:requireNumber(config.amplitude,'амплитуда'),f=config.waveform==='native'?1:requireNumber(config.frequency,'частота'),stop=requireNumber(config.stop,'время'),step=requireNumber(config.step,'шаг');if((config.start!==undefined&&(!finite(config.start)||config.start<0||config.start>=stop))||a<0||f<=0||step<=0||step>stop||stop/step>100000)throw new Error('Неверные параметры переходного процесса');if(config.startup!==undefined&&!['op','uic'].includes(config.startup))throw Error('Неизвестный режим запуска');command=`.tran ${step} ${stop} ${config.start??0} ${step}${config.startup==='uic'?' uic':''}`;excitation=config.waveform==='native'?undefined:source(config.input);}
   else if(kind!=='op')throw new Error('Неизвестный вид анализа');
   const vals=kind==='dc-family'?config.step_values:[undefined];
   if(!vals?.length||vals.length>100||vals.some(v=>v!==undefined&&!finite(v)))throw new Error('Семейство: от 1 до 100 конечных значений');
   if(kind==='dc-family'&&(config.input===config.step_source||(config.points??0)*vals.length>500000))throw new Error('Для семейства нужны разные источники; максимум 500000 точек во всех кривых');
-  const jobs=vals.map(parameter=>{let lines=[...base];if(parameter!==undefined)lines=setSource(lines,source(config.step_source),parameter);
+  const jobs=vals.map(parameter=>{let lines=[...base];if(parameter!==undefined){const c=components(doc).find(c=>c.label===config.step_source),name=c&&mapping.names[c.label];if(!c||!name||!['V','VS','VG','I','IS','R','C','L'].includes(c.kind))throw Error('Выберите поддерживаемый объект управления');lines=setParameter(lines,name,c.kind,parameter);}
     if(kind==='transient'&&config.waveform==='native'){
       const generators=components(doc).filter(c=>c.kind==='VG');if(!generators.length)throw Error('В схеме нет генераторов TSC');
       for(const c of generators){const wave=nativeGeneratorWaveform(c,config.stop!);lines=lines.map(l=>l.trim().split(/\s+/)[0]===mapping.names[c.label]?l+' '+wave:l);}
@@ -84,13 +89,13 @@ export function parseRaw(text:string):Curve {
 
 /** Ideal VM probes add no circuit load: their displayed voltage is first pin minus second. */
 export function addMeterVectors(curves:Curve[],mapping:SimulationResult['mapping']):Curve[] {
-  const meters=Object.entries(mapping.names).filter(([,name])=>name.startsWith('VM_'));
+  const meters=Object.entries(mapping.names).filter(([,name])=>name.startsWith('VM_')||name.startsWith('VP_'));
   if(!meters.length)return curves;
   return curves.map(curve=>{
     const names=[...curve.names],values=curve.values.map(row=>[...row]);
     for(const [label,name] of meters){
-      const pair=mapping.nodes[label],vector=`v(${name.toLowerCase()})`;
-      if(!pair||pair.length!==2)throw new Error('Не определены выводы вольтметра '+label);
+      const terminals=mapping.nodes[label],pair=name.startsWith('VP_')&&terminals?.length===1?[terminals[0],'0']:terminals,vector=`v(${name.toLowerCase()})`;
+      if(!pair||pair.length!==2)throw new Error('Не определены выводы измерителя напряжения '+label);
       if(names.includes(vector))throw new Error('Совпало имя вектора вольтметра '+label);
       const indexes=pair.map(node=>node==='0'?-1:curve.names.indexOf(`v(${node.toLowerCase()})`));
       if(pair[0]!==pair[1]&&indexes.some((index,k)=>index<0&&pair[k]!=='0'))throw new Error('Не найден потенциал узла для вольтметра '+label);
@@ -113,7 +118,7 @@ export async function simulate(doc:Doc,config:SimulationConfig,onProgress?:(done
     const cancel=()=>finish(new DOMException('Расчёт отменён','AbortError'));
     const timer=setTimeout(()=>finish(new Error('Превышено время расчёта (90 секунд). Уменьшите число точек или кривых.')),90000);
     signal?.addEventListener('abort',cancel,{once:true});worker.onerror=e=>finish(new Error('Ошибка расчётного движка: '+e.message));
-    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves,mapping),mapping,netlist:d.result.netlist??jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs});
+    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves.map((curve:Curve)=>resampleAc(curve,config)),mapping),mapping,netlist:d.result.netlist??jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs});
   });
 }
 
@@ -163,4 +168,17 @@ export async function calculateH(doc:Doc,options:{baseSource?:string;collectorSo
   onProgress?.(0,1);
   const result=await estimateH(doc,{transistor,baseSource,collectorSource,iB:options.ib,uCE:options.uce,deltaIB:options.dib,deltaUCE:options.duce},signal);onProgress?.(1,1);
   return {...result,RinTr:result.rIn,RoutTr:result.rOut,point:{ib:result.iB,uce:result.uCE,ic:result.iC,ube:result.uBE},measurements:result.simulation.curves,formulas:{h11:'ΔUБЭ / ΔIБ при UКЭ = const, Ом',h12:'ΔUБЭ / ΔUКЭ при IБ = const',h21:'ΔIК / ΔIБ при UКЭ = const',h22:'ΔIК / ΔUКЭ при IБ = const, См',RinTr:'h11, Ом',RoutTr:'1 / h22, Ом',beta:'h21'},method:'Центральные разности по сетке 3 × 3: рабочая точка и симметричные приращения IБ и UКЭ. Движок ngspice WebAssembly.'};
+}
+
+/** TINA specifies total intervals; ngspice specifies integer points per decade.
+ * Interpolate complex values on log-frequency only when the requested grids differ. */
+export function resampleAc(curve:Curve,config:SimulationConfig):Curve{
+ if(config.kind!=='ac'||config.ac_intervals===undefined)return curve;
+ const a=config.start!,b=config.stop!,n=config.ac_intervals,log=config.ac_logarithmic!==false,frequency=(row:Cell[])=>Array.isArray(row[0])?row[0][0]:row[0];
+ const coordinate=(x:number)=>log?Math.log(x):x;let at=0;
+ const values=Array.from({length:n+1},(_,i)=>{const x=i===n?b:log?a*Math.pow(b/a,i/n):a+(b-a)*i/n;
+ while(at+1<curve.values.length-1&&frequency(curve.values[at+1])<x)at++;
+ const lo=curve.values[at],hi=curve.values[Math.min(at+1,curve.values.length-1)],f0=frequency(lo),f1=frequency(hi),t=f1===f0?0:(coordinate(x)-coordinate(f0))/(coordinate(f1)-coordinate(f0));
+ return lo.map((v,j):Cell=>{if(j===0)return Array.isArray(v)?[x,0]:x;const w=hi[j];if(Array.isArray(v)&&Array.isArray(w))return[v[0]+t*(w[0]-v[0]),v[1]+t*(w[1]-v[1])];return Number(v)+t*(Number(w)-Number(v));});});
+ return {...curve,values};
 }

@@ -1,19 +1,25 @@
 import type {Rec} from './codec.ts';
 import {textRecord} from './native-text.ts';
+const formulaTools:Record<string,{id:string;markup:string}>={'Дробь':{id:'fraction',markup:'\\f(n,d)'},'Степень':{id:'power',markup:'\\e(x,2)'},'Индекс':{id:'index',markup:'\\i(a,i)'}};
 const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 export type TextChanges={text:string;size:number;font:string;color:string;style:number};
-/** Layout observed in native TCSysTextDlg; unported formula tools remain disabled. */
-export function showTextDialog(d:HTMLDialogElement,record:Rec|undefined,apply:(changes:TextChanges)=>void){
+/** Layout observed in native TCSysTextDlg; only proven formula insertions are enabled. */
+export function showTextDialog(d:HTMLDialogElement,record:Rec|undefined,apply:(changes:TextChanges)=>void,onCancel:()=>void=()=>{}){
  const old=record?textRecord(record):null;let draft:TextChanges={text:old?.text??'',size:old?.size??8,font:old?.font??'Arial',color:old?.cssColor??'#0000ff',style:(old?.style??0)&15};
- const close=()=>{d.close();d.classList.remove('text-editor-dialog');};
+ let finished=false,accepted=false;
+ const cleanup=()=>{if(finished)return;finished=true;d.classList.remove('text-editor-dialog');d.removeEventListener('close',cleanup);d.removeEventListener('cancel',cancel);if(!accepted)onCancel();};
+ const close=()=>{cleanup();d.close();};
+ const cancel=(e:Event)=>{e.preventDefault();close();};
+ d.addEventListener('close',cleanup);d.addEventListener('cancel',cancel);
  d.classList.add('text-editor-dialog');
  const editor=()=>{
-  d.innerHTML=`<header>Текст</header><div class="native-text-toolbar"><button type="button" disabled title="Буфер обмена — будет добавлено">▤</button><button type="button" id="text-edit" title="Редактировать">✎</button>${[['ⁿ⁄d','Дробь'],['x³','Степень'],['Û','Надстрочный знак'],['aᵢ','Индекс'],['α↔β','Греческие символы'],['♧','Ссылка']].map(([s,t])=>`<button type="button" disabled title="${t} — будет добавлено">${s}</button>`).join('')}</div><div class="native-text-work"><textarea id="text-content" aria-label="Текст" spellcheck="false"></textarea><div class="native-text-side"><button type="button" id="text-ok" title="OK" aria-label="OK">✓</button><button type="button" id="text-cancel" title="Отмена" aria-label="Отмена">✕</button><button type="button" disabled title="Справка — будет добавлено">?</button><button type="button" id="text-font" title="Шрифт" aria-label="Шрифт"><b><i>F</i></b></button><button type="button" disabled title="Дополнительные параметры — будет добавлено">☞</button></div></div><p class="error" id="text-error" role="alert"></p>`;
+  d.innerHTML=`<header>Текст</header><div class="native-text-toolbar"><button type="button" disabled title="Буфер обмена — будет добавлено">▤</button><button type="button" id="text-edit" title="Редактировать">✎</button>${[['ⁿ⁄d','Дробь'],['x³','Степень'],['Û','Надстрочный знак'],['aᵢ','Индекс'],['α↔β','Греческие символы'],['♧','Ссылка']].map(([s,t])=>`<button type="button" ${formulaTools[t]?`id="text-${formulaTools[t].id}"`:'disabled'} title="${t}${formulaTools[t]?'':' — будет добавлено'}">${s}</button>`).join('')}</div><div class="native-text-work"><textarea id="text-content" aria-label="Текст" spellcheck="false"></textarea><div class="native-text-side"><button type="button" id="text-ok" title="OK" aria-label="OK">✓</button><button type="button" id="text-cancel" title="Отмена" aria-label="Отмена">✕</button><button type="button" disabled title="Справка — будет добавлено">?</button><button type="button" id="text-font" title="Шрифт" aria-label="Шрифт"><b><i>F</i></b></button><button type="button" disabled title="Дополнительные параметры — будет добавлено">☞</button></div></div><p class="error" id="text-error" role="alert"></p>`;
   const area=d.querySelector<HTMLTextAreaElement>('#text-content')!;area.value=draft.text;area.style.fontFamily=draft.font;area.style.fontSize=draft.size*4/3+'px';area.style.color=draft.color;area.style.fontWeight=draft.style&1?'bold':'normal';area.style.fontStyle=draft.style&2?'italic':'normal';area.style.textDecoration=[draft.style&4?'underline':'',draft.style&8?'line-through':''].filter(Boolean).join(' ');
   d.querySelector<HTMLButtonElement>('#text-edit')!.onclick=()=>area.focus();
+  for(const tool of Object.values(formulaTools))d.querySelector<HTMLButtonElement>('#text-'+tool.id)!.onclick=()=>{area.setRangeText(tool.markup,area.selectionStart,area.selectionEnd,'end');area.focus();};
   d.querySelector<HTMLButtonElement>('#text-cancel')!.onclick=close;
   d.querySelector<HTMLButtonElement>('#text-font')!.onclick=()=>{draft.text=area.value;fontDialog();};
-  d.querySelector<HTMLButtonElement>('#text-ok')!.onclick=()=>{try{draft.text=area.value;if(!draft.text.trim())throw Error('Введите текст');apply(draft);close();}catch(e){d.querySelector('#text-error')!.textContent=e instanceof Error?e.message:String(e);}};
+  d.querySelector<HTMLButtonElement>('#text-ok')!.onclick=()=>{try{draft.text=area.value;if(!draft.text.trim())throw Error('Введите текст');apply(draft);accepted=true;close();}catch(e){d.querySelector('#text-error')!.textContent=e instanceof Error?e.message:String(e);}};
   area.focus();
  };
  const fontDialog=()=>{
@@ -23,5 +29,5 @@ export function showTextDialog(d:HTMLDialogElement,record:Rec|undefined,apply:(c
   const preview=()=>{const f=new FormData(form),sample=d.querySelector<HTMLElement>('.native-font-sample span')!;sample.style.fontFamily=String(f.get('font'));sample.style.fontSize=Number(f.get('size'))*4/3+'px';sample.style.color=String(f.get('color'));sample.style.fontWeight=Number(f.get('style'))&1?'bold':'normal';sample.style.fontStyle=Number(f.get('style'))&2?'italic':'normal';sample.style.textDecoration=[f.has('underline')?'underline':'',f.has('strike')?'line-through':''].filter(Boolean).join(' ');};form.oninput=preview;preview();
   form.onsubmit=e=>{e.preventDefault();const f=new FormData(form);const font=String(f.get('font')??'').trim(),size=Number(f.get('size')),color=String(f.get('color'));if(!font||font.length>100||!Number.isInteger(size)||size<1||size>72){d.querySelector('#font-error')!.textContent='Укажите шрифт и размер от 1 до 72 пунктов';return;}const style=Number(f.get('style'))|(f.has('underline')?4:0)|(f.has('strike')?8:0);draft={...draft,font,size,color,style};editor();};
  };
- editor();d.showModal();d.querySelector<HTMLTextAreaElement>('textarea')!.focus();d.onclose=()=>d.classList.remove('text-editor-dialog');
+ d.onclose=null;d.oncancel=null;editor();d.showModal();d.querySelector<HTMLTextAreaElement>('textarea')!.focus();
 }

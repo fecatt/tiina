@@ -1,27 +1,22 @@
 /** Original SVG artwork for classic circuit-editor toolbar controls.
  * These are interface icons, independent of the editable electrical symbols. */
 const svg=(body:string)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#111" stroke-width="1.45" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false">${body}</svg>`;
-const meter=(letter:string,extra='')=>`<path d="M16 2V6M16 26V30"/><circle cx="16" cy="16" r="10" fill="#ffff00"/><text x="16" y="20" text-anchor="middle" fill="#111" stroke="none" font-family="Arial,sans-serif" font-size="13" font-weight="bold">${letter}</text>${extra}`;
+const meter=(letter:string,extra='',polarized=false)=>`<path d="M16 2V6M16 26V30"/><circle cx="16" cy="16" r="10" fill="#ffff00"/><text x="16" y="20" text-anchor="middle" fill="#111" stroke="none" font-family="Arial,sans-serif" font-size="13" font-weight="bold">${letter}</text>${extra}${polarized?'<path d="M24 1V7M21 4H27"/>':''}`;
 const arrow=(d:string)=>`<path d="${d}" fill="#111"/>`;
 
 export function componentIcon(kind:string):string {
+ const original=nativePaletteIcon(kind);if(original)return original;
+ const shared=componentPaletteIcon(kind);if(shared)return shared;
  let body:string;
  switch(kind){
- case 'GND':body='<path d="M16 3V17M5 18H27M9 23H23M13 28H19" stroke-width="2"/>';break;
- case 'R':body='<path d="M2 16H9M23 16H30"/><rect x="9" y="12" width="14" height="8" fill="#ffff00"/>';break;
- case 'C':body='<path d="M2 16H12M20 16H30M12 5V27M20 5V27" stroke-width="2"/>';break;
- case 'L':body='<path d="M2 20H5C5 7 11 7 11 20C11 7 17 7 17 20C17 7 23 7 23 20H30" stroke-width="2"/>';break;
- case 'V':body='<path d="M16 1V6M16 26V31M5 8H27M10 13H22M5 19H27M10 25H22" stroke-width="2"/><path d="M25 1V6M22.5 3.5H27.5"/>';break;
- case 'VS':body=meter('V','<path d="M24 1V7M21 4H27"/>');break;
- case 'VG':body=meter('','<path d="M8 17C11 7 13 7 16 17C19 27 22 25 25 15"/>');break;
- case 'VM':body=meter('V','<path d="M24 1V7M21 4H27"/>');break;
- case 'AM':body='<path d="M2 16H30M19 16L12 10V22Z" stroke="#008000" fill="none"/>';break;
- case 'AMV':body=meter('A','<path d="M24 1V7M21 4H27"/>');break;
- case 'I':body=meter('','<path d="M16 23V9M12 13L16 9L20 13"/>');break;
- case 'IS':body=meter('IS');break;
- case 'NPN':case 'PNP':body='<g stroke="#008000" stroke-width="1.8"><path d="M2 16H11M11 7V25M11 11L24 4V1M11 21L24 28V31"/>'+(kind==='NPN'?'<path d="M18 22L24 28L17 27Z" fill="#008000"/>':'<path d="M18 23L12 20L16 26Z" fill="#008000"/>')+'</g>';break;
+ case 'native:36':body='<path d="M2 19H9M23 19H30"/><rect x="9" y="15" width="14" height="8" fill="#ffff00"/><path d="M16 1V12M12 8L16 12L20 8"/>';break;
+ case 'native:-300':body='<path d="M2 22H5C5 9 11 9 11 22C11 9 17 9 17 22C17 9 23 9 23 22H30M6 28L25 4"/>';break;
+ case 'native:12':case 'native:-301':body='<path d="M2 4H8Q20 7 8 12Q20 17 8 22Q20 27 8 29H2M30 4H24Q12 7 24 12Q12 17 24 22Q12 27 24 29H30M15 3V30M18 3V30"/>';break;
+ case 'native:52':case 'native:59':body='<path d="M1 22H8M24 22H31M9 21L24 9"/><circle cx="8" cy="22" r="2"/><circle cx="24" cy="22" r="2"/>';break;
+ case 'native:-302':body='<path d="M1 20H9M23 20H31M7 28L26 3M21 3H27"/><rect x="9" y="16" width="14" height="8" fill="#ffff00"/>';break;
+ case 'native:3':body='<path d="M2 16H12Q16 6 20 16H30M16 2V10M16 22V30"/>';break;
+ case 'native:81':case 'native:82':case 'native:83':case 'native:84':body=meter(kind==='native:81'?'IC':kind==='native:82'?'+IC':kind==='native:83'?'NS':'+NS');break;
  case 'switch':body='<path d="M1 21H8M24 21H31M9 20L24 10"/><circle cx="8" cy="21" r="2" fill="white"/><circle cx="24" cy="21" r="2" fill="white"/>';break;
- case 'diode':body='<path d="M1 16H10M22 16H31M22 6V26"/><path d="M10 6L22 16L10 26Z" fill="#ffff00"/>';break;
  default:body='<rect x="8" y="8" width="16" height="16" fill="#ffff00"/><path d="M2 16H8M24 16H30"/>';break;
  }
  return svg(body);
@@ -30,6 +25,11 @@ export function componentIcon(kind:string):string {
 export function toolbarIcon(action:string):string {
  const key=action.replace(/^analysis:/,'');let body:string;
  switch(key){
+ case 'web':body='<circle cx="16" cy="16" r="13" fill="#c3efff"/><ellipse cx="16" cy="16" rx="6" ry="13"/><path d="M3 16H29M6 8H26M6 24H26" stroke="#008000"/>';break;
+ case 'print-preview':case 'print':body='<path d="M8 2H25V12H8Z" fill="white"/><path d="M3 10H29V24H3Z" fill="#ddd"/><path d="M8 20H25V30H8Z" fill="white"/><path d="M11 24H22M11 27H22"/><circle cx="25" cy="14" r="1" fill="#008000"/>';break;
+ case 'symbol-editor':body='<rect x="3" y="3" width="26" height="26" fill="white"/><path d="M7 9H12M7 16H12M7 23H12M23 16H27M12 6L23 16L12 26Z"/><path d="M19 7L25 1L29 5L23 11Z" fill="#ddd"/>';break;
+ case 'copy':body='<path d="M4 2H20V24H4Z" fill="white"/><path d="M12 9H28V31H12Z" fill="white"/><path d="M15 15H24M15 20H24M15 25H24" stroke="#888"/>';break;
+ case 'paste':body='<path d="M5 5H25V30H5Z" fill="#c9a13d"/><path d="M9 9H28V31H9Z" fill="white"/><path d="M10 2H20V8H10Z" fill="#ddd"/><path d="M13 15H24M13 20H24M13 25H24" stroke="#666"/>';break;
  case 'text':body='<text x="16" y="27" text-anchor="middle" font-family="Times New Roman,serif" font-size="30" font-weight="bold" fill="#111" stroke="none">T</text>';break;
  case 'new':body='<path d="M7 2H21L27 8V30H7Z" fill="white"/><path d="M21 2V8H27M11 13H22M11 18H22M11 23H19" stroke="#777"/>';break;
  case 'open':body='<path d="M2 10H12L15 13H30L24 29H2Z" fill="#e4bc16"/><path d="M3 10V6H12L15 10H27V13M2 29L7 16H30" fill="#ffff67"/><path d="M17 4H26M23 1L27 4L23 7" stroke="#008000" stroke-width="2"/>';break;
@@ -39,10 +39,13 @@ export function toolbarIcon(action:string):string {
  case 'select':body=arrow('M8 3L8 26L14 20L19 30L24 27L19 18L28 18Z');break;
  case 'wire':body='<path d="M3 27H16V17H27" stroke="#3c0000" stroke-width="2"/><path d="M10 17L23 2L28 7L15 22L8 25Z" fill="#ffff00"/><path d="M10 17L15 22M23 2L28 7M8 25L10 17L15 22Z" fill="#444"/>';break;
  case 'rotate':body='<path d="M6 21A11 11 0 1 1 25 23" stroke-width="2"/><path d="M20 19L25 24L29 17"/><rect x="12" y="11" width="9" height="9" fill="#ffff00"/>';break;
+ case 'rotate-right':body='<g transform="translate(32 0) scale(-1 1)"><path d="M6 21A11 11 0 1 1 25 23" stroke-width="2"/><path d="M20 19L25 24L29 17"/><rect x="12" y="11" width="9" height="9" fill="#ffff00"/></g>';break;
+ case 'mirror':body='<path d="M16 2V30" stroke="#888" stroke-dasharray="2 2"/><path d="M12 7L3 25H12ZM20 7L29 25H20Z" fill="#f4d45d"/>';break;
+ case 'junction':body='<path d="M2 16H30M16 2V30" stroke="#3c0000" stroke-width="2"/><circle cx="16" cy="16" r="3.5" fill="#3c0000"/><path d="M23 3H30M26.5 0V7" stroke="#008000" stroke-width="2"/>';break;
  case 'delete':body='<path d="M4 5L27 28M27 5L4 28" stroke="#b40000" stroke-width="4"/>';break;
  case 'undo':body='<path d="M24 25C32 8 17 4 7 12" stroke="#555" stroke-width="3"/><path d="M7 5L7 14L16 13" stroke="#555" stroke-width="3"/>';break;
  case 'redo':body='<path d="M8 25C0 8 15 4 25 12" stroke="#555" stroke-width="3"/><path d="M25 5L25 14L16 13" stroke="#555" stroke-width="3"/>';break;
- case 'fit':case 'zoom-in':case 'zoom-out':body='<circle cx="13" cy="12" r="9" fill="white"/><path d="M20 19L29 29" stroke-width="5"/><path d="M8 12H18" stroke="#d00000" stroke-width="2"/>'+(key==='zoom-out'?'':'<path d="M13 7V17" stroke="#d00000" stroke-width="2"/>');break;
+ case 'fit':case 'zoom-window':case 'zoom-in':case 'zoom-out':body='<circle cx="13" cy="12" r="9" fill="white"/><path d="M20 19L29 29" stroke-width="5"/><path d="M8 12H18" stroke="#d00000" stroke-width="2"/>'+(key==='zoom-out'?'':'<path d="M13 7V17" stroke="#d00000" stroke-width="2"/>');break;
  case 'properties':case 'panel':body='<rect x="3" y="2" width="26" height="28" fill="white"/><path d="M3 8H29"/><path d="M6 5H9" stroke="#000080" stroke-width="2"/><path d="M7 13H14M7 20H14M7 26H14" stroke="#555"/><path d="M17 12H25V16H17ZM17 19H25V23H17Z" fill="#eee"/>';break;
  case 'run':case 'op':case 'dc':case 'dc-family':case 'ac':case 'transient':body='<path d="M8 4L27 16L8 28Z" fill="#008000"/><path d="M9 6L23 16L9 25Z" fill="#31bf31" stroke="none"/>';break;
  case 'cancel':body='<rect x="7" y="7" width="19" height="19" fill="#c40000"/><path d="M8 8H25V25" stroke="#f55"/>';break;
@@ -54,3 +57,5 @@ export function toolbarIcon(action:string):string {
  }
  return svg(body);
 }
+import {componentPaletteIcon} from './component-palette.ts';
+import {nativePaletteIcon} from './native-palette.ts';

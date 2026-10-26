@@ -1,6 +1,6 @@
 {
   "name": "bf240-schematic-workbench",
-  "version": "0.6.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {

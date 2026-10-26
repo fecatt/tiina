@@ -1,0 +1,21 @@
+.native-analysis-dialog{width:min(480px,calc(100vw - 28px))!important;padding:0!important;overflow:hidden!important}
+.native-analysis-dialog form{margin:0!important}
+.native-analysis-content{display:grid;gap:10px;padding:14px 18px 8px!important}
+.native-analysis-content fieldset{min-width:0;margin:0;padding:10px;border:1px solid var(--ui-line);border-radius:3px}
+.native-analysis-content legend{padding:0 5px;font-size:13px}
+.native-analysis-grid{display:grid;grid-template-columns:minmax(142px,1fr) minmax(100px,1.2fr);align-items:center;gap:8px 10px;font-size:13px}
+.native-analysis-grid input,.native-analysis-grid select,.native-analysis-content table input{box-sizing:border-box;width:100%;min-width:0;height:27px;padding:3px 7px;border:1px solid var(--ui-line);border-radius:3px;background:var(--ui-panel);color:var(--ui-ink);font:13px "Segoe UI",Arial,sans-serif}
+.native-analysis-content table{width:100%;border-collapse:collapse;font-size:13px}
+.native-analysis-content th,.native-analysis-content td{border:1px solid var(--ui-line);padding:5px 8px;text-align:left;font-weight:400}
+.native-analysis-content th{width:45%}
+.native-analysis-content fieldset>label{display:block;margin-top:7px;font-size:13px}
+.native-analysis-content fieldset>label input{margin-right:7px}
+.native-analysis-content fieldset>label+label{margin-top:9px}
+.native-analysis-disabled{color:var(--ui-disabled)}
+.native-analysis-ac fieldset>label{display:inline-flex;align-items:center;margin:5px 14px 3px 0;white-space:nowrap}
+.native-analysis-ac fieldset>label input{margin:0 6px 0 0}
+.native-analysis-ac fieldset:last-child>label{min-width:145px}
+.native-analysis-transient fieldset>label{display:block;margin:7px 0;font-size:13px}
+.native-analysis-transient fieldset>label input{margin-right:7px}
+.native-analysis-error{min-height:18px;margin:0;padding:0 18px;color:#b42318;font-size:12px}
+@media(max-width:440px){.native-analysis-grid{grid-template-columns:minmax(110px,1fr) minmax(85px,1fr);gap:7px}}

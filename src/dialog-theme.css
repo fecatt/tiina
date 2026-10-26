@@ -1,0 +1,26 @@
+/* Shared, compact property grids and quiet desktop dialog actions. */
+.component-dialog,.catalog-dialog,.modal{font-family:"Segoe UI",Arial,sans-serif!important;border-radius:8px!important}
+.component-dialog{width:min(640px,calc(100vw - 32px))!important}
+.component-dialog .component-title,.catalog-dialog .catalog-title,.modal header{min-height:46px!important;padding:10px 18px!important;border-bottom:1px solid var(--ui-line)!important;font:600 15px/1.4 "Segoe UI",Arial,sans-serif!important}
+.component-dialog .component-title .component-close,.catalog-dialog .catalog-title button{width:26px!important;height:26px!important;min-width:26px!important;font:20px "Segoe UI",Arial,sans-serif!important}
+.component-dialog .component-body{padding:16px 18px!important;min-height:180px!important;overflow-x:hidden!important}
+.component-dialog .component-properties-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;border-spacing:0!important;border:1px solid var(--ui-line)!important;background:var(--ui-panel)!important}
+.component-dialog .component-properties-table th,.component-dialog .component-properties-table td{height:28px!important;min-height:0!important;box-sizing:border-box!important;border:1px solid var(--ui-line)!important;padding:0 8px!important;vertical-align:middle!important;font:13px/1.35 "Segoe UI",Arial,sans-serif!important;background:var(--ui-panel)!important;color:var(--ui-ink)!important;overflow-wrap:anywhere!important}
+.component-dialog .component-properties-table th{width:61%!important;text-align:left!important;font-weight:400!important;white-space:normal!important;overflow:visible!important}
+.component-dialog .component-properties-table td.component-property-flag{width:26px!important;padding:0!important;text-align:center!important}
+.component-dialog .component-properties-table input:not([type=checkbox]),.component-dialog .component-properties-table select{width:100%!important;min-width:0!important;min-height:26px!important;height:26px!important;padding:3px 0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;font:13px/1.35 "Segoe UI",Arial,sans-serif!important;color:var(--ui-ink)!important}
+.component-dialog .component-properties-table input:focus,.component-dialog .component-properties-table select:focus{outline:1px solid var(--ui-muted)!important;outline-offset:1px!important}
+.component-dialog .component-properties-table .component-value-link,.component-dialog .component-properties-table .component-model-combo{display:flex!important;align-items:center!important;min-height:26px!important;height:26px!important;width:100%!important;min-width:0!important;padding:3px 0!important;border:0!important;border-radius:2px!important;text-align:left!important;font:13px/1.35 "Segoe UI",Arial,sans-serif!important;text-decoration:none!important;color:#215a9a!important}
+.component-dialog .component-properties-table .component-model-combo{justify-content:space-between!important}
+.component-dialog .component-properties-table .component-unavailable th,.component-dialog .component-properties-table .component-unavailable td,.component-dialog .component-properties-table .component-unavailable input:disabled,.component-dialog .component-properties-table button:disabled{color:var(--ui-disabled)!important;background:var(--ui-chrome)!important}
+.component-dialog .component-properties-table .component-unavailable input:disabled{border:0!important;box-shadow:none!important}
+.component-dialog .component-property-flag input{opacity:.6!important;cursor:default!important}
+.component-dialog footer,.catalog-dialog footer,.modal footer{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;padding:12px 18px!important;margin:0!important;border-top:1px solid var(--ui-line)!important;background:var(--ui-panel)!important}
+.component-dialog footer button,.catalog-dialog footer button,.modal footer button{min-width:84px!important;min-height:28px!important;height:28px!important;padding:3px 14px!important;border:1px solid var(--ui-line)!important;border-radius:4px!important;font:13px/1.4 "Segoe UI",Arial,sans-serif!important}
+.component-dialog footer .component-button-icon,.catalog-dialog footer button>span{display:none!important}
+.component-dialog .component-model-scroll{padding:16px 18px!important;overflow-x:hidden!important}
+.component-dialog-wide .component-properties-table th{width:67%!important}
+.component-dialog .component-properties-table td.component-unit{width:40px!important;color:var(--ui-muted)!important}
+.component-parameters-dialog .component-body{min-height:0!important}
+.component-parameters-dialog .component-properties-table th{width:40%!important}
+@media(max-width:600px){.component-dialog .component-properties-table th{width:58%!important}.component-dialog .component-body{padding:12px!important}.component-dialog footer{padding:10px 12px!important}}

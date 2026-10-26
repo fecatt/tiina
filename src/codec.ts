@@ -1,7 +1,13 @@
+import {bjtModels} from './bjt-library.ts';
 /** Independent browser codec. Opaque OBSS records are preserved verbatim.
  * Semantic editing is deliberately limited to the explicitly listed v66 symbols. */
 import library from './library.json' with { type: 'json' };
 import presetData from './presets.json' with { type: 'json' };
+import {DIODE_TEMPLATE,diodeSpiceModel} from './native-diode.ts';
+import {DIODE_VARIANT_TEMPLATES} from './native-diode-variant-templates.ts';
+import {nativeMacro,macroSpiceModel} from './native-macro.ts';
+import {macroSymbol} from './native-macro-symbol.ts';
+import {nativeConnector} from './native-connector.ts';
 
 export type Point = [number, number];
 export type Rec = { type: number; version: number; data: Uint8Array };
@@ -9,7 +15,7 @@ export type Doc = { records: Rec[]; trailer: Uint8Array };
 export type CircuitComponent = {kind:string;x:number;y:number;label?:string;rotation?:number;value?:number;model?:string;label_dx?:number;label_dy?:number};
 export type CircuitSpec = {format:string;name?:string;components:CircuitComponent[];wires:Point[][];analysis?:unknown};
 export const presets = presetData as unknown as Record<'output'|'input'|'basics',CircuitSpec>;
-export const KINDS: Record<number,string> = {0x203:'GND',0x20a:'R',0x20b:'C',0x20c:'L',0x244:'V',0x20f:'VS',0x20e:'I',0x210:'IS',0x211:'VG',0x223:'AM',0x206:'VM',0x207:'AMV',0x258:'NPN',0x259:'PNP'};
+export const KINDS: Record<number,string> = {0x203:'GND',0x204:'CONNECTOR',0x205:'PROBE',0x20a:'R',0x20b:'C',0x20c:'L',0x244:'V',0x20f:'VS',0x20e:'I',0x210:'IS',0x211:'VG',0x223:'AM',0x206:'VM',0x207:'AMV',0x218:'D',0x22c:'ZENER',0x241:'SCHOTTKY',0x23a:'MACRO',0x258:'NPN',0x259:'PNP'};
 const scalar = new Set(['R','C','L','V','VS','I','IS','VG']);
 const magic = Uint8Array.from([79,66,83,83,26,1,0,0,0,0,0]);
 const maxSize = 128*1024*1024;
@@ -45,50 +51,94 @@ export function encode(doc:Doc):Uint8Array {
  for(const r of doc.records){if(!Number.isInteger(r.type)||r.type<0||r.type>65535||!Number.isInteger(r.version)||r.version<0||r.version>65535)fail('Неверный тип записи');d.setUint16(p,r.type,true);d.setUint16(p+2,r.version,true);d.setUint32(p+4,r.data.length,true);out.set(r.data,p+8);p+=8+r.data.length;}out.set(doc.trailer,p);return out;
 }
 export type Component = {index:number;record:Rec;kind:string;x:number;y:number;label:string;orientation:number;mirrored:boolean;label_dx:number;label_dy:number;uid:string;package:string;pin_count:number;parameter_offset:number;value?:number;model?:string;orientation_offset:number;label_end:number;uid_start:number;uid_end:number};
+const legacyPassiveTypes = new Set([0x203,0x20a,0x20b,0x20c]);
+const legacyPassiveVersions = new Set([54,57]);
+function macroPresentation(record:Rec){
+ try{const m=macroSymbol(record);return {name:m.modelName,parameterOffset:-1,pins:m.pins.map(p=>[p.x,p.y] as Point)};}
+ catch{const m=nativeMacro(record);return {name:m.model.subcircuits[0].name,parameterOffset:m.model.offset,pins:m.pins.map(p=>[p.x,p.y] as Point)};}
+}
 export function component(record:Rec,index=-1):Component {
- const kind=KINDS[record.type],d=record.data,v=view(d);if(record.version!==66||!kind||d.length<10)fail('Тип элемента пока не декодирован');
+ if(record.type===0x204)return {...nativeConnector(record),index,record};
+ const kind=KINDS[record.type],d=record.data,v=view(d),legacy=legacyPassiveTypes.has(record.type)&&legacyPassiveVersions.has(record.version);if((record.version!==66&&!legacy)||!kind||d.length<10)fail('Тип элемента пока не декодирован');
  let p:number,label='',label_dx=0,label_dy=0,orientation_offset=4,label_end=0;
  if(kind==='GND')p=6;else {label_dx=v.getInt16(4,true);label_dy=v.getInt16(6,true);[label,p]=readString(d,9);label_end=p;orientation_offset=p;p+=2;}
  if(p+4>d.length)fail('Отсутствует число выводов');const pin_count=v.getUint32(p,true);p+=4;
  const uid_start=p;let uid:string;[uid,p]=readString(d,p);const uid_end=p;let pack:string;[pack,p]=readString(d,p);
- const parameter_offset=p+(kind==='GND'?53:54);if(parameter_offset>d.length)fail('Неполные свойства элемента');
+ const parameter_offset=legacy?p+(kind==='GND'?51:52):p+(['GND','PROBE'].includes(kind)?53:54);if(parameter_offset>d.length)fail('Неполные свойства элемента');
+ if(legacy){const expectedPins=kind==='GND'?1:2;if(pin_count!==expectedPins||p+4>d.length||d[p]!==0||d[p+1]!==0||d[p+2]!==255||d[p+3]!==255)fail('Непроверенный вариант legacy элемента');if(kind!=='GND'&&parameter_offset+8>d.length)fail('Неполный номинал legacy элемента');if(kind==='GND'&&parameter_offset!==d.length)fail('Непроверенный хвост legacy земли');}
  const c:Component={index,record,kind,x:v.getInt16(0,true),y:v.getInt16(2,true),label,orientation:d[orientation_offset],mirrored:d[orientation_offset+1]===1,label_dx,label_dy,uid,package:pack,pin_count,parameter_offset,orientation_offset,label_end,uid_start,uid_end};
  if(scalar.has(kind)&&parameter_offset+8<=d.length)c.value=v.getFloat64(parameter_offset,true);
- if(kind==='NPN'||kind==='PNP')[c.model]=readString(d,parameter_offset);return c;
+ if(legacy&&kind!=='GND'&&(!Number.isFinite(c.value)||c.value!<=0))fail('Неверный номинал legacy элемента');
+ if(['NPN','PNP','D','ZENER','SCHOTTKY'].includes(kind))[c.model]=readString(d,parameter_offset);
+ if(kind==='MACRO'){const m=macroPresentation(record);c.model=m.name;c.parameter_offset=m.parameterOffset;}
+ if(kind==='PROBE'&&(pin_count!==1||d.length!==parameter_offset+2||d[parameter_offset]!==1||d[parameter_offset+1]!==1))fail('Непроверенная структура пробника напряжения TINA');return c;
 }
-export function components(doc:Doc):Component[] {return doc.records.flatMap((r,index)=>{if(!KINDS[r.type]||r.version!==66)return [];try{return [component(r,index)];}catch{return [];}});}
-export type Changes = Partial<Pick<Component,'x'|'y'|'label'|'value'|'uid'|'label_dx'|'label_dy'|'model'|'orientation'>> & {rotation?:number};
+export function components(doc:Doc):Component[] {return doc.records.flatMap((r,index)=>{if(!KINDS[r.type]||(r.version!==66&&!(legacyPassiveTypes.has(r.type)&&legacyPassiveVersions.has(r.version))))return [];try{return [component(r,index)];}catch{return [];}});}
+export type Changes = Partial<Pick<Component,'x'|'y'|'label'|'value'|'uid'|'label_dx'|'label_dy'|'model'|'orientation'|'mirrored'>> & {rotation?:number};
 export function updateComponent(doc:Doc,index:number,changes:Changes):void {
- const r=doc.records[index];if(!r)fail('Элемент не найден');const c=component(r,index);let d=r.data.slice(),v=view(d);
+ const r=doc.records[index];if(!r)fail('Элемент не найден');const c=component(r,index);let d=Uint8Array.from(r.data),v=view(d);
  v.setInt16(0,i16(changes.x??c.x),true);v.setInt16(2,i16(changes.y??c.y),true);
  const rotation=changes.orientation??changes.rotation;if(rotation!==undefined){if(!Number.isInteger(rotation)||rotation<0||rotation>3)fail('Поддерживаются повороты 0–3');d[c.orientation_offset]=rotation;}
+ if(changes.mirrored!==undefined){if(typeof changes.mirrored!=='boolean')fail('Неверное отражение элемента');d[c.orientation_offset+1]=Number(changes.mirrored);}
  if(changes.label_dx!==undefined||changes.label_dy!==undefined){if(c.kind==='GND')fail('У земли нет подписи');v.setInt16(4,i16(changes.label_dx??c.label_dx),true);v.setInt16(6,i16(changes.label_dy??c.label_dy),true);}
  if(changes.value!==undefined){const n=changes.value;if(!scalar.has(c.kind)||!Number.isFinite(n)||(['R','C','L'].includes(c.kind)&&n<=0))fail('Недопустимый номинал');v.setFloat64(c.parameter_offset,n,true);}
  if(changes.uid!==undefined)d=join(d.slice(0,c.uid_start),countedString(changes.uid),d.slice(c.uid_end));
  if(changes.label!==undefined){if(c.kind==='GND')fail('У земли нет подписи');d=join(d.slice(0,9),countedString(changes.label),d.slice(c.label_end));}
- const updated={...r,data:d};if(changes.model!==undefined)useModel(updated,changes.model);r.data=updated.data;
+ const updated={...r,data:d};if(changes.model!==undefined)useModel(updated,changes.model);if(c.kind==='MACRO')macroPresentation(updated);if(c.kind==='CONNECTOR')nativeConnector(updated);r.data=updated.data;
 }
 function jsonRecord(r:{type_id:number;version:number;data_b64:string}):Rec {return {type:r.type_id,version:r.version,data:from64(r.data_b64)};}
 function useModel(r:Rec,name:string):void {
- const c=component(r),models=library.bjt_models as Record<string,{polarity:string;parameters_b64:string}>,m=models[name];
+ if(r.type===0x23a){if(macroPresentation(r).name!==name)fail('Замена модели макроса пока не поддерживается');return;}
+ if([0x218,0x22c,0x241].includes(r.type)){if(component(r).model!==name)fail('Замена модели диода пока не поддерживается');return;}
+ const c=component(r),models=bjtModels(c.kind),m=models[name];
  if(!m||m.polarity!==c.kind)fail('Эта модель транзистора отсутствует в локальной библиотеке');
  const d=r.data,p=c.parameter_offset;let p1:number;[,p1]=readString(d,p);let p2:number;[,p2]=readString(d,p1);
- if(d[p2]!==0||d[p2+1]!==1||view(d).getUint16(p2+2,true)!==304||p2+308>d.length)fail('Неизвестный формат модели');
- r.data=join(d.slice(0,p),countedString(name),countedString('SPICE-BJT'),d.slice(p2,p2+4),from64(m.parameters_b64),d.slice(p2+308));
+ const embedded=d[p2]===0&&d[p2+1]===1&&view(d).getUint16(p2+2,true)===304&&p2+308<=d.length;
+ const reference=d[p2]===0&&d[p2+1]===0&&view(d).getUint16(p2+2,true)===0;
+ if(!embedded&&!reference)fail('Неизвестный формат модели');
+ r.data=join(d.slice(0,p),countedString(name),countedString('SPICE-BJT'),Uint8Array.of(0,1,48,1),from64(m.parameters_b64),d.slice(p2+(embedded?308:4)));
 }
 let counter=0;
+/** Creation is driven by admitted native templates, independently of import-only kinds. */
+export const CREATABLE_KINDS=[...new Set([...Object.keys(library.components),'D',...Object.keys(DIODE_VARIANT_TEMPLATES)])];
 const uid=()=>`T_${(++counter).toString(16).toUpperCase().padStart(8,'0')}20261022000000`;
 function createComponent(s:CircuitComponent):Rec {
- const entry=(library.components as Record<string,{record:{type_id:number;version:number;data_b64:string}}>)[s.kind];if(!entry)fail('Неизвестный вид элемента');
+ const entry=s.kind==='D'?{record:{type_id:0x218,version:66,data_b64:DIODE_TEMPLATE}}:DIODE_VARIANT_TEMPLATES[s.kind]?{record:DIODE_VARIANT_TEMPLATES[s.kind]}:(library.components as Record<string,{record:{type_id:number;version:number;data_b64:string}}>)[s.kind];if(!entry)fail('Неизвестный вид элемента');
  const r=jsonRecord(entry.record),doc={records:[r],trailer:new Uint8Array()};
  r.data[component(r).orientation_offset+1]=0; // New symbols start unmirrored; imported bytes are preserved.
- updateComponent(doc,0,{x:s.x,y:s.y,orientation:s.rotation??0,uid:uid(),...(s.kind==='GND'?{}:{label:s.label??s.kind,label_dx:s.label_dx,label_dy:s.label_dy}),...(s.value!==undefined?{value:s.value}:{}),...(['NPN','PNP'].includes(s.kind)?{model:s.model??(s.kind==='NPN'?'BF240':'!PNP')}:{})});return r;
+ updateComponent(doc,0,{x:s.x,y:s.y,orientation:s.rotation??0,uid:uid(),...(s.kind==='GND'?{}:{label:s.label??s.kind,label_dx:s.label_dx,label_dy:s.label_dy}),...(s.value!==undefined?{value:s.value}:{}),...(['NPN','PNP'].includes(s.kind)?{model:s.model??(s.kind==='NPN'?'BF240':'!PNP')}:(s.kind==='D'&&s.model?{model:s.model}:{}))});return r;
 }
 export const newUid=()=>`W_${crypto.randomUUID().replace(/-/g,'').slice(0,22)}`;
-export function newComponent(kind:string,x:number,y:number,label:string):Rec {const r=createComponent({kind,x,y,label});updateComponent({records:[r],trailer:new Uint8Array()},0,{uid:newUid(),...(kind==='R'?{label_dx:8,label_dy:-20}:{})});if(kind==='R')r.data[8]=0;return r;}
+export function newComponent(kind:string,x:number,y:number,label:string):Rec {
+ const r=createComponent({kind,x,y,label});
+ // Round-meter placement follows the fresh native AMV donor (11,31, direction 0).
+ // VM shares that drawing family; a separate fresh VM oracle is still pending.
+ const offsets=['R','ZENER','SCHOTTKY'].includes(kind)?{label_dx:8,label_dy:-20}:['VM','AMV'].includes(kind)?{label_dx:11,label_dy:31}:kind==='VS'?{label_dx:0,label_dy:-34}:kind==='VG'?{label_dx:8,label_dy:-12}:{};
+ updateComponent({records:[r],trailer:new Uint8Array()},0,{uid:newUid(),...offsets,...(['VS','VG'].includes(kind)?{orientation:3}:{})});
+ if(['R','VM','AMV','ZENER','SCHOTTKY'].includes(kind))r.data[8]=0;else if(['VS','VG'].includes(kind))r.data[8]=1;
+ return r;
+}
 /** Position is relative to the symbol; label direction has its own native byte. */
-export function labelGeometry(c:Component){let x=c.label_dx,y=c.label_dy;for(let i=0;i<c.orientation;i++)[x,y]=[y,-x];return {x:c.x+x,y:c.y+y,angle:-90*((c.orientation+c.record.data[8])%4)};}
-export function translateLabel(doc:Doc,index:number,dx:number,dy:number){const c=component(doc.records[index],index);for(let i=0;i<c.orientation;i++)[dx,dy]=[-dy,dx];updateComponent(doc,index,{label_dx:c.label_dx+dx,label_dy:c.label_dy+dy});}
+export function labelGeometry(c:Component,width=0,height=0){
+ if(!Number.isFinite(width)||!Number.isFinite(height)||width<0||height<0)fail('Неверный размер подписи');
+ // Native WMF oracle: direction 3 has the same upright text anchor as 1.
+ // Upper bits are flags, not additional quarter turns of the text rectangle.
+ const direction=c.record.data[8]&1;
+ const points:Point[]=[[0,0],[width,0],[0,height],[width,height]].map(([a,b])=>{
+  for(let i=0;i<direction%4;i++)[a,b]=[b,-a];a+=c.label_dx;b+=c.label_dy;
+  if(c.mirrored)a=-a;for(let i=0;i<c.orientation;i++)[a,b]=[b,-a];return [c.x+a,c.y+b];
+ });
+ const vertical=(c.orientation+direction)%2===1;
+ return {x:Math.min(...points.map(p=>p[0])),y:(vertical?Math.max:Math.min)(...points.map(p=>p[1])),angle:vertical?-90:0};
+}
+export function translateLabel(doc:Doc,index:number,dx:number,dy:number){const c=component(doc.records[index],index);for(let i=0;i<c.orientation;i++)[dx,dy]=[-dy,dx];if(c.mirrored)dx=-dx;updateComponent(doc,index,{label_dx:c.label_dx+dx,label_dy:c.label_dy+dy});}
+/** Native left/right actions toggle only the selected label's direction byte. */
+export function rotateLabel(doc:Doc,index:number){
+ const r=doc.records[index],c=component(r,index);
+ if(c.kind==='GND'||!c.label)fail('У элемента нет подписи');
+ if(r.data[8]!==0&&r.data[8]!==1)fail('Направление подписи пока не поддерживается');
+ const d=Uint8Array.from(r.data);d[8]=1-d[8];r.data=d;
+}
 export function wirePoints(r:Rec):Point[] {
  const d=r.data,v=view(d);if(r.type!==256||![21,22].includes(r.version)||d.length<10)fail('Неизвестный формат провода');const n=v.getUint16(8,true);if(n<2||n>8192||10+4*n>d.length)fail('Повреждены точки провода');return Array.from({length:n},(_,i)=>[v.getInt16(10+4*i,true),v.getInt16(12+4*i,true)]);
 }
@@ -152,12 +202,14 @@ export function build(spec:CircuitSpec):Doc {
 export function moveComponent(doc:Doc,index:number,x:number,y:number,orientation?:number):void {
  const before=pins(component(doc.records[index],index));
  const same=(a:Point,b:Point)=>a[0]===b[0]&&a[1]===b[1];
- const onSegment=(p:Point,a:Point,b:Point)=>(p[0]-a[0])*(b[1]-a[1])===(p[1]-a[1])*(b[0]-a[0])&&p[0]>=Math.min(a[0],b[0])&&p[0]<=Math.max(a[0],b[0])&&p[1]>=Math.min(a[1],b[1])&&p[1]<=Math.max(a[1],b[1]);
  const originalWires=doc.records.filter(r=>r.type===256).map(record=>({record,points:wirePoints(record)}));
  const otherPins=components(doc).filter(c=>c.index!==index).flatMap(pins);
  const branches=before.map(p=>{
-  const touching=originalWires.filter(w=>w.points.some((a,j)=>j>0&&onSegment(p,w.points[j-1],a)));
-  const shared=otherPins.some(q=>same(p,q))||touching.length>1||touching.some(w=>!same(p,w.points[0])&&!same(p,w.points.at(-1)!));
+  // Use the same electrical rule as connectivity(): only record endpoints
+  // attach. Crossing a lead or its interior bend must not capture a free pin
+  // on the next drag (e.g. the lower terminal of a raised voltmeter).
+  const touching=originalWires.filter(w=>same(p,w.points[0])||same(p,w.points.at(-1)!));
+  const shared=otherPins.some(q=>same(p,q))||touching.length>1;
   return {connected:touching.length>0||otherPins.some(q=>same(p,q)),shared};
  });
  updateComponent(doc,index,{x,y,orientation});const after=pins(component(doc.records[index],index));
@@ -203,13 +255,21 @@ export function moveComponent(doc:Doc,index:number,x:number,y:number,orientation
  }
 }
 export function pins(c:Component):Point[] {
+ if(c.kind==='CONNECTOR')return [[c.x,c.y]];
+ if(c.kind==='MACRO')return macroPresentation(c.record).pins;
  if(!Number.isInteger(c.orientation)||c.orientation<0||c.orientation>3)fail('Зеркальное отображение выводов пока не поддерживается');
- const pp:Point[]=c.kind==='GND'?[[0,0]]:['NPN','PNP'].includes(c.kind)?[[16,-24],[-16,0],[16,24]]:['V','VM','AMV'].includes(c.kind)?[[0,0],[0,40]]:[[0,0],[40,0]];
+ const pp:Point[]=['GND','PROBE'].includes(c.kind)?[[0,0]]:['NPN','PNP'].includes(c.kind)?[[16,-24],[-16,0],[16,24]]:['V','VM','AMV'].includes(c.kind)?[[0,0],[0,40]]:[[0,0],[40,0]];
  return pp.map(([a,b])=>{if(c.mirrored)a=-a;for(let k=0;k<c.orientation;k++)[a,b]=[b,-a];return [c.x+a,c.y+b];});
 }
 export const BJT_FIELDS='IS NF NR RE RC RB VAF VAR ISE ISC ISS NE NC NS BF BR IKF IKR CJC CJE CJS VJC VJE VJS MJC MJE MJS TF TR EG KF AF VCEO VCBO VEBO ICMAX IBMAX PMAX'.split(' ');
 export function modelParameters(c:Component):Record<string,number> {
- const d=c.record.data;let p:number;[,p]=readString(d,c.parameter_offset);let family:string;[family,p]=readString(d,p);if(family!=='SPICE-BJT'||d[p]!==0||d[p+1]!==1||view(d).getUint16(p+2,true)!==304||p+308>d.length)fail('Модель транзистора пока не поддерживается');
+ const d=c.record.data;let p:number;[,p]=readString(d,c.parameter_offset);let family:string;[family,p]=readString(d,p);
+ if(family==='SPICE-BJT'&&d[p]===0&&d[p+1]===0&&view(d).getUint16(p+2,true)===0){
+  const model=bjtModels(c.kind)[c.model??''];if(!model)fail('Модель отсутствует в локальном каталоге: '+c.model);
+  const bytes=from64(model.parameters_b64);if(bytes.length!==304)fail('Неверная длина каталожной модели');
+  return Object.fromEntries(BJT_FIELDS.map((name,i)=>[name,view(bytes).getFloat64(i*8,true)]));
+ }
+ if(family!=='SPICE-BJT'||d[p]!==0||d[p+1]!==1||view(d).getUint16(p+2,true)!==304||p+308>d.length)fail('Модель транзистора пока не поддерживается');
  return Object.fromEntries(BJT_FIELDS.map((s,i)=>[s,view(d).getFloat64(p+4+8*i,true)]));
 }
 export function connectivity(doc:Doc):{component:Component;nodes:string[]}[] {
@@ -221,6 +281,9 @@ export function connectivity(doc:Doc):{component:Component;nodes:string[]}[] {
  // Native TINA joins separate wire records at their endpoints, not at interior bends/taps.
  // Interior vertices remain geometry only; give each wire its endpoint equivalence.
  for(const w of ww)union(w[0],w.at(-1)!);
+ // TJumper labels are net aliases, not unique device references. Native PSpice
+ // proves exact repeated labels join otherwise disconnected wire endpoints.
+ const namedNets=new Map<string,Point>();cc.forEach((c,i)=>{if(c.kind!=='CONNECTOR'||!c.label)return;const point=pp[i][0],prior=namedNets.get(c.label);if(prior)union(prior,point);else namedNets.set(c.label,point);});
  const ground=cc.flatMap((c,i)=>c.kind==='GND'?[pp[i][0]]:[]);if(!ground.length)fail('В схеме нет общего узла (земли)');ground.slice(1).forEach(p=>union(ground[0],p));const ids=new Map([[find(key(ground[0])),'0']]);
  [...points.values()].sort((a,b)=>a[0]-b[0]||a[1]-b[1]).forEach(p=>{const root=find(key(p));if(!ids.has(root))ids.set(root,String(ids.size));});return cc.map((component,i)=>({component,nodes:pp[i].map(p=>ids.get(find(key(p)))!)}));
 }
@@ -229,13 +292,16 @@ export function connectivity(doc:Doc):{component:Component;nodes:string[]}[] {
  * results even though TINA's PSpice exporter omits the series resistor. */
 export function generatorResistance(c:Component):number|null {
  const d=c.record.data,p=c.parameter_offset;
- if(c.kind!=='VG'||d.length<p+43||d[p+8]!==1||![4,5].includes(d[p+9])||d[p+34]!==0)return null;
+ if(c.kind!=='VG'||d.length<p+43||![0,1].includes(d[p+8])||![4,5].includes(d[p+9])||d[p+34]!==0)return null;
  const r=view(d).getFloat64(p+35,true);return Number.isFinite(r)&&r>=0?r:null;
 }
 export function exportSpice(doc:Doc):{text:string;mapping:{names:Record<string,string>;nodes:Record<string,string[]>}} {
+ for(const c of components(doc).filter(c=>c.kind==='MACRO'))try{nativeMacro(c.record);}catch{fail(`Расчёт модели макроса ${c.label} (${c.model??'неизвестна'}) пока не поддерживается. Его символ, выводы и исходная модель сохраняются в TSC для оригинальной TINA.`);}
+ const unsupportedDiode=components(doc).find(c=>['ZENER','SCHOTTKY'].includes(c.kind));
+ if(unsupportedDiode)fail(`Расчёт и экспорт SPICE: ${unsupportedDiode.kind==='ZENER'?'стабилитрон':'диод Шотки'} ${unsupportedDiode.label}, модель ${unsupportedDiode.model??''} пока не сверена с оригинальной TINA. Редактирование и сохранение TSC доступны.`);
  const rows=['* Independent TINA-compatible editor export','.options TEMP=27'],names:Record<string,string>={},nodes:Record<string,string[]>={},models=new Map<string,string>(),used=new Set<string>();
  const name=(prefix:string,label:string)=>prefix+'_'+label.replace(/[^a-zA-Z0-9_]/g,'_');
- for(const {component:c,nodes:n} of connectivity(doc)){const k=c.kind;if(k==='GND')continue;let label:string;
+ for(const {component:c,nodes:n} of connectivity(doc)){const k=c.kind;if(k==='GND'||k==='CONNECTOR')continue;let label:string;
   if(['R','C','L'].includes(k)){label=name(k,c.label);rows.push(`${label} ${n.join(' ')} ${c.value}`);}
   else if(['V','VS','VG','I','IS'].includes(k)){
    const prefix=['I','IS'].includes(k)?'I':'V';label=name(prefix,c.label);
@@ -250,6 +316,9 @@ export function exportSpice(doc:Doc):{text:string;mapping:{names:Record<string,s
   }
   else if(['AM','AMV'].includes(k)){label=name('VAM',c.label);rows.push(`${label} ${n.join(' ')} 0`);}
   else if(k==='VM'){label=name('VM',c.label);rows.push(`* ${label} measures V(${n.join(',')}); ideal infinite input impedance`);}
+  else if(k==='PROBE'){label=name('VP',c.label);rows.push(`* ${label} measures V(${n[0]}); ideal infinite input impedance`);}
+  else if(k==='D'){label=name('D',c.label);const m=name('MD',c.model!),text=diodeSpiceModel(c.record,m);if(models.has(m)&&models.get(m)!==text)fail('Разные модели диода с одинаковым именем');models.set(m,text);rows.push(`${label} ${n.join(' ')} ${m}`);}
+  else if(k==='MACRO'){label=name('X',c.label);const m=`TM_${c.index}_LM741`;models.set(m,macroSpiceModel(nativeMacro(c.record),m));rows.push(`${label} ${n.join(' ')} ${m}`);}
   else if(['NPN','PNP'].includes(k)){label=name('Q',c.label);const m=name('M',c.model!),p=modelParameters(c);if(p.ISS!==0)fail('Модель с ненулевым током подложки пока не экспортируется');const excluded=['ISS','NS','VCEO','VCBO','VEBO','ICMAX','IBMAX','PMAX'];const text=`.model ${m} ${k} (${Object.entries(p).filter(([key])=>!excluded.includes(key)).map(([key,value])=>`${key}=${value}`).join(' ')})`;if(models.has(m)&&models.get(m)!==text)fail('Разные модели с одинаковым именем');models.set(m,text);rows.push(`${label} ${n.join(' ')} ${m}`);}
   else return fail(`Экспорт элемента ${k} не реализован`);
   if(used.has(label.toLowerCase())||Object.hasOwn(names,c.label))fail('Совпадают обозначения элементов');used.add(label.toLowerCase());names[c.label]=label;nodes[c.label]=n;

@@ -11,15 +11,15 @@ export function checkCircuit(doc:Doc):ElectricalIssue[] {
  }
  if(!cc.some(c=>c.kind==='GND'))add('error','missing-ground','Добавьте общий узел (землю) для расчёта.');
  const labels=new Map<string,number[]>();
- for(const c of cc){if(c.kind==='GND'||!c.label.trim())continue;const label=c.label.trim().toLowerCase();labels.set(label,[...(labels.get(label)??[]),c.index]);}
+ for(const c of cc){if(['GND','CONNECTOR'].includes(c.kind)||!c.label.trim())continue;const label=c.label.trim().toLowerCase();labels.set(label,[...(labels.get(label)??[]),c.index]);}
  for(const [label,records] of labels)if(records.length>1)add('error','duplicate-label',`Повторяется обозначение «${label}».`,records);
  if(issues.some(i=>i.code==='missing-ground'||i.code==='unsupported-component'))return issues;
  try{
   const rows=connectivity(doc),counts=new Map<string,number>();
   // Voltage probes do not provide a conducting path for another component.
-  for(const {component:c,nodes} of rows)if(c.kind!=='VM')for(const node of nodes)counts.set(node,(counts.get(node)??0)+1);
+  for(const {component:c,nodes} of rows)if(!['VM','PROBE','CONNECTOR'].includes(c.kind))for(const node of nodes)counts.set(node,(counts.get(node)??0)+1);
   for(const {component:c,nodes} of rows){
-   if(c.kind==='GND'||c.kind==='VM')continue;
+   if(['GND','VM','PROBE','CONNECTOR'].includes(c.kind))continue;
    nodes.forEach((node,p)=>{if(node!=='0'&&counts.get(node)===1)add('warning','dangling-pin',`${c.label||c.kind}: вывод ${p+1} не соединён с другим элементом.`,[c.index]);});
    if(new Set(nodes).size===1)add('warning','shorted-component',`${c.label||c.kind}: все выводы соединены с одним узлом.`,[c.index]);
   }

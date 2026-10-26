@@ -1,0 +1,77 @@
+/* Shared button feedback: keep each control's existing surface color and geometry. */
+.component-dialog button:disabled,.catalog-dialog button:disabled,.modal button:disabled{color:var(--ui-disabled)!important;box-shadow:none!important;cursor:default!important}
+.full-button,.full-button:hover:enabled,.full-button:active,.native-text-toolbar button,.native-text-toolbar button:hover:enabled,.native-text-side button,.native-text-side button:hover:enabled{background-color:var(--ui-chrome)!important}
+.right-panel button:enabled:hover,.document-add:enabled:hover{background:var(--ui-chrome)!important;box-shadow:inset 0 1px 2px #0002,inset 0 -1px 1px #fff9!important}
+.right-panel button:enabled:active,.document-add:enabled:active{background:var(--ui-chrome)!important;box-shadow:inset 0 3px 5px -2px #0005,inset 0 -2px 4px -1px #fffc!important}
+.tool:not(:disabled):not(.category):not(.document-tab):not(.tab),
+.component-button:not(:disabled):not(.category):not(.document-tab):not(.tab),
+.full-button:not(:disabled):not(.category):not(.document-tab):not(.tab),
+.native-text-toolbar button:not(:disabled),
+.native-text-side button:not(:disabled),
+.component-dialog button:not(:disabled),
+.catalog-dialog button:not(:disabled),
+.modal button:not(:disabled) {
+  border-color: var(--ui-line) !important;
+  box-shadow: none !important;
+  transition: box-shadow 150ms ease !important;
+}
+
+.tool:not(:disabled):not(.category):not(.document-tab):not(.tab):hover,
+.component-button:not(:disabled):not(.category):not(.document-tab):not(.tab):hover,
+.full-button:not(:disabled):not(.category):not(.document-tab):not(.tab):hover,
+.native-text-toolbar button:not(:disabled):hover,
+.native-text-side button:not(:disabled):hover,
+.component-dialog button:not(:disabled):hover,
+.catalog-dialog button:not(:disabled):hover,
+.modal button:not(:disabled):hover {
+  box-shadow: inset 0 1px 2px #0002, inset 0 -1px 1px #fff9 !important;
+}
+
+.tool:not(:disabled):not(.category):not(.document-tab):not(.tab):is(:active,.active,[aria-pressed="true"]),
+.component-button:not(:disabled):not(.category):not(.document-tab):not(.tab):is(:active,.active,[aria-pressed="true"]),
+.full-button:not(:disabled):not(.category):not(.document-tab):not(.tab):is(:active,.active,[aria-pressed="true"]),
+.native-text-toolbar button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
+.native-text-side button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
+.component-dialog button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
+.catalog-dialog button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
+.modal button:not(:disabled):is(:active,.active,[aria-pressed="true"]) {
+  box-shadow: inset 0 3px 5px -2px #0005, inset 0 -2px 4px -1px #fffc !important;
+}
+
+.toolbar .tool,
+.toolbar .tool:hover:enabled,
+.toolbar .tool:active,
+.toolbar .tool.active,
+.toolbar .tool[aria-pressed="true"],
+.palette .component-button,
+.palette .component-button:hover:enabled,
+.palette .component-button:active,
+.palette .component-button.active,
+.palette .component-button[aria-pressed="true"] {
+  background-color: var(--ui-chrome) !important;
+}
+
+.component-dialog button,
+.component-dialog button:hover:enabled,
+.component-dialog button:active,
+.component-dialog button.active,
+.component-dialog button[aria-pressed="true"],
+.catalog-dialog button,
+.catalog-dialog button:hover:enabled,
+.catalog-dialog button:active,
+.catalog-dialog button.active,
+.catalog-dialog button[aria-pressed="true"],
+.modal button,
+.modal button:hover:enabled,
+.modal button:active,
+.modal button.active,
+.modal button[aria-pressed="true"] {
+  background-color: var(--ui-panel) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool, .component-button, .full-button, .native-text-toolbar button,
+  .native-text-side button, .component-dialog button, .catalog-dialog button, .modal button {
+    transition: none !important;
+  }
+}

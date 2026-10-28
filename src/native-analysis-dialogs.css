@@ -29,3 +29,8 @@
 .bjt-auto-dialog [data-auto-result] h3{margin:4px 0 10px;font-size:14px}
 .bjt-auto-dialog [data-auto-result] td{overflow-wrap:anywhere}
 .bjt-auto-dialog details>summary{cursor:pointer;font-size:13px;margin-bottom:8px}
+
+.native-analysis-dialog:has([data-auto]){width:min(640px,calc(100vw - 28px))!important}
+.native-analysis-dialog footer{flex-wrap:wrap}
+.native-analysis-dialog footer button{white-space:nowrap}
+.native-analysis-dialog [data-fit-summary]{margin:4px 0;font-size:13px;line-height:1.45}

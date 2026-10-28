@@ -147,7 +147,7 @@ function combinedSpec(scene:BjtGraphScene):NativeGraphSpec{
  curves.push({name:'coordinate axes',points:[[-1.05,0],[1.05,0],[0,0],[0,-1.05],[0,1.05]],color:0x202020});
  const output=panels.get('output')!,transfer=panels.get('transfer')!,input=panels.get('input')!;
  labels.push({text:'Выходные характеристики',x:.52,y:.78},{text:'Передаточная характеристика',x:-.97,y:.82},{text:'Входная характеристика при 5 В',x:-.98,y:-.82});
- return{title:scene.title.slice(0,100),xLabel:`${output.xLabel} ->; ${transfer.xLabel} <- (${transfer.x.max} ед.)`,yLabel:`${output.yLabel} up; ${input.yLabel} down`,bounds:{xmin:-1.1,xmax:1.1,ymin:-1.1,ymax:1.1},curves,labels};
+ return{title:scene.title.slice(0,100),xLabel:`UКЭ/${output.x.max}В вправо; -IБ/${transfer.x.max.toPrecision(4)}А влево`,yLabel:`IК/${output.y.max.toPrecision(4)}А вверх; -UБЭ/${input.y.max.toPrecision(4)}В вниз`,bounds:{xmin:-1.1,xmax:1.1,ymin:-1.1,ymax:1.1},curves,labels};
 }
 function waveSpec(scene:BjtGraphScene):NativeGraphSpec{
  const curves:NativeGraphCurve[]=[],labels:NativeGraphLabel[]=[];

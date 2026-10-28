@@ -3,7 +3,7 @@
     "autoDesign": true,
     "supply": 18,
     "outputStop": 22,
-    "ibStop": -0.00004,
+    "ibStop": -4e-05,
     "axisOutput": "20m",
     "axisInput": "100u",
     "inputStart": 0.5,
@@ -37,12 +37,12 @@
     "Ce": "470u",
     "Cp1": "47u",
     "datasheet": {
-      "title": "Philips Semiconductors BF240 Product specification 2004",
-      "url": "https://media.digikey.com/pdf/Data%20Sheets/NXP%20PDFs/BF240.pdf",
+      "title": "Fairchild Semiconductor BF240 NPN RF Transistor Rev A September 2003",
+      "url": "https://www.komponenten.es.aau.dk/fileadmin/komponenten/Data_Sheet/Transistor/BF240.pdf",
       "limits": {
         "VCEO_V": 40,
-        "IC_A": 0.025,
-        "Ptot_W_TA25": 0.3
+        "IC_A": 0.05,
+        "Ptot_W_TA25": 0.35
       }
     }
   }

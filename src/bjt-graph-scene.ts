@@ -112,14 +112,14 @@ export function buildBjtGraphScene(data:BjtGraphData):BjtGraphScene {
  if(!R1||!R2)calculationWarnings.push('Введите R₁ и R₂, чтобы получить сопротивление входного делителя, мощность источника и параметры каскада.');
  if(!Ce||!Cp1||!Ck)calculationWarnings.push('Для оценки граничных частот задайте Cр₁ и Cк; Cэ вводится отдельно и в двухполюсную оценку полосы не включён.');
  if(dividerResidual!==null&&R1&&R2){const id=(q.ube_V+(q.ic_A+q.ib_A)*Re)/R2;if(Math.abs(dividerResidual)>.05*Math.max(Math.abs(q.ib_A+id),1e-12))calculationWarnings.push('Ток делителя по R₁/R₂ отличается от тока базы в рабочей точке более чем на 5%; мощность источника и входное сопротивление требуют проверки режима.');}
- const maxUce=Math.max(data.limits.uceMax_V,E,...family.flatMap(c=>c.points.map(p=>p[0]))),maxIc=Math.max(data.limits.icMax_A,E/R,...family.flatMap(c=>c.points.map(p=>p[1]))),maxIb=levels.at(-1)!;
+ const maxUce=Math.max(data.limits.uceMax_V,E,...family.flatMap(c=>c.points.map(p=>p[0]))),maxIc=Math.max(E/R,...family.flatMap(c=>c.points.map(p=>p[1])))*1.08,maxIb=levels.at(-1)!;
  const outputSeries:BjtGraphSeries[]=family.map(c=>({name:`IБ=${c.ib_A} А`,points:c.points.map(([x,y])=>({x,y}))}));
  const loadIntercept=E-q.ib_A*Re;
- outputSeries.push({name:'Рабочая нагрузочная линия для IБ(Q)',color:'#c33',points:[{x:0,y:loadIntercept/R},{x:loadIntercept,y:0}]},
+ outputSeries.push({name:'Нагрузочная линия без RЭ',color:'#8952a8',dash:true,points:[{x:0,y:E/Rk},{x:E,y:0}]},{name:'Рабочая нагрузочная линия для IБ(Q)',color:'#c33',points:[{x:0,y:loadIntercept/R},{x:loadIntercept,y:0}]},
   {name:'UКЭ max',color:'#777',dash:true,points:[{x:data.limits.uceMax_V,y:0},{x:data.limits.uceMax_V,y:maxIc}]},
   {name:'IК max',color:'#777',dash:true,points:[{x:0,y:data.limits.icMax_A},{x:maxUce,y:data.limits.icMax_A}]},
   {name:'PК max',color:'#a65',dash:true,points:Array.from({length:161},(_,i)=>{const u=Math.max(1e-12,maxUce*i/160);return{x:u,y:data.limits.pCollectorMax_W/u};})});
- const keyPoints:[string,typeof q,string][]=[['Q',q,'#aa2222'],['a',a,'#237447'],['b',b,'#237447']];
+ const keyPoints:[string,typeof q,string][]=[['A',q,'#aa2222'],['a',a,'#237447'],['b',b,'#237447']];
  const marks=(xKey:'ib_A'|'uce_V',yKey:'ic_A'|'ube_V')=>keyPoints.map(([name,p,color])=>({name,point:{x:p[xKey],y:p[yKey]},color}));
  const panels:BjtGraphPanel[]=[
   {id:'output',title:'Выходные характеристики',xLabel:'UКЭ, В',yLabel:'IК, А',rect:{x:520,y:55,width:420,height:270},x:{min:0,max:maxUce},y:{min:0,max:maxIc},series:outputSeries,marks:marks('uce_V','ic_A')},
@@ -194,3 +194,4 @@ export function renderBjtGraphScene(scene:BjtGraphScene,width=1000,height=1050):
  scene.notes.forEach((n,i)=>html+=`<text x="35" y="1018" dy="${i*15}" font-size="9">${esc(n)}</text>`);
  return html+'</svg>';
 }
+

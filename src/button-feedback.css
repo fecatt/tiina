@@ -1,5 +1,5 @@
 /* Shared button feedback: keep each control's existing surface color and geometry. */
-.component-dialog button:disabled,.catalog-dialog button:disabled,.modal button:disabled{color:var(--ui-disabled)!important;box-shadow:none!important;cursor:default!important}
+.component-dialog button:disabled,.catalog-dialog button:disabled,.modal button:disabled,.graph-tools button:disabled{color:var(--ui-disabled)!important;box-shadow:none!important;cursor:default!important}
 .full-button,.full-button:hover:enabled,.full-button:active,.native-text-toolbar button,.native-text-toolbar button:hover:enabled,.native-text-side button,.native-text-side button:hover:enabled{background-color:var(--ui-chrome)!important}
 .right-panel button:enabled:hover,.document-add:enabled:hover{background:var(--ui-chrome)!important;box-shadow:inset 0 1px 2px #0002,inset 0 -1px 1px #fff9!important}
 .right-panel button:enabled:active,.document-add:enabled:active{background:var(--ui-chrome)!important;box-shadow:inset 0 3px 5px -2px #0005,inset 0 -2px 4px -1px #fffc!important}
@@ -10,6 +10,7 @@
 .native-text-side button:not(:disabled),
 .component-dialog button:not(:disabled),
 .catalog-dialog button:not(:disabled),
+.graph-tools button:not(:disabled),
 .modal button:not(:disabled) {
   border-color: var(--ui-line) !important;
   box-shadow: none !important;
@@ -23,6 +24,7 @@
 .native-text-side button:not(:disabled):hover,
 .component-dialog button:not(:disabled):hover,
 .catalog-dialog button:not(:disabled):hover,
+.graph-tools button:not(:disabled):hover,
 .modal button:not(:disabled):hover {
   box-shadow: inset 0 1px 2px #0002, inset 0 -1px 1px #fff9 !important;
 }
@@ -34,6 +36,7 @@
 .native-text-side button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
 .component-dialog button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
 .catalog-dialog button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
+.graph-tools button:not(:disabled):is(:active,.active,[aria-pressed="true"]),
 .modal button:not(:disabled):is(:active,.active,[aria-pressed="true"]) {
   box-shadow: inset 0 3px 5px -2px #0005, inset 0 -2px 4px -1px #fffc !important;
 }
@@ -71,7 +74,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tool, .component-button, .full-button, .native-text-toolbar button,
-  .native-text-side button, .component-dialog button, .catalog-dialog button, .modal button {
+  .native-text-side button, .component-dialog button, .catalog-dialog button, .modal button, .graph-tools button {
     transition: none !important;
   }
 }

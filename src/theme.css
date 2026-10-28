@@ -5,7 +5,7 @@ button,input,select,textarea{font-family:Arial,sans-serif}
 button:disabled{color:var(--ui-disabled)!important;opacity:1!important;filter:none}
 button:focus-visible,summary:focus-visible{outline:2px solid var(--ui-muted)!important;outline-offset:2px!important}
 /* Flat controls at rest. Only pressed/selected controls are recessed. */
-.tool,.component-button,.full-button,.native-text-toolbar button,.native-text-side button,.component-dialog button,.catalog-dialog button,.modal button{background:var(--ui-chrome)!important;color:var(--ui-ink)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;box-shadow:var(--ui-raised)!important}
+.tool,.component-button,.full-button,.native-text-toolbar button,.native-text-side button,.component-dialog button,.catalog-dialog button,.modal button,.graph-tools button{background:var(--ui-chrome)!important;color:var(--ui-ink)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;box-shadow:var(--ui-raised)!important}
 .tool:hover:enabled,.component-button:hover:enabled,.full-button:hover:enabled,.component-dialog button:hover:enabled,.catalog-dialog button:hover:enabled,.modal button:hover:enabled{background:var(--ui-hover)!important;border-color:var(--ui-line)!important}
 .tool:active,.tool.active,.tool.active:hover,.tool[aria-pressed="true"],.component-button:active,.component-button.active,.component-button.active:hover,.full-button:active,.component-dialog button:active,.catalog-dialog button:active,.modal button:active,.native-text-toolbar button:active,.native-text-side button:active{background:var(--ui-active)!important;border-color:var(--ui-line)!important;box-shadow:var(--ui-pressed)!important}
 /* Editor chrome: clear groups, no imitation empty component slots. */
@@ -24,7 +24,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--ui-muted)!imp
 .toolbar .tool.active,.toolbar .tool[aria-pressed="true"],.toolbar .tool:active{box-shadow:var(--ui-pressed)!important}
 .tool svg{width:24px!important;height:24px!important}
 .sep{height:25px!important;border:0!important;border-left:1px solid var(--ui-line)!important;margin:0 7px!important;width:1px!important}
-.toolbar select,.component-picker select,.props-grid input,.props-grid select{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;color:var(--ui-ink)!important;height:30px!important;font-size:13px!important;padding:3px 7px!important}
+.toolbar select,.component-picker select,.props-grid input,.props-grid select,.graph-tools select{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:5px!important;color:var(--ui-ink)!important;height:30px!important;font-size:13px!important;padding:3px 7px!important}
 .component-picker{padding-left:12px!important}.component-picker select{width:205px!important}
 /* A single component tray, with cells in one recessed rail and attached tabs. */
 .palette{height:52px!important;min-height:52px!important;background:var(--ui-chrome)!important;border:0!important;border-top:1px solid var(--ui-line)!important;padding:6px 8px 8px!important;gap:0!important;box-shadow:inset 0 2px 3px #00000014!important}
@@ -116,3 +116,5 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--ui-muted)!imp
 
 button:disabled svg{filter:grayscale(1);opacity:.36}
 .component-dialog select:disabled,.catalog-dialog select:disabled{color:var(--ui-disabled)!important}
+
+.graph-tools{background:var(--ui-chrome);border-bottom-color:var(--ui-line);color:var(--ui-ink)}

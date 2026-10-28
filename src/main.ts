@@ -43,6 +43,20 @@ import {copySelection,pasteSelection,selectAll,translateSelection,dragWireSegmen
 import {build,CREATABLE_KINDS,decode,encode,labelGeometry,translateLabel,rotateLabel,components,wires,pins,presets,updateComponent,newComponent,makeWire,addConnectedWire,moveComponent,exportSpice,connectivity,modelParameters,type Doc,type Component,type Point,type Rec} from './codec.ts';
 import {simulate,type SimulationConfig,type SimulationResult,type Curve,type Cell} from './solver.ts';
 
+// Keep command captions compact without changing native catalog names or any
+// editable text. This applies only to rendered buttons (including tooltips).
+function trimCommandEllipsis(root:ParentNode){
+ const trim=(value:string)=>value.replace(/(?:\.{2,}|…)+(?=\s*$)/u,'').trimEnd();
+ const buttons=[...(root instanceof HTMLButtonElement&&!root.classList.contains('component-button')?[root]:[]),...root.querySelectorAll<HTMLButtonElement>('button:not(.component-button)')];
+ buttons.forEach(button=>{
+  const walker=document.createTreeWalker(button,NodeFilter.SHOW_TEXT);let node:Node|null;while((node=walker.nextNode()))if(node.textContent&&!node.parentElement?.closest('kbd,svg')){const next=trim(node.textContent);if(next!==node.textContent)node.textContent=next;}
+  for(const attr of ['title','aria-label']){const value=button.getAttribute(attr);if(value){const next=trim(value);if(next!==value)button.setAttribute(attr,next);}}
+ });
+}
+const commandLabelObserver=new MutationObserver(records=>{for(const record of records){if(record.type==='childList'&&record.target instanceof Element)trimCommandEllipsis(record.target);else if(record.type==='characterData'&&record.target.parentElement)trimCommandEllipsis(record.target.parentElement);}});
+commandLabelObserver.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+trimCommandEllipsis(document);
+
 const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 const $=<T extends HTMLElement=HTMLElement>(s:string)=>document.querySelector<T>(s)!;
 const fmt=(n:number,d=5)=>Number.isFinite(n)?Number(n.toPrecision(d)).toString():'—';

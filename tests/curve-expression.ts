@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {parseCurveExpression} from '../src/curve-expression.ts';
+const c={names:['x','v(2)','V_VS1[2,0][1]'],values:[[.1,.1,.1],[20,20,20],[40,40,40]],plot:'test'};
+assert.equal(parseCurveExpression('0.35/x',c.names)(20,c),.017499999999999998);
+assert.equal(parseCurveExpression('0.35/V_VS1[2,0][1](x)',c.names)(20,c),.017499999999999998);
+assert.equal(parseCurveExpression('(v(2)+2)*-3',c.names)(10,c),-36);
+assert.equal(parseCurveExpression('v(2)',c.names)(30,c),30);
+assert.equal(parseCurveExpression('1e-3+2e-3',c.names)(1,c),.003);
+assert.throws(()=>parseCurveExpression('globalThis.alert(1)',c.names));
+assert.throws(()=>parseCurveExpression('0,35/x',c.names));
+assert.equal(Number.isFinite(parseCurveExpression('1/x',c.names)(0,c)),false);
+console.log('Curve expressions: arithmetic, named native references, interpolation and invalid input passed');

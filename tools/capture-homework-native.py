@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import uuid
+import re
 
 
 WAIT_DIALOG_S = 20.0
@@ -158,6 +159,48 @@ def export_graph_scoped(session, pid: int, graph: int, path: Path) -> None:
     enter_file_dialog(session, pid, path)
 
 
+def wait_complete_export(path: Path, graph_key: str, timeout: float = 30.0) -> dict:
+    """Do not copy a newly created file while TINA is still filling its buffers.
+
+    Native exports may appear nonempty after only a few of eleven curves.
+    Check a stable, closed file and the complete homework sampling contract.
+    """
+    import ctypes
+    from ctypes import wintypes as w
+    kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+    kernel.CreateFileW.argtypes=[w.LPCWSTR,w.DWORD,w.DWORD,ctypes.c_void_p,w.DWORD,w.DWORD,w.HANDLE]
+    kernel.CreateFileW.restype=w.HANDLE
+    kernel.CloseHandle.argtypes=[w.HANDLE]
+    invalid=ctypes.c_void_p(-1).value
+    expected={'output':(11,501),'input':(2,501),'input_5V':(1,501),'amplifier_ac':(1,401)}
+    end=time.monotonic()+timeout;last_size=-1;stable_since=None;counts=[]
+    while time.monotonic()<end:
+        size=path.stat().st_size if path.is_file()else 0
+        if size!=last_size:last_size=size;stable_since=time.monotonic()
+        if size and stable_since is not None and time.monotonic()-stable_since>=1.0:
+            # Sharing mode zero fails while any writer still owns the file.
+            handle=kernel.CreateFileW(str(path.resolve()),0x80000000,0,None,3,0,None)
+            if handle not in (None,invalid):
+                kernel.CloseHandle(handle)
+                counts=[];rows=0
+                for line in path.read_bytes().decode('cp1251').splitlines():
+                    if line.startswith('*'):
+                        if rows:counts.append(rows)
+                        rows=0
+                    else:
+                        cells=re.split(r'\s+',line.strip())
+                        try:
+                            if len(cells)>=2:
+                                [float(c.replace(',','.'))for c in cells];rows+=1
+                        except ValueError:pass
+                if rows:counts.append(rows)
+                req=expected.get(graph_key)
+                valid=(len(counts)==req[0] and all(n==req[1]for n in counts))if req else len(counts)>=2 and all(n>=300 for n in counts)
+                if valid:return {'curve_samples':counts,'closed_and_stable':True}
+        time.sleep(.1)
+    raise RuntimeError(f'Incomplete native export {path}: curve sample counts {counts}; expected {expected.get(graph_key,"at least two complete transient traces")}')
+
+
 def open_file(session, pid: int, editor: int, path: Path) -> None:
     restore_and_paint(session, editor)
     session.command(editor, OPEN_COMMAND)
@@ -257,10 +300,7 @@ def run_analysis(session, pid: int, editor: int, command: int, dialog_class: str
     fresh_export = paths["fresh_export"]
     fresh_export.parent.mkdir(parents=True, exist_ok=True)
     export_graph_scoped(session, pid, graph, fresh_export)
-    end=time.monotonic()+10
-    while time.monotonic()<end and (not fresh_export.is_file() or fresh_export.stat().st_size==0):time.sleep(.05)
-    if not fresh_export.is_file() or fresh_export.stat().st_size == 0:
-        raise RuntimeError(f"Graph export did not produce data: {fresh_export}")
+    export_validation=wait_complete_export(fresh_export,graph_key)
     final_export = paths["text"]
     final_export.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(fresh_export, final_export)
@@ -273,6 +313,7 @@ def run_analysis(session, pid: int, editor: int, command: int, dialog_class: str
         "graph_hwnd": graph,
         "text": str(final_export),
         "text_bytes": final_export.stat().st_size,
+        "export_validation": export_validation,
         "graph_png": str(paths["graph"]),
         "dialog_png": str(paths["dialog"]),
         "status": "ok",

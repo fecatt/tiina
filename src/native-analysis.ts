@@ -12,7 +12,9 @@ export function setNativeDc(doc:Doc,next:NativeDc){
  if(!Number.isFinite(next.start)||!Number.isFinite(next.stop)||next.stop<=next.start||!Number.isInteger(next.intervals)||next.intervals<1||next.intervals>65535)throw Error('Неверный диапазон развёртки');
  if(!components(doc).some(c=>c.label===next.input&&['V','VS','VG','I','IS'].includes(c.kind)))throw Error('Выберите независимый источник');
  const r=record(doc,0xf281,19),end=readString(r.data,36)[1],d=join(r.data.slice(0,36),countedString(next.input),r.data.slice(end)),v=view(d);
- v.setUint16(0,next.intervals,true);v.setFloat64(12,next.start,true);v.setFloat64(20,next.stop,true);r.data=d;
+ // TINA's DC analysis record keeps the sweep start in both the display-range
+ // field at 4 and the analysis field at 12. Native exports use the former.
+ v.setUint16(0,next.intervals,true);v.setFloat64(4,next.start,true);v.setFloat64(12,next.start,true);v.setFloat64(20,next.stop,true);r.data=d;
 }
 export function nativeControl(doc:Doc):NativeControl|null{
  try{if(record(doc,0xf280,24).data[0]!==2)return null;const r=record(doc,0xf287,18),d=r.data,v=view(d);if(d.length<32||v.getUint16(0,true)!==1||v.getUint16(6,true)!==1||v.getUint16(8,true)!==1||d[28]!==0)return null;

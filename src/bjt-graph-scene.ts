@@ -1,3 +1,4 @@
+import {bjtOutputCallouts,calloutArrow,type GraphCallout} from './graph-annotations.ts';
 /** Shared graphical construction built only from measured/simulated BJT curves. */
 export type BjtGraphData={
  output:Array<{ib_A:number;points:Array<[uce_V:number,ic_A:number]>}>;
@@ -14,7 +15,7 @@ export type BjtGraphPanel={
  id:'output'|'transfer'|'input';title:string;xLabel:string;yLabel:string;
  rect:{x:number;y:number;width:number;height:number};
  x:{min:number;max:number;reverse?:boolean};y:{min:number;max:number;reverse?:boolean};
- series:BjtGraphSeries[];marks?:BjtGraphMark[];
+ series:BjtGraphSeries[];marks?:BjtGraphMark[];callouts?:GraphCallout[];
 };
 export type BjtTimePanel={title:string;yLabel:string;rect:{x:number;y:number;width:number;height:number};min:number;max:number;points:Array<[number,number]>};
 export type BjtCalculationRow={label:string;value:number|null;unit:string;status:'computed'|'unavailable';method?:string};
@@ -112,7 +113,7 @@ export function buildBjtGraphScene(data:BjtGraphData):BjtGraphScene {
  if(!R1||!R2)calculationWarnings.push('Введите R₁ и R₂, чтобы получить сопротивление входного делителя, мощность источника и параметры каскада.');
  if(!Ce||!Cp1||!Ck)calculationWarnings.push('Для оценки граничных частот задайте Cр₁ и Cк; Cэ вводится отдельно и в двухполюсную оценку полосы не включён.');
  if(dividerResidual!==null&&R1&&R2){const id=(q.ube_V+(q.ic_A+q.ib_A)*Re)/R2;if(Math.abs(dividerResidual)>.05*Math.max(Math.abs(q.ib_A+id),1e-12))calculationWarnings.push('Ток делителя по R₁/R₂ отличается от тока базы в рабочей точке более чем на 5%; мощность источника и входное сопротивление требуют проверки режима.');}
- const maxUce=Math.max(data.limits.uceMax_V,E,...family.flatMap(c=>c.points.map(p=>p[0]))),maxIc=Math.max(E/R,...family.flatMap(c=>c.points.map(p=>p[1])))*1.08,maxIb=levels.at(-1)!;
+ const maxUce=Math.max(data.limits.uceMax_V,E,...family.flatMap(c=>c.points.map(p=>p[0]))),maxIc=Math.max(E/R,data.limits.pCollectorMax_W/maxUce*1.5,...family.flatMap(c=>c.points.map(p=>p[1])))*1.08,maxIb=levels.at(-1)!;
  const outputSeries:BjtGraphSeries[]=family.map(c=>({name:`IБ=${c.ib_A} А`,points:c.points.map(([x,y])=>({x,y}))}));
  const loadIntercept=E-q.ib_A*Re;
  outputSeries.push({name:'Нагрузочная линия без RЭ',color:'#8952a8',dash:true,points:[{x:0,y:E/Rk},{x:E,y:0}]},{name:'Рабочая нагрузочная линия для IБ(Q)',color:'#c33',points:[{x:0,y:loadIntercept/R},{x:loadIntercept,y:0}]},
@@ -122,9 +123,9 @@ export function buildBjtGraphScene(data:BjtGraphData):BjtGraphScene {
  const keyPoints:[string,typeof q,string][]=[['A',q,'#aa2222'],['a',a,'#237447'],['b',b,'#237447']];
  const marks=(xKey:'ib_A'|'uce_V',yKey:'ic_A'|'ube_V')=>keyPoints.map(([name,p,color])=>({name,point:{x:p[xKey],y:p[yKey]},color}));
  const panels:BjtGraphPanel[]=[
-  {id:'output',title:'Выходные характеристики',xLabel:'UКЭ, В',yLabel:'IК, А',rect:{x:520,y:55,width:420,height:270},x:{min:0,max:maxUce},y:{min:0,max:maxIc},series:outputSeries,marks:marks('uce_V','ic_A')},
+  {id:'output',title:'Выходные характеристики',xLabel:'UКЭ, В',yLabel:'IК, А',rect:{x:520,y:55,width:420,height:270},x:{min:0,max:maxUce},y:{min:0,max:maxIc},series:outputSeries,marks:marks('uce_V','ic_A'),callouts:bjtOutputCallouts(data,q.ib_A,{xmin:0,xmax:maxUce,ymin:0,ymax:maxIc})},
   {id:'transfer',title:'Переходная характеристика IК(IБ)',xLabel:'IБ, А',yLabel:'IК, А',rect:{x:70,y:55,width:420,height:270},x:{min:0,max:maxIb,reverse:true},y:{min:0,max:maxIc},series:[{name:'Пересечения нагрузочной линии',points:transfer.map(p=>({x:p.ib_A,y:p.ic_A}))}],marks:marks('ib_A','ic_A')},
-  {id:'input',title:'Входная характеристика · поворот 90°',xLabel:'IБ, А',yLabel:'UБЭ, В',rect:{x:70,y:365,width:420,height:270},x:{min:0,max:maxIb,reverse:true},y:{min:0,max:Math.max(...data.input5V.map(p=>p[0])),reverse:true},series:[{name:'Входная характеристика UКЭ=5 В',points:data.input5V.map(([ube,ib])=>({x:ib,y:ube}))}],marks:marks('ib_A','ube_V')}
+  {id:'input',title:'Входная характеристика · поворот 90°',xLabel:'IБ, А',yLabel:'UБЭ, В',rect:{x:70,y:390,width:420,height:245},x:{min:0,max:maxIb,reverse:true},y:{min:0,max:Math.max(...data.input5V.map(p=>p[0])),reverse:true},series:[{name:'Входная характеристика UКЭ=5 В',points:data.input5V.map(([ube,ib])=>({x:ib,y:ube}))}],marks:marks('ib_A','ube_V')}
  ];
  const projections:BjtGraphScene['projections']=keyPoints.flatMap(([name,p])=>[
   {from:'output',to:'transfer',fromPoint:{x:p.uce_V,y:p.ic_A},toPoint:{x:p.ib_A,y:p.ic_A},name},
@@ -186,9 +187,10 @@ export function renderBjtGraphScene(scene:BjtGraphScene,width=1000,height=1050):
  }
  for(const p of scene.projections){const a=byId.get(p.from),b=byId.get(p.to);if(!a||!b)continue;const x=map(a,p.fromPoint),y=map(b,p.toPoint);html+=`<path d="M${x.x},${x.y}L${y.x},${y.y}" stroke="#555" stroke-dasharray="4 4" fill="none" data-projection="${p.name}"/>`;}
  const outputPanel=scene.panels.find(p=>p.id==='output');
- if(outputPanel){const overlays=outputPanel.series.slice(-4),x=outputPanel.rect.x+8,y=outputPanel.rect.y+8,w=150,h=overlays.length*16+8;html+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="white" fill-opacity=".88" stroke="#bbb"/>`;
-  overlays.forEach((s,i)=>{const yy=y+15+i*16;html+=`<path d="M${x+6},${yy-3}h19" stroke="${s.color??'#1769aa'}" stroke-width="1.4"${s.dash?' stroke-dasharray="4 2"':''}/><text x="${x+29}" y="${yy}" font-size="9">${esc(s.name)}</text>`;});
+ if(outputPanel){const overlays=outputPanel.series,x=outputPanel.rect.x,y=390,w=420,rows=Math.ceil(overlays.length/2),h=rows*16+12;html+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="white" fill-opacity=".88" stroke="#bbb"/>`;
+  overlays.forEach((s,i)=>{const xx=x+Math.floor(i/rows)*210,yy=y+15+(i%rows)*16;const label=s.name.startsWith('IБ=')?'IБ = '+Number((Number(s.name.slice(3).split(' ')[0])*1e6).toPrecision(5))+' мкА':s.name;html+=`<path d="M${xx+6},${yy-3}h19" stroke="${s.color??'#1769aa'}" stroke-width="1.4"${s.dash?' stroke-dasharray="4 2"':''}/><text x="${xx+29}" y="${yy}" font-size="8">${esc(label)}</text>`;});
  }
+ for(const panel of scene.panels)for(const c of panel.callouts??[]){const pos=map(panel,{x:c.x,y:c.y}),pts=calloutArrow(c,{xmin:panel.x.min,xmax:panel.x.max,ymin:panel.y.min,ymax:panel.y.max},panel.rect.width,panel.rect.height).map(([x,y])=>map(panel,{x,y}));const w=c.text.length*5.2+8;html+=`<g data-callout="${esc(c.text)}"><polyline points="${pts.map(p=>`${p.x},${p.y}`).join(' ')}" fill="none" stroke="#222" stroke-width="1.1"/><rect x="${pos.x-3}" y="${pos.y-3}" width="${w}" height="15" fill="white" stroke="#777"/><text x="${pos.x+1}" y="${pos.y+8}" font-size="9">${esc(c.text)}</text></g>`;}
  for(const [i,p] of scene.timePanels.entries()){const r=p.rect,clip=`time-${i}`,loX=0,hiX=.002,py=(v:number)=>r.y+r.height-(v-p.min)/(p.max-p.min)*r.height;html+=`<defs><clipPath id="${clip}"><rect x="${r.x}" y="${r.y}" width="${r.width}" height="${r.height}"/></clipPath></defs><g><text x="${r.x+r.width/2}" y="${r.y-9}" text-anchor="middle" font-size="11">${esc(p.title)}</text><rect x="${r.x}" y="${r.y}" width="${r.width}" height="${r.height}" fill="none" stroke="#333"/><path d="M${r.x},${r.y+r.height/2}H${r.x+r.width}" stroke="#ddd" stroke-dasharray="3 3"/><text x="${r.x-3}" y="${r.y+r.height/2+3}" text-anchor="end" font-size="8">${((p.min+p.max)/2).toExponential(1)}</text><text x="${r.x+r.width/2}" y="${r.y+r.height+14}" text-anchor="middle" font-size="9">t, с</text><g clip-path="url(#${clip})"><polyline points="${p.points.map(([t,v])=>`${r.x+(t-loX)/(hiX-loX)*r.width},${py(v)}`).join(' ')}" fill="none" stroke="#1769aa" stroke-width="1.2"/></g></g>`;}
  scene.equations.forEach((e,i)=>html+=`<text x="35" y="950" dy="${i*17}" font-size="10">${esc(e)}</text>`);
  scene.notes.forEach((n,i)=>html+=`<text x="35" y="1018" dy="${i*15}" font-size="9">${esc(n)}</text>`);

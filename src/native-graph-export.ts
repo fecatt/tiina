@@ -1,3 +1,4 @@
+import {calloutArrow,type GraphCallout} from './graph-annotations.ts';
 import type {BjtGraphPanel,BjtGraphPoint,BjtGraphScene,BjtGraphSeries} from './bjt-graph-scene.ts';
 
 /** Native TINA diagram viewer export. Every curve owns its own XY block. */
@@ -6,7 +7,7 @@ export type NativeGraphLabel={text:string;x:number;y:number;dx?:number;dy?:numbe
 export type NativeGraphSpec={
  title:string;xLabel:string;yLabel:string;
  bounds:{xmin:number;xmax:number;ymin:number;ymax:number};
- curves:NativeGraphCurve[];labels?:NativeGraphLabel[];
+ curves:NativeGraphCurve[];labels?:NativeGraphLabel[];callouts?:GraphCallout[];
 };
 
 const MAGIC=Uint8Array.from([79,66,83,83,26,1,0,0,0,0,0]);
@@ -81,7 +82,7 @@ function labelRecord(label:NativeGraphLabel,uid:number,plotId:number,bounds:Nati
  const py=646-(label.y-bounds.ymin)/(bounds.ymax-bounds.ymin)*(646-68)+(label.dy??0);
  if(!(px>30&&px<1150&&py>40&&py<690))return undefined;
  putI16(d,3,Math.round(px));putI16(d,5,Math.round(py));
- putF64(d,7,px/1182);putF64(d,15,(py-38)/685);putF64(d,23,Math.max(12,Math.min(650,label.text.length*7.6+4))/1182);putF64(d,31,12/685);
+ putF64(d,7,px/1182);putF64(d,15,(py-38)/685);putF64(d,23,12/1182);putF64(d,31,12/685);
  putU16(d,39,12);putU16(d,41,plotId);
  const fontStart=43+1+d[43],textStart=fontStart+16,textEnd=textStart+1+d[textStart];
  return join(d.slice(0,textStart),pascal(label.text),d.slice(textEnd));
@@ -92,7 +93,7 @@ export function exportNativeGraphTdr(spec:NativeGraphSpec):Uint8Array{
  if(!spec.curves.length)throw new Error('A native graph needs at least one curve.');
  if(spec.curves.length>250)throw new Error('The native viewer supports at most 250 curves in one export.');
  if(!(spec.bounds.xmin<spec.bounds.xmax&&spec.bounds.ymin<spec.bounds.ymax))throw new Error('Native graph bounds must be increasing.');
- const curves=spec.curves,labels=spec.labels??[],plotId=2,archiveId=1,groupId=3,xAxisId=4,yAxisId=5,crossId=6+2*curves.length;
+ const curves=[...spec.curves,...(spec.callouts??[]).map((c,i)=>({name:`annotation_${i+1}_${c.text}`,points:calloutArrow(c,spec.bounds),color:0}))],labels=[...(spec.labels??[]),...(spec.callouts??[]).map(c=>({text:c.text,x:c.x,y:c.y}))],plotId=2,archiveId=1,groupId=3,xAxisId=4,yAxisId=5,crossId=6+2*curves.length;
  const data=curveData(curves);let offset=0;const metas:Rec[]=[];
  for(let i=0;i<curves.length;i++){const d=curveMeta(curves[i],i,offset);metas.push(record(0x302,20,d));offset+=curves[i].points.length*16;}
  const countData=new Uint8Array(4);putU32(countData,0,curves.length+6+labels.length);
@@ -144,10 +145,11 @@ function combinedSpec(scene:BjtGraphScene):NativeGraphSpec{
   }
  }
  for(const p of scene.projections){const a=panels.get(p.from),b=panels.get(p.to);if(!a||!b)continue;curves.push({name:`projection_${p.name}`.slice(0,96),points:[mapPoint(a,p.fromPoint),mapPoint(b,p.toPoint)],color:0x606060,dash:true});}
+ const callouts:GraphCallout[]=[];for(const panel of scene.panels)for(const c of panel.callouts??[]){const[x,y]=mapPoint(panel,{x:c.x,y:c.y}),[targetX,targetY]=mapPoint(panel,{x:c.targetX,y:c.targetY});callouts.push({...c,x,y,targetX,targetY});}
  curves.push({name:'coordinate axes',points:[[-1.05,0],[1.05,0],[0,0],[0,-1.05],[0,1.05]],color:0x202020});
  const output=panels.get('output')!,transfer=panels.get('transfer')!,input=panels.get('input')!;
  labels.push({text:'Выходные характеристики',x:.52,y:.78},{text:'Передаточная характеристика',x:-.97,y:.82},{text:'Входная характеристика при 5 В',x:-.98,y:-.82});
- return{title:scene.title.slice(0,100),xLabel:`UКЭ/${output.x.max}В вправо; -IБ/${transfer.x.max.toPrecision(4)}А влево`,yLabel:`IК/${output.y.max.toPrecision(4)}А вверх; -UБЭ/${input.y.max.toPrecision(4)}В вниз`,bounds:{xmin:-1.1,xmax:1.1,ymin:-1.1,ymax:1.1},curves,labels};
+ return{title:scene.title.slice(0,100),xLabel:`UКЭ/${output.x.max}В вправо; -IБ/${transfer.x.max.toPrecision(4)}А влево`,yLabel:`IК/${output.y.max.toPrecision(4)}А вверх; -UБЭ/${input.y.max.toPrecision(4)}В вниз`,bounds:{xmin:-1.1,xmax:1.1,ymin:-1.1,ymax:1.1},curves,labels,callouts};
 }
 function waveSpec(scene:BjtGraphScene):NativeGraphSpec{
  const curves:NativeGraphCurve[]=[],labels:NativeGraphLabel[]=[];
@@ -197,5 +199,5 @@ function detailSpec(scene:BjtGraphScene):NativeGraphSpec{
 }
 /** Export a computed BJT construction as a native TINA graph viewer document. */
 export function exportBjtNativeTdr(scene:BjtGraphScene,kind:'combined'|'waveforms'|'detail'='combined'):Uint8Array{
- const spec=kind==='combined'?combinedSpec(scene):kind==='waveforms'?waveSpec(scene):detailSpec(scene);spec.labels=spec.labels?.filter(label=>label.text.length===1);return exportNativeGraphTdr(spec);
+ const spec=kind==='combined'?combinedSpec(scene):kind==='waveforms'?waveSpec(scene):detailSpec(scene);return exportNativeGraphTdr(spec);
 }

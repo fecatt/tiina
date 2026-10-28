@@ -123,7 +123,7 @@ export function buildBjtGraphScene(data:BjtGraphData):BjtGraphScene {
  const keyPoints:[string,typeof q,string][]=[['A',q,'#aa2222'],['a',a,'#237447'],['b',b,'#237447']];
  const marks=(xKey:'ib_A'|'uce_V',yKey:'ic_A'|'ube_V')=>keyPoints.map(([name,p,color])=>({name,point:{x:p[xKey],y:p[yKey]},color}));
  const panels:BjtGraphPanel[]=[
-  {id:'output',title:'Выходные характеристики',xLabel:'UКЭ, В',yLabel:'IК, А',rect:{x:520,y:55,width:420,height:270},x:{min:0,max:maxUce},y:{min:0,max:maxIc},series:outputSeries,marks:marks('uce_V','ic_A'),callouts:bjtOutputCallouts(data,q.ib_A,{xmin:0,xmax:maxUce,ymin:0,ymax:maxIc})},
+  {id:'output',title:'Выходные характеристики',xLabel:'UКЭ, В',yLabel:'IК, А',rect:{x:520,y:55,width:420,height:270},x:{min:0,max:maxUce},y:{min:0,max:maxIc},series:outputSeries,marks:marks('uce_V','ic_A'),callouts:bjtOutputCallouts(data,q.ib_A,{xmin:0,xmax:maxUce,ymin:0,ymax:maxIc},{width:420,height:270,charWidth:5.2,heightText:16})},
   {id:'transfer',title:'Переходная характеристика IК(IБ)',xLabel:'IБ, А',yLabel:'IК, А',rect:{x:70,y:55,width:420,height:270},x:{min:0,max:maxIb,reverse:true},y:{min:0,max:maxIc},series:[{name:'Пересечения нагрузочной линии',points:transfer.map(p=>({x:p.ib_A,y:p.ic_A}))}],marks:marks('ib_A','ic_A')},
   {id:'input',title:'Входная характеристика · поворот 90°',xLabel:'IБ, А',yLabel:'UБЭ, В',rect:{x:70,y:390,width:420,height:245},x:{min:0,max:maxIb,reverse:true},y:{min:0,max:Math.max(...data.input5V.map(p=>p[0])),reverse:true},series:[{name:'Входная характеристика UКЭ=5 В',points:data.input5V.map(([ube,ib])=>({x:ib,y:ube}))}],marks:marks('ib_A','ube_V')}
  ];

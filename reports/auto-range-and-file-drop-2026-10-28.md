@@ -1,0 +1,9 @@
+# Automatic BJT overview ranges and TSC drop (2026-10-28)
+
+- DC transfer dialog and DC-family graph offer «Подобрать значения…» for a supported grounded-emitter NPN/PNP testbench. It probes the actual model, fits the base-current sweep to 90% of the entered collector-current limit, then validates the full family before applying native TSC analysis settings. It does not redesign the amplifier or change component values.
+- Manufacturer limits are separate from generic SPICE placeholders. Verified presets currently cover 2N2925 (GE/RCA, 25 V / 100 mA / 360 mW) and BF240 (Fairchild, 40 V / 50 mA / 350 mW), at 25 °C. Other models require user-supplied limits. The fitting mechanism is shared across NPN/PNP models.
+- Full families can extend above the Pmax curve for inspection; permissible operating points must also lie below that curve. Local sweeps remain appropriate for working-point and h-parameter measurements.
+- Drop one or more .TSC files anywhere in the window to open new document tabs. Decode precedes tab creation. Unsaved current tabs survive. Invalid files are rejected without discarding work; text drags are unaffected. File opening is blocked while an analysis or property dialog is active.
+- Annotation endpoints interpolate their source curve; power endpoints satisfy I=P/U. Placement avoids ambiguous curve intersections, overlapping label boxes and intersecting leaders. Native TDR and browser SVG share the geometry.
+
+Validation: focused fitting/annotation/native-export tests and TypeScript/Vite build; browser auto-fit and file-drop workflows; actual original TINA reopening/recalculation of both UI-saved TSCs and numeric TDR re-export. Model-probed browser families reached 88.3% and 88.9% of rated collector current. Both short-leader TDR exports retained all 17 curves in TINA (maximum relative coordinate difference below 4e-15). Private coursework and binary assets are excluded from this repository update.

@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';import {fitBaseCurrent}from'../src/bjt-auto-range.ts';import{bjtDeviceRating}from'../src/device-ratings.ts';
+const linear=await fitBaseCurrent(.09,40e-6,.02,async ib=>200*ib);assert.ok(Math.abs(linear.ic/.09-1)<.025);assert.ok(linear.probes.length<8);
+const nonlinear=await fitBaseCurrent(.09,10e-6,.02,async ib=>400*ib/(1+400*ib/.2));assert.ok(Math.abs(nonlinear.ic/.09-1)<.025);assert.ok(nonlinear.ib>linear.ib/2);
+await assert.rejects(()=>fitBaseCurrent(.1,.001,.01,async()=>NaN));await assert.rejects(()=>fitBaseCurrent(.1,.001,.01,async()=>0));await assert.rejects(()=>fitBaseCurrent(Infinity,.001,.01,async()=>1));
+assert.equal(bjtDeviceRating('!NPN'),undefined,'generic SPICE defaults are not device ratings');assert.equal(bjtDeviceRating('unknown'),undefined);const p=bjtDeviceRating('2N2925')!;assert.deepEqual([p.uceMax_V,p.icMax_A,p.pCollectorMax_W],[25,.1,.36]);p.icMax_A=2;assert.equal(bjtDeviceRating('2N2925')!.icMax_A,.1,'caller cannot overwrite verified ratings');console.log('Automatic model fitting, bounded failures and verified-rating separation passed');
+const lowGain=await fitBaseCurrent(.09,40e-6,.1,async ib=>2*ib);assert.ok(Math.abs(lowGain.ic/.09-1)<.025,'low-gain models must not be limited by an arbitrary beta floor');

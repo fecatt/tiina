@@ -145,7 +145,7 @@ function combinedSpec(scene:BjtGraphScene):NativeGraphSpec{
   }
  }
  for(const p of scene.projections){const a=panels.get(p.from),b=panels.get(p.to);if(!a||!b)continue;curves.push({name:`projection_${p.name}`.slice(0,96),points:[mapPoint(a,p.fromPoint),mapPoint(b,p.toPoint)],color:0x606060,dash:true});}
- const callouts:GraphCallout[]=[];for(const panel of scene.panels)for(const c of panel.callouts??[]){const[x,y]=mapPoint(panel,{x:c.x,y:c.y}),[targetX,targetY]=mapPoint(panel,{x:c.targetX,y:c.targetY});callouts.push({...c,x,y,targetX,targetY});}
+ const callouts:GraphCallout[]=[];for(const panel of scene.panels)for(const c of panel.callouts??[]){const[x,y]=mapPoint(panel,{x:c.x,y:c.y}),[targetX,targetY]=mapPoint(panel,{x:c.targetX,y:c.targetY});const leader=c.leaderX===undefined||c.leaderY===undefined?undefined:mapPoint(panel,{x:c.leaderX,y:c.leaderY});callouts.push({...c,x,y,targetX,targetY,leaderX:leader?.[0],leaderY:leader?.[1]});}
  curves.push({name:'coordinate axes',points:[[-1.05,0],[1.05,0],[0,0],[0,-1.05],[0,1.05]],color:0x202020});
  const output=panels.get('output')!,transfer=panels.get('transfer')!,input=panels.get('input')!;
  labels.push({text:'Выходные характеристики',x:.52,y:.78},{text:'Передаточная характеристика',x:-.97,y:.82},{text:'Входная характеристика при 5 В',x:-.98,y:-.82});

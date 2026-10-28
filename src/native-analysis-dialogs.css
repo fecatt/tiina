@@ -24,3 +24,8 @@
 .modal.native-analysis-dialog .native-analysis-content fieldset>label{display:flex;flex-direction:row;align-items:center;gap:8px}
 .modal.native-analysis-dialog .native-analysis-content input:is([type=checkbox],[type=radio]){width:16px;height:16px;min-height:0;flex:0 0 16px;margin:0;padding:0}
 .modal.native-analysis-dialog .native-analysis-content :is(label.native-analysis-disabled,label:has(input:disabled),fieldset.native-analysis-disabled){color:var(--ui-disabled)!important;cursor:default}
+
+.bjt-auto-dialog .native-analysis-content{max-height:calc(100dvh - 190px);overflow-y:auto}
+.bjt-auto-dialog [data-auto-result] h3{margin:4px 0 10px;font-size:14px}
+.bjt-auto-dialog [data-auto-result] td{overflow-wrap:anywhere}
+.bjt-auto-dialog details>summary{cursor:pointer;font-size:13px;margin-bottom:8px}

@@ -19,3 +19,8 @@
 .native-analysis-transient fieldset>label input{margin-right:7px}
 .native-analysis-error{min-height:18px;margin:0;padding:0 18px;color:#b42318;font-size:12px}
 @media(max-width:440px){.native-analysis-grid{grid-template-columns:minmax(110px,1fr) minmax(85px,1fr);gap:7px}}
+
+/* Choice controls stay inline; unavailable choices must remain visibly disabled. */
+.modal.native-analysis-dialog .native-analysis-content fieldset>label{display:flex;flex-direction:row;align-items:center;gap:8px}
+.modal.native-analysis-dialog .native-analysis-content input:is([type=checkbox],[type=radio]){width:16px;height:16px;min-height:0;flex:0 0 16px;margin:0;padding:0}
+.modal.native-analysis-dialog .native-analysis-content :is(label.native-analysis-disabled,label:has(input:disabled),fieldset.native-analysis-disabled){color:var(--ui-disabled)!important;cursor:default}

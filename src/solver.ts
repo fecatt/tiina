@@ -7,6 +7,14 @@ export interface SimulationConfig {kind:'op'|'dc'|'dc-family'|'ac'|'transient';i
 export interface SimulationResult {curves:Curve[];log:string;netlist:string;mapping:ReturnType<typeof exportSpice>['mapping'];engine:string}
 export interface Job {netlist:string;parameter?:number;initialBias?:{netlist:string;nodes:string[]}}
 
+const expectedPlot:Record<SimulationConfig['kind'],string>={op:'operating point',dc:'dc transfer characteristic','dc-family':'dc transfer characteristic',ac:'ac analysis',transient:'transient analysis'};
+/** Reject ngspice's constants plot (and other unsupported plots) rather than presenting it as a successful requested analysis. */
+export function validateAnalysisPlot(curve:Curve,kind:SimulationConfig['kind']):Curve {
+ const expected=expectedPlot[kind];
+ if(curve.plot.trim().toLowerCase()!==expected)throw new Error(`Расчёт ${kind} не выполнен: движок вернул «${curve.plot}» вместо «${expected}». Проверьте схему и подключения источников.`);
+ return curve;
+}
+
 const finite=(n:unknown):n is number=>typeof n==='number'&&Number.isFinite(n);
 function requireNumber(n:unknown,label:string):number {if(!finite(n))throw new Error('Неверное значение: '+label);return n;}
 function setSource(lines:string[],name:string,value:number) {let found=false;const out=lines.map(l=>{const t=l.trim().split(/\s+/);if(t[0]!==name)return l;if(!/^[VI]/i.test(name)||t[3]?.toUpperCase()!=='DC')throw new Error('Нужен независимый источник постоянного тока или напряжения');found=true;return `${t.slice(0,3).join(' ')} DC ${value}`});if(!found)throw new Error('Источник не найден');return out;}
@@ -118,7 +126,7 @@ export async function simulate(doc:Doc,config:SimulationConfig,onProgress?:(done
     const cancel=()=>finish(new DOMException('Расчёт отменён','AbortError'));
     const timer=setTimeout(()=>finish(new Error('Превышено время расчёта (90 секунд). Уменьшите число точек или кривых.')),90000);
     signal?.addEventListener('abort',cancel,{once:true});worker.onerror=e=>finish(new Error('Ошибка расчётного движка: '+e.message));
-    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves.map((curve:Curve)=>resampleAc(curve,config)),mapping),mapping,netlist:d.result.netlist??jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs});
+    worker.onmessage=e=>{const d=e.data;if(d.type==='progress')onProgress?.(d.done,jobs.length);else if(d.type==='error')finish(new Error(d.error));else if(d.type==='result'){try{finish(undefined,{...d.result,curves:addMeterVectors(d.result.curves.map((curve:Curve)=>resampleAc(curve,config)),mapping),mapping,netlist:d.result.netlist??jobs.map(j=>j.netlist).join('\n'),engine:'ngspice 46 / WebAssembly'});}catch(error){finish(error instanceof Error?error:new Error(String(error)));}}};worker.postMessage({jobs,config});
   });
 }
 

@@ -2,3 +2,12 @@ node_modules/
 dist/
 .sites-runtime/
 *.log
+
+# Extracted from the owner's installed TINA, never source-controlled.
+data/
+
+# Personal deliverables and temporary local sessions are not website sources.
+/work/
+/output/
+*.pid
+*.bak

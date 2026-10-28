@@ -1,7 +1,7 @@
 import createNgspice from '@o.z/ngspice-wasm';
-import {parseRaw,resolveInitialBias,type Job,type Curve} from './solver.ts';
+import {parseRaw,resolveInitialBias,validateAnalysisPlot,type Job,type Curve,type SimulationConfig} from './solver.ts';
 
-self.onmessage=async(e:MessageEvent<{jobs:Job[]}>)=>{
+self.onmessage=async(e:MessageEvent<{jobs:Job[];config:SimulationConfig}>)=>{
   const logs:string[]=[],curves:Curve[]=[],netlists:string[]=[];
   try {
    const execute=async(netlist:string):Promise<Curve>=>{
@@ -20,7 +20,7 @@ self.onmessage=async(e:MessageEvent<{jobs:Job[]}>)=>{
     const job=e.data.jobs[i];logs.push(`--- Расчёт ${i+1} ---`);
     const netlist=await resolveInitialBias(job,execute);
     netlists.push(netlist);
-    curves.push({...await execute(netlist),parameter:job.parameter});self.postMessage({type:'progress',done:i+1});
+    curves.push({...validateAnalysisPlot(await execute(netlist),e.data.config.kind),parameter:job.parameter});self.postMessage({type:'progress',done:i+1});
   }self.postMessage({type:'result',result:{curves,log:logs.join('\n'),netlist:netlists.join('\n')}});
   }catch(error){self.postMessage({type:'error',error:error instanceof Error?error.message:String(error)});}
 };

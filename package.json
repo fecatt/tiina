@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:analysis-result": "node --experimental-strip-types tests/analysis-result-guard.ts",
     "dev": "vite --host 127.0.0.1",
     "test:browser": "node --experimental-strip-types tools/check-editor-browser.mjs",
     "build": "tsc --noEmit && vite build",

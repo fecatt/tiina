@@ -102,20 +102,30 @@ let counter=0;
 /** Creation is driven by admitted native templates, independently of import-only kinds. */
 export const CREATABLE_KINDS=[...new Set([...Object.keys(library.components),'D',...Object.keys(DIODE_VARIANT_TEMPLATES)])];
 const uid=()=>`T_${(++counter).toString(16).toUpperCase().padStart(8,'0')}20261022000000`;
+/** Fresh native placement, shared by the palette and programmatic TSC builds.
+ * Imported records keep their own offsets; explicit build offsets win. */
+function creationLabel(kind:string):{label_dx?:number;label_dy?:number;direction?:number} {
+ if(['R','ZENER','SCHOTTKY'].includes(kind))return {label_dx:8,label_dy:-20,direction:0};
+ // AMV uses the fresh native donor; VM shares its drawing family.
+ // A separate fresh-VM placement oracle remains pending.
+ if(['VM','AMV'].includes(kind))return {label_dx:11,label_dy:31,direction:0};
+ if(kind==='VS')return {label_dx:0,label_dy:-34,direction:1};
+ if(kind==='VG')return {label_dx:8,label_dy:-12,direction:1};
+ return {};
+}
 function createComponent(s:CircuitComponent):Rec {
  const entry=s.kind==='D'?{record:{type_id:0x218,version:66,data_b64:DIODE_TEMPLATE}}:DIODE_VARIANT_TEMPLATES[s.kind]?{record:DIODE_VARIANT_TEMPLATES[s.kind]}:(library.components as Record<string,{record:{type_id:number;version:number;data_b64:string}}>)[s.kind];if(!entry)fail('Неизвестный вид элемента');
  const r=jsonRecord(entry.record),doc={records:[r],trailer:new Uint8Array()};
  r.data[component(r).orientation_offset+1]=0; // New symbols start unmirrored; imported bytes are preserved.
- updateComponent(doc,0,{x:s.x,y:s.y,orientation:s.rotation??0,uid:uid(),...(s.kind==='GND'?{}:{label:s.label??s.kind,label_dx:s.label_dx,label_dy:s.label_dy}),...(s.value!==undefined?{value:s.value}:{}),...(['NPN','PNP'].includes(s.kind)?{model:s.model??(s.kind==='NPN'?'BF240':'!PNP')}:(s.kind==='D'&&s.model?{model:s.model}:{}))});return r;
+ const label=creationLabel(s.kind);
+ updateComponent(doc,0,{x:s.x,y:s.y,orientation:s.rotation??0,uid:uid(),...(s.kind==='GND'?{}:{label:s.label??s.kind,label_dx:s.label_dx??label.label_dx,label_dy:s.label_dy??label.label_dy}),...(s.value!==undefined?{value:s.value}:{}),...(['NPN','PNP'].includes(s.kind)?{model:s.model??(s.kind==='NPN'?'BF240':'!PNP')}:(s.kind==='D'&&s.model?{model:s.model}:{}))});
+ if(label.direction!==undefined)r.data[8]=label.direction;
+ return r;
 }
 export const newUid=()=>`W_${crypto.randomUUID().replace(/-/g,'').slice(0,22)}`;
 export function newComponent(kind:string,x:number,y:number,label:string):Rec {
  const r=createComponent({kind,x,y,label});
- // Round-meter placement follows the fresh native AMV donor (11,31, direction 0).
- // VM shares that drawing family; a separate fresh VM oracle is still pending.
- const offsets=['R','ZENER','SCHOTTKY'].includes(kind)?{label_dx:8,label_dy:-20}:['VM','AMV'].includes(kind)?{label_dx:11,label_dy:31}:kind==='VS'?{label_dx:0,label_dy:-34}:kind==='VG'?{label_dx:8,label_dy:-12}:{};
- updateComponent({records:[r],trailer:new Uint8Array()},0,{uid:newUid(),...offsets,...(['VS','VG'].includes(kind)?{orientation:3}:{})});
- if(['R','VM','AMV','ZENER','SCHOTTKY'].includes(kind))r.data[8]=0;else if(['VS','VG'].includes(kind))r.data[8]=1;
+ updateComponent({records:[r],trailer:new Uint8Array()},0,{uid:newUid(),...(['VS','VG'].includes(kind)?{orientation:3}:{})});
  return r;
 }
 /** Position is relative to the symbol; label direction has its own native byte. */

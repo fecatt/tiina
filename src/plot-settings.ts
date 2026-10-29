@@ -19,6 +19,8 @@ export function defaultPlotAxis(title:string):PlotAxisSettings {
 
 const esc=(value:string)=>value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 
+// TINA-UI: window=plot-axis; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Проверить все native-поля, формат чисел и сохранение графика. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showPlotAxisDialog(dialog:HTMLDialogElement,axis:PlotAxisSettings,onApply:(next:PlotAxisSettings)=>void):void {
  dialog.classList.add('modal','plot-axis-dialog');
  dialog.setAttribute('aria-label','Настройка осей');

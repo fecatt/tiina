@@ -4,3 +4,4 @@
 .cursor-measurements th:first-child{width:50px}.cursor-measurements td:nth-child(2){width:32%}.cursor-difference{margin-top:5px;font-size:12px}
 .graph-tools button[aria-pressed="true"]{box-shadow:var(--ui-pressed);background:var(--ui-panel)}
 .plot [data-axis]{cursor:pointer}.plot text{font-family:"Segoe UI",Arial,sans-serif;fill:var(--ui-ink)}
+.graph-tools label[hidden],#cursor-readout[hidden]{display:none!important}

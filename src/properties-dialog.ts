@@ -66,6 +66,8 @@ function createDialog(title:string,content:string,wide=false):HTMLDialogElement 
  dialog.innerHTML=`<header class="component-title"><span>${escape(title)}</span><button type="button" class="component-close" aria-label="Закрыть" data-close>×</button></header>${content}`;
  document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());dialog.querySelector<HTMLButtonElement>('[data-close]')!.onclick=()=>dialog.close();return dialog;
 }
+// TINA-UI: window=model-parameters; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Сверить состав параметров по семействам; это не полная приёмка всех моделей. Реестр и правила проверки: docs/UI_WINDOWS.md.
 function showModelParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>void)=>void):void {
  const c=component(doc.records[index],index),values=modelParameters(c);
  const dialog=createDialog(`Модель ${c.model??''}  SPICE BJT`,`<form class="component-model-form"><div class="component-model-scroll">${parameterGroups.map(([group,fields])=>`<fieldset><legend>${escape(group)}</legend><table class="component-properties-table"><tbody>${fields.map(key=>`<tr><th scope="row"><label for="bjt-${key}"><b>${key}</b> — ${escape(descriptors[key][0])}</label></th><td><input id="bjt-${key}" name="${key}" type="text" inputmode="decimal" value="${values[key]}" autocomplete="off" /></td><td class="component-unit">${escape(descriptors[key][1])}</td></tr>`).join('')}</tbody></table></fieldset>`).join('')}<p class="component-explanation">Модельные ограничения хранятся в записи TINA. Они могут отличаться от предельных значений в паспорте транзистора и не используются браузерным расчётом как паспортные ограничения.</p><p class="component-explanation">Параметры ISS и NS сохраняются в TSC. Расчёт модели с ненулевым ISS в браузере пока не поддерживается.</p></div><p class="component-error" role="alert" aria-live="polite"></p><footer><button type="submit">ОК</button><button type="button" data-cancel>Отмена</button></footer></form>`,true);
@@ -74,6 +76,8 @@ function showModelParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>void)=
  dialog.showModal();
 }
 
+// TINA-UI: window=generator-parameters; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Не все формы и режимы генераторов перенесены. Реестр и правила проверки: docs/UI_WINDOWS.md.
 function showGeneratorParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>void)=>void):void {
  const c=component(doc.records[index],index),settings=nativeGenerator(c);if(!settings)throw Error('Формат сигнала пока не поддерживается');
  const field=(label:string,key:string,value:number,unit:string)=>`<tr data-signal-row="${key}"><th><label for="signal-${key}">${label}</label></th><td><input id="signal-${key}" name="${key}" value="${value}" autocomplete="off"></td><td class="component-unit">${unit}</td></tr>`;
@@ -91,6 +95,8 @@ function showGeneratorParameters(doc:Doc,index:number,onRawCommit:(mutate:()=>vo
  dialog.showModal();
 }
 
+// TINA-UI: window=generic-parameters; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Общие параметры не заменяют неподдержанные свойства семейства. Реестр и правила проверки: docs/UI_WINDOWS.md.
 function showGenericParameters(label:string):void {
  const rows=[1,2,3,4].map(n=>`<tr class="component-unavailable"><th scope="row">Параметр #${n}</th><td><input disabled value="" aria-label="Значение параметра #${n}"></td></tr>`).join('');
  const dialog=createDialog('Параметры',`<form><div class="component-body"><table class="component-properties-table"><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead><tbody>${rows}</tbody></table></div><footer><button type="button" data-cancel><span class="component-button-icon component-ok">✓</span>ОК</button><button type="button" data-dismiss><span class="component-button-icon component-cancel">✕</span>Отмена</button><button type="button" disabled><span class="component-button-icon component-help">?</span>Помощь</button></footer></form>`);
@@ -101,6 +107,8 @@ function showGenericParameters(label:string):void {
 /** The host owns undo/history. Nested model/signal edits and native wire movement
  * are staged on a detached document; final OK commits one complete transaction.
  * Cancel never mutates the source document. Common-only hosts retain commit(changes). */
+// TINA-UI: window=component-properties; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Общий механизм семейств есть; полный состав всех native-окон не принят. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showComponentProperties(doc:Doc,index:number,commit:(changes:Changes)=>void,onRawCommit?:(mutate:()=>void)=>void):void {
  const c=component(doc.records[index],index),isBjt=['NPN','PNP'].includes(c.kind);
  const profile=propertyProfiles[profileFor[c.kind]??'passive'];

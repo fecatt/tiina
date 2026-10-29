@@ -20,6 +20,8 @@ function decodeParameters(model:Model):number[]{const bytes=Uint8Array.from(atob
 function stylesheet():void {if(document.querySelector('link[data-catalog-style]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href=new URL('./catalog-dialog.css',import.meta.url).href;link.dataset.catalogStyle='';document.head.append(link);}
 
 /** Preview the component's polarity-compatible native models; only OK returns a choice. */
+// TINA-UI: window=catalog; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Состав каталога частичный; локальная и публичная библиотеки различаются. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showCatalogDialog(polarity:string,current:string,onChoose:(model:string)=>void):void {
  stylesheet();const models=bjtModels(polarity),available=Object.keys(models);if(current&&!available.includes(current))available.unshift(current);
  const dialog=document.createElement('dialog');dialog.className='catalog-dialog';dialog.setAttribute('aria-label','Редактор каталога');

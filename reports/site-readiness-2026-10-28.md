@@ -1,5 +1,7 @@
 # BrowserTransfer readiness inventory
 
+> Первичный исторический срез до исправления проводки и повторного UI-прохода 28.10.2026. Текущий статус находится в [docs/STATUS.md](../docs/STATUS.md); незавершённые действия ниже не являются актуальным планом.
+
 **Scope.** Read-only inspection of `src/native-menus.json`, `src/native-catalog.json`, `src/main.ts`, analysis/solver modules and the corresponding source files in `C:/Users/fedor/Documents/ChatGPT/Tiina/HostedTina`. No full test suite was run. HostedTina is the checked-in mirror; this inventory does not verify a live public deployment.
 
 ## What is wired in the local project

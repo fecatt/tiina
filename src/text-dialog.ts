@@ -4,6 +4,8 @@ const formulaTools:Record<string,{id:string;markup:string}>={'Дробь':{id:'f
 const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 export type TextChanges={text:string;size:number;font:string;color:string;style:number};
 /** Layout observed in native TCSysTextDlg; only proven formula insertions are enabled. */
+// TINA-UI: window=text; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Не все native-свойства текста и оформления перенесены. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showTextDialog(d:HTMLDialogElement,record:Rec|undefined,apply:(changes:TextChanges)=>void,onCancel:()=>void=()=>{}){
  const old=record?textRecord(record):null;let draft:TextChanges={text:old?.text??'',size:old?.size??8,font:old?.font??'Arial',color:old?.cssColor??'#0000ff',style:(old?.style??0)&15};
  let finished=false,accepted=false;

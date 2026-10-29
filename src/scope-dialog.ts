@@ -6,6 +6,8 @@ const esc = (s: string): string =>
 
 const fmt = (n: number): string => (Number.isFinite(n) ? n.toPrecision(6) : "—");
 
+// TINA-UI: window=oscilloscope; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Часть прибора перенесена; полный native-сценарий Run/Stop/Single и каналы не принят. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showScope(dialog: HTMLDialogElement, curve: Curve): void {
   const oldStyle=dialog.getAttribute('style');
   dialog.addEventListener('close',()=>{if(oldStyle===null)dialog.removeAttribute('style');else dialog.setAttribute('style',oldStyle);dialog.removeAttribute('data-scope');},{once:true});

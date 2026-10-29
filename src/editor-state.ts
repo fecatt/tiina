@@ -192,16 +192,44 @@ export function dragWireSegment(doc:Doc,index:number,segment:number,dx:number,dy
  if(a[0]!==b[0]&&a[1]!==b[1]){translateSelection(doc,[index],dx,dy);return;}
  if(a[1]===b[1])dx=0;else dy=0;
  if(!dx&&!dy)return;
+ // When a branch endpoint slides along another route, split that route at
+ // the new endpoint. TINA's electrical graph joins wire-record endpoints;
+ // merely drawing the branch over the middle of a trunk leaves it open.
+ const pointOn=(p:Point,x:Point,y:Point)=>
+  (p[0]-x[0])*(y[1]-x[1])===(p[1]-x[1])*(y[0]-x[0])&&
+  p[0]>=Math.min(x[0],y[0])&&p[0]<=Math.max(x[0],y[0])&&p[1]>=Math.min(x[1],y[1])&&p[1]<=Math.max(x[1],y[1]);
+ const slideTargets=new Map<number,{point:Point;points:Point[]}>();
+ for(const end of [0,old.length-1]){
+  if(end===0?segment!==0:segment!==old.length-2)continue;
+  const from=old[end],to:Point=[coordinate(from[0]+dx),coordinate(from[1]+dy)];
+  for(let wi=0;wi<staged.records.length;wi++){
+   if(wi===index||staged.records[wi].type!==256)continue;
+   let route:Point[];try{route=wirePoints(staged.records[wi]);}catch{continue;}
+   if(route.some((q,j)=>j>0&&pointOn(from,route[j-1],q)&&pointOn(to,route[j-1],q))){slideTargets.set(wi,{point:to,points:route});}
+  }
+ }
  const pp=old.map(p=>[...p] as Point);
  for(const i of [segment,segment+1])pp[i]=[coordinate(old[i][0]+dx),coordinate(old[i][1]+dy)];
  const otherEnds=staged.records.flatMap((other,i)=>{if(i===index||other.type!==256)return [];try{const w=wirePoints(other);return [w[0],w.at(-1)!];}catch{return [];}});
  const terminals=components(staged).flatMap(pins);
- const fixed=(p:Point)=>terminals.some(q=>same(p,q))||otherEnds.some(q=>same(p,q));
+ const sliding=(p:Point)=>[...slideTargets.values()].some(v=>same(v.points[0],p)||same(v.points.at(-1)!,p)||v.points.some((q,j)=>j>0&&pointOn(p,v.points[j-1],q)));
+ const fixed=(p:Point)=>terminals.some(q=>same(p,q))||(!sliding(p)&&otherEnds.some(q=>same(p,q)));
  if(segment===0&&fixed(old[0]))pp.unshift(old[0]);
  if(segment===old.length-2&&fixed(old.at(-1)!))pp.push(old.at(-1)!);
  for(let i=1;i<pp.length;)if(same(pp[i-1],pp[i]))pp.splice(i,1);else if(i<pp.length-1&&((pp[i-1][0]===pp[i][0]&&pp[i][0]===pp[i+1][0])||(pp[i-1][1]===pp[i][1]&&pp[i][1]===pp[i+1][1])))pp.splice(i,1);else i++;
  if(pp.length<2)throw Error('Перемещение сворачивает провод в точку');
- r.data=join(makeWire(pp).data.slice(0,10+4*pp.length),r.data.slice(10+4*old.length));commit(doc,staged);
+ r.data=join(makeWire(pp).data.slice(0,10+4*pp.length),r.data.slice(10+4*old.length));
+ for(const [wi,{point,points}] of [...slideTargets].sort((a,b)=>b[0]-a[0])){
+  const target=staged.records[wi],vertex=points.findIndex(p=>same(p,point));let cut=vertex>0&&vertex<points.length-1?vertex:-1;
+  if(cut<0)for(let j=1;j<points.length;j++)if(pointOn(point,points[j-1],points[j])&&!same(point,points[j-1])&&!same(point,points[j])){cut=j;break;}
+  if(cut<0)continue;
+  const parts=[points.slice(0,cut),points.slice(cut)];
+  if(!same(parts[0].at(-1)!,point))parts[0].push(point);if(!same(parts[1][0],point))parts[1].unshift(point);
+  const tailStart=10+4*points.length,[,uidEnd]=readString(target.data,tailStart+8);
+  const replacements=parts.map((route,i)=>{const geometry=makeWire(route).data.slice(0,10+4*route.length);return {...target,data:join(geometry,target.data.slice(tailStart,tailStart+8),i?countedString(newUid()):target.data.slice(tailStart+8,uidEnd),target.data.slice(uidEnd))};});
+  staged.records.splice(wi,1,...replacements);
+ }
+ commit(doc,staged);
 }
 function uniqueLabel(label:string,used:Set<string>){let candidate=label;const taken=(s:string)=>used.has(s.toLocaleLowerCase());if(taken(candidate)){const m=label.match(/^(.*?)(\d+)$/),prefix=m?m[1]:label+'_';let n=m?BigInt(m[2])+1n:2n;do{const suffix=String(n++);candidate=prefix.slice(0,254-suffix.length)+suffix;}while(taken(candidate));}used.add(candidate.toLocaleLowerCase());return candidate;}
 

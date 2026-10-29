@@ -19,6 +19,8 @@ export interface BjtAutoDefaults {
 const esc=(value:unknown)=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 
 /** Opens the BJT automatic curve setup dialog. The callback reports progress while it runs. */
+// TINA-UI: window=bjt-auto; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Дополнение сайта; сравнивать с собственным контрактом, а не называть копией native-окна. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showBjtAutoDialog(
   dialog:HTMLDialogElement,
   defaults:BjtAutoDefaults,

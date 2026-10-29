@@ -1,0 +1,23 @@
+.custom-select{position:relative;display:inline-flex;vertical-align:middle;box-sizing:border-box}
+.custom-select>select{position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important}
+.custom-select-button{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:30px;padding:4px 9px;background:var(--ui-panel);color:var(--ui-ink);border:1px solid var(--ui-line);border-radius:5px;font:13px Arial,sans-serif;text-align:left;cursor:pointer}
+.custom-select-button::after{content:"";width:7px;height:7px;border-right:1.5px solid var(--ui-muted);border-bottom:1.5px solid var(--ui-muted);transform:rotate(45deg) translateY(-2px);flex:none}
+.custom-select-button:focus-visible{outline:2px solid var(--ui-muted);outline-offset:2px}
+.custom-select-button:not(:disabled){transition:box-shadow 150ms ease}
+.custom-select-button:disabled{box-shadow:none!important}
+.custom-select-button:disabled{color:var(--ui-disabled);cursor:default}
+.custom-select-popup{display:none;position:absolute;z-index:10000;top:calc(100% + 3px);left:0;right:0;max-height:min(280px,calc(100vh - 24px));overflow:auto;padding:4px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:6px;box-shadow:var(--ui-window)}
+.custom-select-popup.opens-up{top:auto;bottom:calc(100% + 3px)}
+.custom-select.open .custom-select-popup{display:block}
+.custom-select-popup.always-open{display:block;position:static;min-width:100%;max-height:none;padding:0;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:4px;box-shadow:none}
+.custom-select.listbox{display:flex}
+.custom-select.listbox .custom-select-popup{height:100%;overflow:auto}
+.custom-select.listbox .custom-select-popup{min-height:0}
+.custom-select.listbox .custom-select-option{border-radius:0}
+.custom-select.listbox .custom-select-option.selected{background:var(--ui-active)}
+.custom-select-option{min-height:30px;box-sizing:border-box;display:flex;align-items:center;padding:5px 8px;border-radius:4px;color:var(--ui-ink);font:13px Arial,sans-serif;cursor:pointer}
+.custom-select-option.active,.custom-select-option:hover{background:var(--ui-hover)}
+.custom-select-option.selected{font-weight:600}
+.custom-select-option[aria-disabled="true"]{color:var(--ui-disabled);cursor:default}
+textarea{resize:none!important}
+.native-text-work textarea{resize:none!important}

@@ -16,6 +16,8 @@ function kindValue(c:Component){return c.value===undefined?'':`${c.value} ${unit
 export type NativeAcSettings={start:number;stop:number;intervals:number;logarithmic:boolean;display:'magnitude'|'phase'|'both'};
 export type NativeTransientSettings={start:number;stop:number};
 
+// TINA-UI: window=control-properties; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Требуется полная сверка полей, состояний и записи TSC. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showControlProperty(dialog:HTMLDialogElement,doc:Doc,index:number,onApply:(next:NativeControl|null)=>void):void{
  const c=components(doc).find(x=>x.index===index);
  if(!c||!kinds[c.kind]){prepare(dialog,'Контроль объекта');dialog.innerHTML=`<header><span>Контроль объекта</span></header><p>Выберите скалярный источник или элемент R, C, L.</p><footer><button type="button" data-cancel>Отмена</button></footer>`;dialog.querySelector('[data-cancel]')!.addEventListener('click',()=>close(dialog));show(dialog);return;}
@@ -31,6 +33,8 @@ export function showControlProperty(dialog:HTMLDialogElement,doc:Doc,index:numbe
  renderIntro();show(dialog);
 }
 
+// TINA-UI: window=dc-transfer; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Проверен локальный сценарий измерений; все режимы окна и native-паритет не приняты. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showDcTransferDialog(dialog:HTMLDialogElement,doc:Doc,onApply:(next:NativeDc)=>void,onAuto?:((input:string,onApplied:()=>void)=>void)):void{
  const sources=components(doc).filter(c=>['V','VS','VG','I','IS'].includes(c.kind));
  const current=nativeDc(doc),defaultInput=current?.input&&sources.some(c=>c.label===current.input)?current.input:sources[0]?.label??'';
@@ -41,6 +45,8 @@ export function showDcTransferDialog(dialog:HTMLDialogElement,doc:Doc,onApply:(n
  dialog.querySelector('[data-cancel]')!.addEventListener('click',()=>close(dialog));show(dialog);
 }
 
+// TINA-UI: window=ac-transfer; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Частотный анализ реализован; все поля и сценарии оригинала не приняты. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showAcTransferDialog(dialog:HTMLDialogElement,initial:NativeAcSettings,onApply:(next:NativeAcSettings)=>void):void{
  const title='Частотные характеристики переменного тока';prepare(dialog,title);
  dialog.innerHTML=`<header><span>${title}</span></header><form novalidate><section class="native-analysis-content native-analysis-ac"><fieldset><div class="native-analysis-grid"><label for="ac-start">Начальная частота:</label><input id="ac-start" name="start" value="${esc(initial.start)}" autocomplete="off"><label for="ac-stop">Конечная частота:</label><input id="ac-stop" name="stop" value="${esc(initial.stop)}" autocomplete="off"><label for="ac-intervals">Число позиций:</label><input id="ac-intervals" name="intervals" inputmode="numeric" value="${esc(initial.intervals)}"></div></fieldset><fieldset><legend>Тип свип-сигнала</legend><label><input type="radio" name="logarithmic" value="linear" ${initial.logarithmic?'':'checked'}>Линейный</label><label><input type="radio" name="logarithmic" value="log" ${initial.logarithmic?'checked':''}>Логарифмический</label></fieldset><fieldset><legend>Диаграмма</legend><label><input type="radio" name="display" value="magnitude" ${initial.display==='magnitude'?'checked':''}>Амплитуда</label><label><input type="radio" name="display" value="phase" ${initial.display==='phase'?'checked':''}>Фаза</label><label><input type="radio" name="display" value="both" ${initial.display==='both'?'checked':''}>Амплитуда и Фаза</label><label class="native-analysis-disabled"><input type="radio" disabled>Найквист</label><label class="native-analysis-disabled"><input type="radio" disabled>Групповая задержка</label></fieldset></section>${errorBox()}<footer><button type="submit">OK</button><button type="button" data-cancel>Отмена</button><button type="button" disabled>Помощь</button></footer></form>`;
@@ -48,6 +54,8 @@ export function showAcTransferDialog(dialog:HTMLDialogElement,initial:NativeAcSe
  dialog.querySelector('[data-cancel]')!.addEventListener('click',()=>close(dialog));show(dialog);
 }
 
+// TINA-UI: window=transient; status=partial; full-parity-checks=0 (полная приёмка не подтверждена).
+// Осталось: Часть начальных условий недоступна; полная совместимость TSC не подтверждена. Реестр и правила проверки: docs/UI_WINDOWS.md.
 export function showTransientDialog(dialog:HTMLDialogElement,initial:NativeTransientSettings,onApply:(next:NativeTransientSettings)=>void):void{
  const title='Анализ переходных процессов';prepare(dialog,title);
  dialog.innerHTML=`<header><span>${title}</span></header><form novalidate><section class="native-analysis-content native-analysis-transient"><fieldset><div class="native-analysis-grid"><label for="transient-start">Начальное время:</label><input id="transient-start" name="start" value="${esc(initial.start)}" autocomplete="off"><label for="transient-stop">Конечное время:</label><input id="transient-stop" name="stop" value="${esc(initial.stop)}" autocomplete="off"></div></fieldset><fieldset><legend>Начальные условия</legend><label><input type="radio" name="initial-condition" checked>Вычислить опорную точку</label><label class="native-analysis-disabled"><input type="radio" name="initial-condition" disabled>Использовать начальные условия</label><label class="native-analysis-disabled"><input type="radio" name="initial-condition" disabled>Нулевые начальные условия</label></fieldset><fieldset class="native-analysis-disabled"><label><input type="checkbox" disabled>Отобразить возбуждения</label></fieldset></section>${errorBox()}<footer><button type="submit">OK</button><button type="button" data-cancel>Отмена</button><button type="button" disabled>Помощь</button></footer></form>`;
